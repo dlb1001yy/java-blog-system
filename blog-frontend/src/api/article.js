@@ -5,7 +5,12 @@ export default {
   getArticles(params) {
     return request.get('/portal/articles/page', { params })
   },
-  
+
+  // 获取站点统计信息
+  getStats() {
+    return request.get('/portal/stats')
+  },
+
   // 获取文章详情
   getArticleDetail(id) {
     return request.get(`/portal/articles/${id}`)

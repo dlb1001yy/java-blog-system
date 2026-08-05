@@ -39,5 +39,13 @@ export default {
   // 批量删除
   batchDelete(ids) {
     return request.delete('/admin/articles/batch', { data: { ids } })
+  },
+  // 导入 Markdown 文件，解析为文章字段
+  importMarkdown(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return request.post('/admin/articles/import-markdown', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
   }
 }

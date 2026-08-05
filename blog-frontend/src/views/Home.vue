@@ -13,7 +13,7 @@
             </div>
             <div class="stat-divider"></div>
             <div class="stat-item">
-              <span class="stat-number">{{ stats.totalViews || 0 }}</span>
+              <span class="stat-number">{{ stats.viewCount || 0 }}</span>
               <span class="stat-label">浏览</span>
             </div>
             <div class="stat-divider"></div>
@@ -81,7 +81,7 @@ const pageSize = ref(10)
 const total = ref(0)
 const stats = reactive({
   articleCount: 0,
-  totalViews: 0,
+  viewCount: 0,
   categoryCount: 0
 })
 
@@ -117,8 +117,14 @@ const handlePageChange = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+const fetchStats = async () => {
+  const res = await articleApi.getStats()
+  Object.assign(stats, res.data)
+}
+
 onMounted(() => {
   fetchArticles()
+  fetchStats()
 })
 </script>
 

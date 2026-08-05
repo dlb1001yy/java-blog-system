@@ -2,6 +2,10 @@
   <PageContainer title="文章编辑" description="创作或修改文章内容">
     <template #action>
       <el-button @click="$router.back()">返回</el-button>
+      <el-button :loading="importLoading" @click="triggerImport">
+        <el-icon v-if="!importLoading"><Upload /></el-icon>
+        导入 Markdown
+      </el-button>
       <el-button type="info" @click="handleSave(0)">存草稿</el-button>
       <el-button type="primary" @click="handleSave(1)">发布</el-button>
     </template>
@@ -150,6 +154,13 @@
         </el-form-item>
       </el-form>
     </div>
+    <input
+      ref="fileInputRef"
+      type="file"
+      accept=".md,.markdown"
+      style="display:none"
+      @change="handleFileChange"
+    />
   </PageContainer>
 </template>
 
@@ -157,7 +168,7 @@
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Upload } from '@element-plus/icons-vue'
 import MarkdownIt from 'markdown-it'
 import 'github-markdown-css'
 import articleApi from '@/api/article'
@@ -172,6 +183,8 @@ const formRef = ref()
 const categories = ref([])
 const tags = ref([])
 const previewMode = ref(false)
+const importLoading = ref(false)
+const fileInputRef = ref()
 
 const isEdit = computed(() => !!route.params.id)
 
@@ -248,6 +261,30 @@ const insertText = (before, after = '', placeholder = '') => {
     textarea.focus()
     textarea.setSelectionRange(start + before.length, start + before.length + selected.length)
   })
+}
+
+const triggerImport = () => {
+  fileInputRef.value?.click()
+}
+
+const handleFileChange = async (event) => {
+  const file = event.target.files?.[0]
+  if (!file) return
+  importLoading.value = true
+  try {
+    const res = await articleApi.importMarkdown(file)
+    const data = res.data || {}
+    if (data.title) form.title = data.title
+    if (data.summary) form.summary = data.summary
+    if (data.content) form.content = data.content
+    if (data.coverImage) form.coverImage = data.coverImage
+    ElMessage.success('导入成功')
+  } catch (e) {
+    // request 拦截器已统一弹出错误提示
+  } finally {
+    importLoading.value = false
+    event.target.value = ''
+  }
 }
 
 const handleCoverSuccess = (response) => {

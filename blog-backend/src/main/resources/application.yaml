@@ -43,7 +43,7 @@ jwt:
 # 文件上传路径
 file:
   upload-path: D:\\my-project\\java-blog-system\\blog-backend\\uploads\\
-  allowed-types: jpg,jpeg,png,gif,webp
+  allowed-types: jpg,jpeg,png,gif,webp,md,markdown
   max-size: 10485760  # 10MB
 
 # 网站配置
