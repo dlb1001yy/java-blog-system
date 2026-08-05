@@ -1,31 +1,26 @@
 <template>
-  <div class="article-edit">
-    <el-card>
-      <template #header>
-        <div class="card-header">
-          <span>{{ isEdit ? '编辑文章' : '写新文章' }}</span>
-          <div>
-            <el-button @click="$router.back()">返回</el-button>
-            <el-button type="info" @click="handleSave(0)">存草稿</el-button>
-            <el-button type="primary" @click="handleSave(1)">发布</el-button>
-          </div>
-        </div>
-      </template>
-      
+  <PageContainer title="文章编辑" description="创作或修改文章内容">
+    <template #action>
+      <el-button @click="$router.back()">返回</el-button>
+      <el-button type="info" @click="handleSave(0)">存草稿</el-button>
+      <el-button type="primary" @click="handleSave(1)">发布</el-button>
+    </template>
+
+    <div class="content-card">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="标题" prop="title">
           <el-input v-model="form.title" placeholder="请输入文章标题" maxlength="200" show-word-limit />
         </el-form-item>
-        
+
         <el-row :gutter="20">
           <el-col :span="8">
             <el-form-item label="分类" prop="categoryId">
               <el-select v-model="form.categoryId" placeholder="请选择分类" style="width: 100%">
-                <el-option 
-                  v-for="cat in categories" 
-                  :key="cat.id" 
-                  :label="cat.name" 
-                  :value="cat.id" 
+                <el-option
+                  v-for="cat in categories"
+                  :key="cat.id"
+                  :label="cat.name"
+                  :value="cat.id"
                 />
               </el-select>
             </el-form-item>
@@ -45,25 +40,25 @@
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <el-form-item label="标签">
-          <el-select 
-            v-model="form.tagIds" 
-            multiple 
-            filterable 
+          <el-select
+            v-model="form.tagIds"
+            multiple
+            filterable
             allow-create
             placeholder="请选择或输入标签"
             style="width: 100%"
           >
-            <el-option 
-              v-for="tag in tags" 
-              :key="tag.id" 
-              :label="tag.name" 
-              :value="tag.id" 
+            <el-option
+              v-for="tag in tags"
+              :key="tag.id"
+              :label="tag.name"
+              :value="tag.id"
             />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item label="封面图">
           <el-upload
             class="cover-uploader"
@@ -81,18 +76,18 @@
           </el-upload>
           <el-button text @click="form.coverImage = ''" v-if="form.coverImage">移除</el-button>
         </el-form-item>
-        
+
         <el-form-item label="摘要">
-          <el-input 
-            v-model="form.summary" 
-            type="textarea" 
-            :rows="3" 
+          <el-input
+            v-model="form.summary"
+            type="textarea"
+            :rows="3"
             placeholder="请输入文章摘要（选填）"
-            maxlength="500" 
-            show-word-limit 
+            maxlength="500"
+            show-word-limit
           />
         </el-form-item>
-        
+
         <!-- 转载信息 -->
         <template v-if="form.type === 1">
           <el-form-item label="来源名称">
@@ -102,7 +97,7 @@
             <el-input v-model="form.sourceUrl" placeholder="请输入原文链接" />
           </el-form-item>
         </template>
-        
+
         <el-form-item label="正文" prop="content">
           <div class="editor-wrapper">
             <!-- Markdown编辑器 -->
@@ -126,15 +121,15 @@
                 <el-button size="small" @click="insertText('[', '](url)', '链接')">链接</el-button>
                 <el-button size="small" @click="insertText('![', '](url)', '图片')">图片</el-button>
               </el-button-group>
-              <el-button 
-                size="small" 
-                style="margin-left: 8px;" 
+              <el-button
+                size="small"
+                style="margin-left: 8px;"
                 @click="previewMode = !previewMode"
               >
                 {{ previewMode ? '编辑' : '预览' }}
               </el-button>
             </div>
-            
+
             <div class="editor-content">
               <el-input
                 v-show="!previewMode"
@@ -145,7 +140,7 @@
                 class="markdown-editor"
                 :input-style="{ fontFamily: 'monospace', fontSize: '14px' }"
               />
-              <div 
+              <div
                 v-show="previewMode"
                 class="markdown-body preview"
                 v-html="renderedContent"
@@ -154,8 +149,8 @@
           </div>
         </el-form-item>
       </el-form>
-    </el-card>
-  </div>
+    </div>
+  </PageContainer>
 </template>
 
 <script setup>
@@ -168,6 +163,7 @@ import 'github-markdown-css'
 import articleApi from '@/api/article'
 import categoryApi from '@/api/category'
 import tagApi from '@/api/tag'
+import PageContainer from '@/components/PageContainer.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -208,6 +204,28 @@ const md = new MarkdownIt({
   html: true,
   linkify: true
 })
+
+// 外链新窗口打开（锚点链接除外）
+const defaultLinkOpen = md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
+  return self.renderToken(tokens, idx, options)
+}
+md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+  const href = tokens[idx].attrGet('href') || ''
+  if (/^https?:\/\//i.test(href)) {
+    tokens[idx].attrSet('target', '_blank')
+    tokens[idx].attrSet('rel', 'noopener noreferrer')
+  }
+  return defaultLinkOpen(tokens, idx, options, env, self)
+}
+// 图片：防盗链 + 懒加载（与 meta 双保险）
+const defaultImage = md.renderer.rules.image || function (tokens, idx, options, env, self) {
+  return self.renderToken(tokens, idx, options)
+}
+md.renderer.rules.image = function (tokens, idx, options, env, self) {
+  tokens[idx].attrSet('referrerpolicy', 'no-referrer')
+  tokens[idx].attrSet('loading', 'lazy')
+  return defaultImage(tokens, idx, options, env, self)
+}
 
 const renderedContent = computed(() => {
   return md.render(form.content || '')
@@ -288,10 +306,43 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.content-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+:deep(.el-input__wrapper) {
+  border-radius: var(--radius-md);
+  transition: box-shadow var(--transition-base);
+}
+:deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px var(--color-primary) inset, 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+:deep(.el-textarea__inner) {
+  border-radius: var(--radius-md);
+  transition: box-shadow var(--transition-base);
+}
+:deep(.el-textarea__inner:focus) {
+  box-shadow: 0 0 0 1px var(--color-primary) inset, 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+:deep(.el-tabs__item) {
+  font-size: var(--font-base);
+  font-weight: 500;
+}
+:deep(.el-tabs__active-bar) {
+  background: var(--gradient-primary);
+  height: 3px;
+  border-radius: var(--radius-full);
+}
+:deep(.el-tabs__item.is-active) {
+  color: var(--color-primary);
+}
+:deep(.el-tabs__item:hover) {
+  color: var(--color-primary-light);
 }
 
 .cover-uploader {
@@ -302,33 +353,33 @@ onMounted(() => {
   width: 200px;
   height: 120px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
 }
 
 .cover-placeholder {
   width: 200px;
   height: 120px;
-  border: 1px dashed #d9d9d9;
-  border-radius: 4px;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  color: #909399;
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: border-color 0.3s;
+  transition: border-color var(--transition-base), color var(--transition-base);
 }
 
 .cover-placeholder:hover {
-  border-color: #409eff;
-  color: #409eff;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .editor-wrapper {
   width: 100%;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
@@ -336,9 +387,9 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  padding: 8px;
-  border-bottom: 1px solid #dcdfe6;
-  background: #f5f7fa;
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-subtle);
 }
 
 .editor-content {
@@ -352,7 +403,7 @@ onMounted(() => {
 }
 
 .preview {
-  padding: 20px;
+  padding: var(--space-5);
   min-height: 400px;
 }
 </style>

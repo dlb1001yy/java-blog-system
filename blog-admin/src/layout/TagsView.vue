@@ -10,7 +10,7 @@
           @contextmenu.prevent="openMenu(tag, $event)"
         >
           <span>{{ tag.title }}</span>
-          <el-icon 
+          <el-icon
             v-if="tag.path !== '/dashboard'"
             class="close-icon"
             @click.stop="closeTag(tag)"
@@ -20,9 +20,9 @@
         </div>
       </div>
     </el-scrollbar>
-    
+
     <!-- 右键菜单 -->
-    <ul v-show="menuVisible" 
+    <ul v-show="menuVisible"
         :style="{ left: menuLeft + 'px', top: menuTop + 'px' }"
         class="context-menu">
       <li @click="refreshSelectedTag(selectedTag)">刷新</li>
@@ -114,10 +114,9 @@ onUnmounted(() => {
 
 <style scoped>
 .tags-view-container {
-  background: #fff;
-  border-bottom: 1px solid #d8dce5;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
-  padding: 4px 8px;
+  background: transparent;
+  border-bottom: 1px solid var(--border-color);
+  padding: var(--space-2) var(--space-4);
 }
 
 .tags-scrollbar {
@@ -126,62 +125,71 @@ onUnmounted(() => {
 
 .tags-wrapper {
   display: flex;
-  gap: 4px;
+  gap: var(--space-2);
 }
 
 .tag-item {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 12px;
-  font-size: 12px;
-  border: 1px solid #d8dce5;
-  border-radius: 3px;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-xs);
+  border: none;
+  border-radius: var(--radius-full);
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.3s;
+  transition: all var(--transition-base);
+  background: var(--bg-subtle);
+  color: var(--text-regular);
+  font-weight: 500;
 }
 
 .tag-item:hover {
-  color: #409eff;
+  color: var(--color-primary);
+  background: var(--el-color-primary-light-9);
 }
 
 .tag-item.active {
-  background-color: #409eff;
+  background: var(--gradient-primary);
   color: #fff;
-  border-color: #409eff;
+  box-shadow: var(--shadow-primary);
 }
 
 .close-icon {
   font-size: 12px;
-  border-radius: 50%;
-  transition: all 0.3s;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+  width: 14px;
+  height: 14px;
 }
 
 .close-icon:hover {
   background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
 }
 
 .context-menu {
   position: fixed;
-  background: #fff;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  padding: var(--space-1) 0;
+  font-size: var(--font-sm);
+  overflow: hidden;
   z-index: 3000;
   list-style-type: none;
-  padding: 5px 0;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 400;
-  color: #333;
-  box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
 }
 
 .context-menu li {
-  margin: 0;
-  padding: 7px 16px;
+  padding: var(--space-2) var(--space-4);
   cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--text-regular);
 }
 
 .context-menu li:hover {
-  background: #f0f0f0;
+  background: var(--bg-subtle);
+  color: var(--color-primary);
 }
 </style>

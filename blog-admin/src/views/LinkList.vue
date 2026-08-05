@@ -1,11 +1,11 @@
 <template>
-  <div class="link-list">
-    <el-card>
-      <div class="action-bar">
-        <el-button type="primary" :icon="Plus" @click="handleAdd">新增链接</el-button>
-      </div>
-      
-      <el-table :data="tableData" v-loading="loading" border>
+  <PageContainer title="友情链接" description="管理友链交换">
+    <template #action>
+      <el-button type="primary" :icon="Plus" @click="handleAdd">新增链接</el-button>
+    </template>
+
+    <div class="table-card">
+      <el-table :data="tableData" v-loading="loading" :border="false" stripe>
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="name" label="网站名称" />
         <el-table-column prop="url" label="网站地址" show-overflow-tooltip />
@@ -25,7 +25,7 @@
           </template>
         </el-table-column>
       </el-table>
-    </el-card>
+    </div>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
@@ -53,7 +53,7 @@
         <el-button type="primary" @click="handleSubmit">确定</el-button>
       </template>
     </el-dialog>
-  </div>
+  </PageContainer>
 </template>
 
 <script setup>
@@ -61,6 +61,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import linkApi from '@/api/link'
+import PageContainer from '@/components/PageContainer.vue'
 
 const loading = ref(false)
 const tableData = ref([])
@@ -124,5 +125,34 @@ onMounted(() => fetchData())
 </script>
 
 <style scoped>
-.action-bar { margin-bottom: 16px; }
+.search-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+:deep(.el-form--inline .el-form-item) { margin-bottom: 0; }
+
+.table-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+:deep(.el-table) { border-radius: var(--radius-md); }
+:deep(.el-table th.el-table__cell) { background: var(--bg-subtle); color: var(--text-regular); font-weight: 600; }
+:deep(.el-table tr) { transition: background var(--transition-base); }
+:deep(.el-table__row:hover > td.el-table__cell) { background: var(--el-color-primary-light-9) !important; }
+:deep(.el-table .el-table__cell) { border-bottom: 1px solid var(--border-color); }
+:deep(.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell) { background: var(--bg-subtle); }
+
+.pagination-wrap { display: flex; justify-content: flex-end; margin-top: var(--space-5); }
+
+:deep(.el-dialog) { border-radius: var(--radius-lg); overflow: hidden; }
+:deep(.el-dialog__header) { padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--border-color); margin-right: 0; }
+:deep(.el-dialog__body) { padding: var(--space-5); }
+:deep(.el-dialog__footer) { padding: var(--space-4) var(--space-5); border-top: 1px solid var(--border-color); }
 </style>

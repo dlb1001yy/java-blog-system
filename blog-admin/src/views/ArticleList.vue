@@ -1,7 +1,12 @@
 <template>
-  <div class="article-list">
+  <PageContainer title="文章管理" description="管理博客文章、发布状态与置顶">
+    <template #action>
+      <el-button type="primary" :icon="Plus" @click="$router.push('/article/create')">写文章</el-button>
+      <el-button type="danger" plain :icon="Delete" :disabled="!selectedRows.length" @click="handleBatchDelete">批量删除</el-button>
+    </template>
+
     <!-- 搜索栏 -->
-    <el-card class="search-card">
+    <div class="search-card">
       <el-form :inline="true" :model="searchForm">
         <el-form-item label="标题">
           <el-input v-model="searchForm.title" placeholder="请输入文章标题" clearable />
@@ -24,25 +29,16 @@
           <el-button @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
-    </el-card>
-
-    <!-- 操作栏 -->
-    <div class="action-bar">
-      <el-button type="primary" :icon="Plus" @click="$router.push('/article/create')">
-        写文章
-      </el-button>
-      <el-button type="danger" :icon="Delete" :disabled="!selectedRows.length" @click="handleBatchDelete">
-        批量删除
-      </el-button>
     </div>
 
-    <!-- 表格 -->
-    <el-card>
+    <!-- 表格卡 -->
+    <div class="table-card">
       <el-table
         :data="tableData"
         v-loading="loading"
         @selection-change="handleSelectionChange"
-        border
+        :border="false"
+        stripe
       >
         <el-table-column type="selection" width="55" />
         <el-table-column prop="id" label="ID" width="80" />
@@ -84,7 +80,7 @@
         </el-table-column>
       </el-table>
 
-      <div class="pagination-wrapper">
+      <div class="pagination-wrap">
         <el-pagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
@@ -95,8 +91,8 @@
           @current-change="handleCurrentChange"
         />
       </div>
-    </el-card>
-  </div>
+    </div>
+  </PageContainer>
 </template>
 
 <script setup>
@@ -104,6 +100,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
+import PageContainer from '@/components/PageContainer.vue'
 import articleApi from '@/api/article'
 
 const router = useRouter()
@@ -201,7 +198,56 @@ onMounted(() => fetchData())
 </script>
 
 <style scoped>
-.search-card { margin-bottom: 16px; }
-.action-bar { margin-bottom: 16px; }
-.pagination-wrapper { display: flex; justify-content: flex-end; margin-top: 16px; }
+.search-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+:deep(.el-form--inline .el-form-item) {
+  margin-bottom: 0;
+}
+
+.table-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+:deep(.el-table) {
+  border-radius: var(--radius-md);
+  --el-table-border-color: var(--border-color);
+}
+
+:deep(.el-table th.el-table__cell) {
+  background: var(--bg-subtle);
+  color: var(--text-regular);
+  font-weight: 600;
+}
+
+:deep(.el-table tr) {
+  transition: background var(--transition-base);
+}
+
+:deep(.el-table__row:hover > td.el-table__cell) {
+  background: var(--el-color-primary-light-9) !important;
+}
+
+:deep(.el-table .el-table__cell) {
+  border-bottom: 1px solid var(--border-color);
+}
+
+:deep(.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell) {
+  background: var(--bg-subtle);
+}
+
+.pagination-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-5);
+}
 </style>

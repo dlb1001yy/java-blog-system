@@ -126,6 +126,28 @@ const md = new MarkdownIt({
   }
 })
 
+// 外链新窗口打开（锚点链接除外）
+const defaultLinkOpen = md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
+  return self.renderToken(tokens, idx, options)
+}
+md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+  const href = tokens[idx].attrGet('href') || ''
+  if (/^https?:\/\//i.test(href)) {
+    tokens[idx].attrSet('target', '_blank')
+    tokens[idx].attrSet('rel', 'noopener noreferrer')
+  }
+  return defaultLinkOpen(tokens, idx, options, env, self)
+}
+// 图片：防盗链 + 懒加载（与 meta 双保险）
+const defaultImage = md.renderer.rules.image || function (tokens, idx, options, env, self) {
+  return self.renderToken(tokens, idx, options)
+}
+md.renderer.rules.image = function (tokens, idx, options, env, self) {
+  tokens[idx].attrSet('referrerpolicy', 'no-referrer')
+  tokens[idx].attrSet('loading', 'lazy')
+  return defaultImage(tokens, idx, options, env, self)
+}
+
 const typeMap = {
   0: { label: '原创', type: 'primary' },
   1: { label: '转载', type: 'warning' },

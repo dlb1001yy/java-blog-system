@@ -1,10 +1,6 @@
 <template>
-  <div class="settings-page">
-    <el-card>
-      <template #header>
-        <span>系统设置</span>
-      </template>
-      
+  <PageContainer title="系统设置" description="管理网站配置、密码与上传">
+    <div class="content-card">
       <el-tabs v-model="activeTab">
         <el-tab-pane label="网站配置" name="site">
           <el-form :model="siteConfig" label-width="120px" style="max-width: 600px;">
@@ -22,7 +18,7 @@
             </el-form-item>
           </el-form>
         </el-tab-pane>
-        
+
         <el-tab-pane label="修改密码" name="password">
           <el-form ref="pwdFormRef" :model="pwdForm" :rules="pwdRules" label-width="120px" style="max-width: 600px;">
             <el-form-item label="原密码" prop="oldPassword">
@@ -39,7 +35,7 @@
             </el-form-item>
           </el-form>
         </el-tab-pane>
-        
+
         <el-tab-pane label="文件上传" name="upload">
           <el-form :model="uploadConfig" label-width="120px" style="max-width: 600px;">
             <el-form-item label="上传路径">
@@ -57,8 +53,8 @@
           </el-form>
         </el-tab-pane>
       </el-tabs>
-    </el-card>
-  </div>
+    </div>
+  </PageContainer>
 </template>
 
 <script setup>
@@ -66,6 +62,7 @@ import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
 import authApi from '@/api/auth'
 import request from '@/api/request'
+import PageContainer from '@/components/PageContainer.vue'
 
 const activeTab = ref('site')
 const pwdFormRef = ref()
@@ -146,5 +143,42 @@ const handleSaveUpload = async () => {
 </script>
 
 <style scoped>
-.settings-page { max-width: 900px; }
+.content-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+:deep(.el-input__wrapper) {
+  border-radius: var(--radius-md);
+  transition: box-shadow var(--transition-base);
+}
+:deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px var(--color-primary) inset, 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+:deep(.el-textarea__inner) {
+  border-radius: var(--radius-md);
+  transition: box-shadow var(--transition-base);
+}
+:deep(.el-textarea__inner:focus) {
+  box-shadow: 0 0 0 1px var(--color-primary) inset, 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+:deep(.el-tabs__item) {
+  font-size: var(--font-base);
+  font-weight: 500;
+}
+:deep(.el-tabs__active-bar) {
+  background: var(--gradient-primary);
+  height: 3px;
+  border-radius: var(--radius-full);
+}
+:deep(.el-tabs__item.is-active) {
+  color: var(--color-primary);
+}
+:deep(.el-tabs__item:hover) {
+  color: var(--color-primary-light);
+}
 </style>

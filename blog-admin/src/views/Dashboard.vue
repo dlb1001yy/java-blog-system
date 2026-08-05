@@ -3,8 +3,8 @@
     <!-- 统计卡片 -->
     <el-row :gutter="20" class="stat-row">
       <el-col :xs="12" :sm="6">
-        <div class="stat-card">
-          <div class="stat-icon" style="background: #409eff;">
+        <div class="stat-card stat-card--primary">
+          <div class="stat-icon">
             <el-icon :size="28"><Document /></el-icon>
           </div>
           <div class="stat-info">
@@ -14,8 +14,8 @@
         </div>
       </el-col>
       <el-col :xs="12" :sm="6">
-        <div class="stat-card">
-          <div class="stat-icon" style="background: #67c23a;">
+        <div class="stat-card stat-card--secondary">
+          <div class="stat-icon">
             <el-icon :size="28"><View /></el-icon>
           </div>
           <div class="stat-info">
@@ -25,8 +25,8 @@
         </div>
       </el-col>
       <el-col :xs="12" :sm="6">
-        <div class="stat-card">
-          <div class="stat-icon" style="background: #e6a23c;">
+        <div class="stat-card stat-card--warning">
+          <div class="stat-icon">
             <el-icon :size="28"><ChatDotRound /></el-icon>
           </div>
           <div class="stat-info">
@@ -36,8 +36,8 @@
         </div>
       </el-col>
       <el-col :xs="12" :sm="6">
-        <div class="stat-card">
-          <div class="stat-icon" style="background: #f56c6c;">
+        <div class="stat-card stat-card--danger">
+          <div class="stat-icon">
             <el-icon :size="28"><Star /></el-icon>
           </div>
           <div class="stat-info">
@@ -51,39 +51,37 @@
     <!-- 图表区域 -->
     <el-row :gutter="20">
       <el-col :xs="24" :lg="16">
-        <el-card shadow="hover">
-          <template #header>
-            <span>近7天文章发布趋势</span>
-          </template>
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">近7天文章发布趋势</span>
+          </div>
           <div ref="trendChartRef" style="height: 320px;"></div>
-        </el-card>
+        </div>
       </el-col>
       <el-col :xs="24" :lg="8">
-        <el-card shadow="hover">
-          <template #header>
-            <span>文章类型分布</span>
-          </template>
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">文章类型分布</span>
+          </div>
           <div ref="typeChartRef" style="height: 320px;"></div>
-        </el-card>
+        </div>
       </el-col>
     </el-row>
 
-    <el-row :gutter="20" style="margin-top: 20px;">
+    <el-row :gutter="20" class="chart-row">
       <el-col :xs="24" :lg="12">
-        <el-card shadow="hover">
-          <template #header>
-            <span>分类文章统计</span>
-          </template>
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">分类文章统计</span>
+          </div>
           <div ref="categoryChartRef" style="height: 320px;"></div>
-        </el-card>
+        </div>
       </el-col>
       <el-col :xs="24" :lg="12">
-        <el-card shadow="hover">
-          <template #header>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span>待处理事项</span>
-            </div>
-          </template>
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">待处理事项</span>
+          </div>
           <div class="todo-list">
             <div class="todo-item" @click="$router.push('/comment')">
               <el-icon><ChatDotRound /></el-icon>
@@ -106,7 +104,7 @@
               <el-badge :value="stats.todayArticleCount || 0" :max="99" />
             </div>
           </div>
-        </el-card>
+        </div>
       </el-col>
     </el-row>
   </div>
@@ -147,24 +145,24 @@ const fetchTrend = async () => {
       type: 'category',
       data: res.data.map(item => item.date),
       axisLine: { lineStyle: { color: '#dcdfe6' } },
-      axisLabel: { color: '#606266' }
+      axisLabel: { color: '#94A3B8' }
     },
     yAxis: {
       type: 'value',
       axisLine: { show: false },
-      axisLabel: { color: '#606266' },
-      splitLine: { lineStyle: { color: '#f0f0f0' } }
+      axisLabel: { color: '#94A3B8' },
+      splitLine: { lineStyle: { color: '#F1F5F9' } }
     },
     series: [{
       name: '发布文章',
       type: 'line',
       smooth: true,
       data: res.data.map(item => item.count),
-      itemStyle: { color: '#409eff' },
+      itemStyle: { color: '#6366F1' },
       areaStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: 'rgba(64, 158, 255, 0.3)' },
-          { offset: 1, color: 'rgba(64, 158, 255, 0.01)' }
+          { offset: 0, color: 'rgba(99, 102, 241, 0.3)' },
+          { offset: 1, color: 'rgba(99, 102, 241, 0.01)' }
         ])
       }
     }]
@@ -187,9 +185,9 @@ const fetchTypeStats = async () => {
       label: { show: false },
       emphasis: { label: { show: true, fontSize: 18, fontWeight: 'bold' } },
       data: [
-        { value: res.data.original, name: '原创', itemStyle: { color: '#409eff' } },
-        { value: res.data.reproduced, name: '转载', itemStyle: { color: '#e6a23c' } },
-        { value: res.data.translated, name: '翻译', itemStyle: { color: '#67c23a' } }
+        { value: res.data.original, name: '原创', itemStyle: { color: '#6366F1' } },
+        { value: res.data.reproduced, name: '转载', itemStyle: { color: '#F59E0B' } },
+        { value: res.data.translated, name: '翻译', itemStyle: { color: '#10B981' } }
       ]
     }]
   })
@@ -207,16 +205,16 @@ const fetchCategoryStats = async () => {
     xAxis: {
       type: 'category',
       data: res.data.map(item => item.name),
-      axisLabel: { color: '#606266', rotate: 30 }
+      axisLabel: { color: '#94A3B8', rotate: 30 }
     },
-    yAxis: { type: 'value', axisLabel: { color: '#606266' } },
+    yAxis: { type: 'value', axisLabel: { color: '#94A3B8' } },
     series: [{
       type: 'bar',
       data: res.data.map(item => item.count),
       itemStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: '#409eff' },
-          { offset: 1, color: '#79bbff' }
+          { offset: 0, color: '#6366F1' },
+          { offset: 1, color: '#818CF8' }
         ]),
         borderRadius: [4, 4, 0, 0]
       },
@@ -247,76 +245,149 @@ onMounted(() => {
 }
 
 .stat-row {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
+}
+
+.chart-row {
+  margin-top: var(--space-5);
 }
 
 .stat-card {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 20px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  color: #fff;
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .stat-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-card--primary {
+  background: linear-gradient(135deg, #6366F1, #818CF8);
+}
+
+.stat-card--secondary {
+  background: linear-gradient(135deg, #06B6D4, #22D3EE);
+}
+
+.stat-card--warning {
+  background: linear-gradient(135deg, #F59E0B, #FBBF24);
+}
+
+.stat-card--danger {
+  background: linear-gradient(135deg, #EC4899, #F472B6);
 }
 
 .stat-icon {
-  width: 56px;
-  height: 56px;
+  position: relative;
+  z-index: 1;
+  width: 48px;
+  height: 48px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
   color: #fff;
 }
 
 .stat-info {
+  position: relative;
+  z-index: 1;
   flex: 1;
 }
 
 .stat-label {
-  font-size: 14px;
-  color: #909399;
-  margin-bottom: 4px;
+  font-size: var(--font-sm);
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: var(--space-1);
 }
 
 .stat-value {
-  font-size: 28px;
+  font-size: var(--font-3xl);
   font-weight: 700;
-  color: #303133;
+  color: #fff;
+}
+
+.chart-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+  transition: all var(--transition-base);
+  border: 1px solid transparent;
+}
+
+.chart-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-color);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.chart-title {
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .todo-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .todo-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background: #f5f7fa;
-  border-radius: 8px;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all var(--transition-base);
+  border: 1px solid transparent;
 }
 
 .todo-item:hover {
-  background: #ecf5ff;
+  background: var(--el-color-primary-light-9);
+  border-color: var(--el-color-primary-light-7);
   transform: translateX(4px);
+}
+
+.todo-item .el-icon {
+  color: var(--color-primary);
+  font-size: 20px;
 }
 
 .todo-text {
   flex: 1;
-  font-size: 14px;
-  color: #606266;
+  font-size: var(--font-base);
+  color: var(--text-regular);
+  font-weight: 500;
 }
 </style>

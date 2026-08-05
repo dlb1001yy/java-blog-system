@@ -1,8 +1,8 @@
 <template>
   <div class="header-container">
     <div class="header-left">
-      <el-icon 
-        class="collapse-btn" 
+      <el-icon
+        class="collapse-btn"
         @click="appStore.toggleSidebar"
       >
         <Fold v-if="!appStore.sidebarCollapsed" />
@@ -13,20 +13,20 @@
         <el-breadcrumb-item v-if="currentTitle">{{ currentTitle }}</el-breadcrumb-item>
       </el-breadcrumb>
     </div>
-    
+
     <div class="header-right">
       <el-tooltip content="刷新页面" placement="bottom">
         <el-icon class="header-icon" @click="handleRefresh">
           <Refresh />
         </el-icon>
       </el-tooltip>
-      
+
       <el-tooltip content="全屏" placement="bottom">
         <el-icon class="header-icon" @click="toggleFullscreen">
           <FullScreen />
         </el-icon>
       </el-tooltip>
-      
+
       <el-dropdown @command="handleCommand">
         <span class="user-info">
           <el-avatar :size="32" :src="userStore.userInfo.avatar">
@@ -60,7 +60,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { 
+import {
   Fold, Expand, ArrowDown, Refresh, FullScreen,
   User, Setting, SwitchButton
 } from '@element-plus/icons-vue'
@@ -114,55 +114,89 @@ const handleCommand = (command) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 60px;
-  padding: 0 20px;
-  background: #fff;
-  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  height: 64px;
+  padding: 0 var(--space-6);
+  background: transparent;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .collapse-btn {
   font-size: 20px;
   cursor: pointer;
-  color: #5a5e66;
-  transition: color 0.3s;
+  color: var(--text-regular);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
 }
 
 .collapse-btn:hover {
-  color: #409eff;
+  background: var(--bg-subtle);
+  color: var(--color-primary);
+}
+
+:deep(.el-breadcrumb__item) {
+  font-size: var(--font-base);
+}
+
+:deep(.el-breadcrumb__inner.is-link) {
+  color: var(--text-regular);
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: var(--space-3);
 }
 
 .header-icon {
   font-size: 18px;
   cursor: pointer;
-  color: #5a5e66;
-  transition: color 0.3s;
+  color: var(--text-regular);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
 }
 
 .header-icon:hover {
-  color: #409eff;
+  background: var(--bg-subtle);
+  color: var(--color-primary);
+  transform: translateY(-1px);
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   cursor: pointer;
-  color: #606266;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-base);
+}
+
+.user-info:hover {
+  background: var(--bg-subtle);
 }
 
 .username {
-  font-size: 14px;
+  font-size: var(--font-base);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+:deep(.el-avatar) {
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
 }
 </style>

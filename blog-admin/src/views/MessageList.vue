@@ -1,6 +1,6 @@
 <template>
-  <div class="message-list">
-    <el-card class="search-card">
+  <PageContainer title="留言管理" description="审核访客留言">
+    <div class="search-card">
       <el-form :inline="true" :model="searchForm">
         <el-form-item label="状态">
           <el-select v-model="searchForm.status" placeholder="请选择" clearable>
@@ -13,10 +13,10 @@
           <el-button type="primary" @click="handleSearch">查询</el-button>
         </el-form-item>
       </el-form>
-    </el-card>
+    </div>
 
-    <el-card>
-      <el-table :data="tableData" v-loading="loading" border>
+    <div class="table-card">
+      <el-table :data="tableData" v-loading="loading" :border="false" stripe>
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="nickname" label="昵称" width="120" />
         <el-table-column prop="email" label="邮箱" width="200" show-overflow-tooltip />
@@ -36,7 +36,7 @@
         </el-table-column>
       </el-table>
 
-      <div class="pagination-wrapper">
+      <div class="pagination-wrap">
         <el-pagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
@@ -45,14 +45,15 @@
           @current-change="fetchData"
         />
       </div>
-    </el-card>
-  </div>
+    </div>
+  </PageContainer>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import messageApi from '@/api/message'
+import PageContainer from '@/components/PageContainer.vue'
 
 const loading = ref(false)
 const tableData = ref([])
@@ -110,6 +111,34 @@ onMounted(() => fetchData())
 </script>
 
 <style scoped>
-.search-card { margin-bottom: 16px; }
-.pagination-wrapper { display: flex; justify-content: flex-end; margin-top: 16px; }
+.search-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+:deep(.el-form--inline .el-form-item) { margin-bottom: 0; }
+
+.table-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+:deep(.el-table) { border-radius: var(--radius-md); }
+:deep(.el-table th.el-table__cell) { background: var(--bg-subtle); color: var(--text-regular); font-weight: 600; }
+:deep(.el-table tr) { transition: background var(--transition-base); }
+:deep(.el-table__row:hover > td.el-table__cell) { background: var(--el-color-primary-light-9) !important; }
+:deep(.el-table .el-table__cell) { border-bottom: 1px solid var(--border-color); }
+:deep(.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell) { background: var(--bg-subtle); }
+
+.pagination-wrap { display: flex; justify-content: flex-end; margin-top: var(--space-5); }
+
+:deep(.el-dialog) { border-radius: var(--radius-lg); overflow: hidden; }
+:deep(.el-dialog__header) { padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--border-color); margin-right: 0; }
+:deep(.el-dialog__body) { padding: var(--space-5); }
+:deep(.el-dialog__footer) { padding: var(--space-4) var(--space-5); border-top: 1px solid var(--border-color); }
 </style>

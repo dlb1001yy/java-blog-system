@@ -2,9 +2,9 @@
   <el-menu
     :default-active="activeMenu"
     :collapse="isCollapse"
-    background-color="#304156"
-    text-color="#bfcbd9"
-    active-text-color="#409EFF"
+    background-color="transparent"
+    text-color="rgba(255,255,255,0.65)"
+    active-text-color="#FFFFFF"
     router
     class="sidebar-menu"
   >
@@ -48,9 +48,36 @@ const activeMenu = computed(() => route.path)
 .sidebar-menu {
   height: 100%;
   border-right: none;
+  padding: var(--space-2);
 }
 
 .sidebar-menu:not(.el-menu--collapse) {
   width: 220px;
+}
+
+:deep(.el-menu-item) {
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-1);
+  height: 44px;
+  line-height: 44px;
+  color: rgba(255, 255, 255, 0.65);
+  transition: all var(--transition-base);
+}
+
+:deep(.el-menu-item:hover) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+:deep(.el-menu-item.is-active) {
+  background: var(--gradient-primary);
+  color: #fff;
+  box-shadow: var(--shadow-primary);
+  font-weight: 600;
+}
+
+:deep(.el-menu--collapse) .el-menu-item {
+  width: 100%;
+  border-radius: var(--radius-md);
 }
 </style>
