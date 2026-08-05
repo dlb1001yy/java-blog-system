@@ -1,0 +1,22 @@
+package com.dlbyy.blog.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.dlbyy.blog.entity.Article;
+
+import java.util.List;
+import java.util.Map;
+
+public interface ArticleService extends IService<Article> {
+    
+    void fillArticleInfo(Article article);
+    
+    void incrementViewCount(Long id);
+    
+    void incrementLikeCount(Long id);
+    
+    void saveArticleTags(Long articleId, List<Long> tagIds);
+    
+    void updateArticleTags(Long articleId, List<Long> tagIds);
+    
+    List<Map<String, Object>> getArchives();
+}

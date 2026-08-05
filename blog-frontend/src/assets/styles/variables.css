@@ -1,0 +1,7 @@
+/* 专属变量扩展文件，可在此覆盖或新增 global.css 中的变量 */
+:root {
+  --header-height: 64px;
+  --footer-height: 60px;
+  --sidebar-width: 300px;
+  --max-width: 1200px;
+}

@@ -1,0 +1,52 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "首页",
+        "enablePullDownRefresh": true,
+        "backgroundColor": "#f5f7fa"
+      }
+    },
+    {
+      "path": "pages/article/detail",
+      "style": {
+        "navigationBarTitleText": "文章详情",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/resume/index",
+      "style": {
+        "navigationBarTitleText": "个人简历",
+        "backgroundColor": "#f5f7fa"
+      }
+    },
+    {
+      "path": "pages/mine/index",
+      "style": {
+        "navigationBarTitleText": "我的",
+        "backgroundColor": "#f5f7fa"
+      }
+    },
+    {
+      "path": "pages/mine/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "Java码农笔记",
+    "navigationBarBackgroundColor": "#409eff",
+    "backgroundColor": "#f5f7fa"
+  },
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^ArticleItem": "@/components/ArticleItem.vue"
+    }
+  }
+}

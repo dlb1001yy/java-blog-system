@@ -1,0 +1,80 @@
+<template>
+  <svg
+    :width="size"
+    :height="size"
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    class="logo-icon"
+  >
+    <!-- 咖啡杯主体 -->
+    <path
+      d="M12 14h20v20c0 4.418-3.582 8-8 8h-4c-4.418 0-8-3.582-8-8V14z"
+      fill="url(#cupGradient)"
+    />
+    <!-- 咖啡杯把手 -->
+    <path
+      d="M32 18h4c2.209 0 4 1.791 4 4v2c0 2.209-1.791 4-4 4h-4"
+      stroke="url(#handleGradient)"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      fill="none"
+    />
+    <!-- 咖啡蒸汽 -->
+    <path
+      d="M18 10c0-2 1-3 2-3s2 1 2 3M24 8c0-2 1-3 2-3s2 1 2 3"
+      stroke="#409eff"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      fill="none"
+      opacity="0.7"
+    />
+    <!-- 代码符号 { } -->
+    <text
+      x="22"
+      y="30"
+      font-family="monospace"
+      font-size="12"
+      font-weight="bold"
+      fill="#ffffff"
+      text-anchor="middle"
+    >{'{'}
+    </text>
+    <text
+      x="22"
+      y="38"
+      font-family="monospace"
+      font-size="12"
+      font-weight="bold"
+      fill="#ffffff"
+      text-anchor="middle"
+    >{'}'}
+    </text>
+    <!-- 渐变定义 -->
+    <defs>
+      <linearGradient id="cupGradient" x1="12" y1="14" x2="32" y2="42" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#409eff" />
+        <stop offset="1" stop-color="#1a73e8" />
+      </linearGradient>
+      <linearGradient id="handleGradient" x1="32" y1="18" x2="40" y2="28" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#409eff" />
+        <stop offset="1" stop-color="#1a73e8" />
+      </linearGradient>
+    </defs>
+  </svg>
+</template>
+
+<script setup>
+defineProps({
+  size: {
+    type: Number,
+    default: 28
+  }
+})
+</script>
+
+<style scoped>
+.logo-icon {
+  display: block;
+}
+</style>

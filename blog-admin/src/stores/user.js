@@ -1,0 +1,42 @@
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+import authApi from '@/api/auth'
+
+export const useUserStore = defineStore('user', () => {
+  const token = ref(localStorage.getItem('admin_token') || '')
+  const username = ref(localStorage.getItem('admin_username') || '')
+  const userInfo = ref({})
+
+  const login = async (loginForm) => {
+    const res = await authApi.login(loginForm)
+    token.value = res.data.token
+    username.value = res.data.username
+    localStorage.setItem('admin_token', res.data.token)
+    localStorage.setItem('admin_username', res.data.username)
+    return res
+  }
+
+  const logout = () => {
+    token.value = ''
+    username.value = ''
+    userInfo.value = {}
+    localStorage.removeItem('admin_token')
+    localStorage.removeItem('admin_username')
+  }
+
+  const getUserInfo = async () => {
+    if (!token.value) return
+    const res = await authApi.getUserInfo()
+    userInfo.value = res.data
+    return res
+  }
+
+  return {
+    token,
+    username,
+    userInfo,
+    login,
+    logout,
+    getUserInfo
+  }
+})
