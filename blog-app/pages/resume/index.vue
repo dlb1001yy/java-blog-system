@@ -24,6 +24,24 @@
       </view>
     </view>
 
+    <!-- 基本信息 -->
+    <view class="section" v-if="genderText || age || maritalText || resume.workYears != null || resume.highestEducation || jobSearchText || resume.expectedSalary || resume.hukou">
+      <view class="section-title">
+        <Icon name="user" :size="18" :color="colors.primary" />
+        <text>基本信息</text>
+      </view>
+      <view class="info-grid">
+        <view class="info-item" v-if="genderText"><text class="info-label">性别</text><text class="info-value">{{ genderText }}</text></view>
+        <view class="info-item" v-if="age"><text class="info-label">年龄</text><text class="info-value">{{ age }}</text></view>
+        <view class="info-item" v-if="maritalText"><text class="info-label">婚姻</text><text class="info-value">{{ maritalText }}</text></view>
+        <view class="info-item" v-if="resume.workYears != null"><text class="info-label">工作年限</text><text class="info-value">{{ resume.workYears }}年</text></view>
+        <view class="info-item" v-if="resume.highestEducation"><text class="info-label">最高学历</text><text class="info-value">{{ resume.highestEducation }}</text></view>
+        <view class="info-item" v-if="jobSearchText"><text class="info-label">求职状态</text><text class="info-value">{{ jobSearchText }}</text></view>
+        <view class="info-item" v-if="resume.expectedSalary"><text class="info-label">期望薪资</text><text class="info-value">{{ resume.expectedSalary }}</text></view>
+        <view class="info-item" v-if="resume.hukou"><text class="info-label">户籍</text><text class="info-value">{{ resume.hukou }}</text></view>
+      </view>
+    </view>
+
     <!-- 个人简介 -->
     <view class="section" v-if="resume.summary">
       <view class="section-title">
@@ -31,6 +49,15 @@
         <text>个人简介</text>
       </view>
       <text class="section-content">{{ resume.summary }}</text>
+    </view>
+
+    <!-- 自我评价 -->
+    <view class="section" v-if="resume.selfEvaluation">
+      <view class="section-title">
+        <Icon name="edit" :size="18" :color="colors.primary" />
+        <text>自我评价</text>
+      </view>
+      <text class="section-content">{{ resume.selfEvaluation }}</text>
     </view>
 
     <!-- 技能特长（彩色标签云） -->
@@ -110,8 +137,36 @@
       </view>
     </view>
 
+    <!-- 证书荣誉 -->
+    <view class="section" v-if="certificates.length">
+      <view class="section-title">
+        <Icon name="document" :size="18" :color="colors.primary" />
+        <text>证书荣誉</text>
+      </view>
+      <view class="timeline">
+        <view class="timeline-item" v-for="(cert, index) in certificates" :key="index">
+          <text class="timeline-title">{{ cert.name }}</text>
+          <view class="timeline-date" v-if="cert.date">
+            <Icon name="clock" :size="12" :color="colors.textTertiary" />
+            <text>{{ cert.date }}</text>
+          </view>
+          <text class="timeline-sub" v-if="cert.issuer">{{ cert.issuer }}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 兴趣爱好 -->
+    <view class="section" v-if="resume.interests">
+      <view class="section-title">
+        <Icon name="edit" :size="18" :color="colors.primary" />
+        <text>兴趣爱好</text>
+      </view>
+      <text class="section-content">{{ resume.interests }}</text>
+    </view>
+
     <TabBar current="/pages/resume/index" />
   </view>
+  <view v-else class="empty-state"><text>暂无简历信息</text></view>
 </template>
 
 <script setup>
@@ -154,6 +209,32 @@ const education = computed(() => {
   try { return JSON.parse(resume.value.education) } catch { return [] }
 })
 
+const certificates = computed(() => {
+  if (!resume.value?.certificates) return []
+  try { return JSON.parse(resume.value.certificates) } catch { return [] }
+})
+const genderText = computed(() => {
+  const g = resume.value?.gender
+  return g === 0 ? '男' : g === 1 ? '女' : ''
+})
+const maritalText = computed(() => {
+  const m = resume.value?.maritalStatus
+  return m === 0 ? '未婚' : m === 1 ? '已婚' : m === 2 ? '离异' : ''
+})
+const jobSearchText = computed(() => {
+  const s = resume.value?.jobSearchStatus
+  return s === 0 ? '离职-随时到岗' : s === 1 ? '在职-暂不流动' : s === 2 ? '在职-考虑机会' : ''
+})
+const age = computed(() => {
+  if (!resume.value?.birthDate) return ''
+  const birth = new Date(resume.value.birthDate)
+  const now = new Date()
+  let a = now.getFullYear() - birth.getFullYear()
+  const m = now.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) a--
+  return a > 0 ? a + '岁' : ''
+})
+
 // 根据 level 文案返回技能标签颜色类名
 // 精通/熟练 → 主色，掌握/良好 → 辅色，其他 → 强调色
 const getSkillColor = (level) => {
@@ -167,7 +248,7 @@ const getSkillColor = (level) => {
 onLoad(async () => {
   try {
     const res = await api.getResume()
-    resume.value = res.data
+    resume.value = res.data || null
   } catch (e) {
     uni.showToast({ title: '简历加载失败', icon: 'none' })
   }
@@ -411,6 +492,45 @@ onLoad(async () => {
         border-radius: $radius-full;
         font-size: 11px;
       }
+    }
+  }
+}
+
+/* === 空状态 === */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: $color-text-tertiary;
+  font-size: 14px;
+}
+
+/* === 基本信息 grid === */
+.info-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: #F8FAFC;
+    border-radius: $radius-md;
+    padding: 8px 12px;
+    min-width: 80px;
+
+    .info-label {
+      font-size: 11px;
+      color: $color-text-tertiary;
+    }
+
+    .info-value {
+      font-size: 13px;
+      font-weight: 500;
+      color: $color-text;
     }
   }
 }

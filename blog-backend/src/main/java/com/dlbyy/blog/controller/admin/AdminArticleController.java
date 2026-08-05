@@ -3,16 +3,20 @@ package com.dlbyy.blog.controller.admin;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dlbyy.blog.common.Result;
+import com.dlbyy.blog.common.exception.BusinessException;
 import com.dlbyy.blog.entity.Article;
 import com.dlbyy.blog.service.ArticleService;
+import com.dlbyy.blog.service.MarkdownImportService;
 import com.dlbyy.blog.service.TagService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/admin/articles")
@@ -22,6 +26,7 @@ public class AdminArticleController {
 
     private final ArticleService articleService;
     private final TagService tagService;
+    private final MarkdownImportService markdownImportService;
 
     @GetMapping("/page")
     @Operation(summary = "分页查询文章")
@@ -151,6 +156,19 @@ public class AdminArticleController {
         article.setUpdateTime(LocalDateTime.now());
         articleService.updateById(article);
         return Result.success("操作成功", null);
+    }
+
+    @PostMapping("/import-markdown")
+    @Operation(summary = "导入 Markdown 文件解析为文章字段")
+    public Result<?> importMarkdown(@RequestParam("file") MultipartFile file) {
+        try {
+            Map<String, String> result = markdownImportService.importMarkdown(file);
+            return Result.success("导入成功", result);
+        } catch (BusinessException e) {
+            return Result.error(e.getMessage());
+        } catch (Exception e) {
+            return Result.error("导入失败");
+        }
     }
 
     @lombok.Data

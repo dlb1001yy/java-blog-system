@@ -151,3 +151,15 @@ VALUES ('admin', '$2a$10$Eblj1bNwQX5fZQvXQxQJZOVpO0ZQ7Q2LqXzQ8Q9Q0Q0Q0Q0Q0Q0Q', 
 INSERT INTO `blog_category` (`name`, `sort`) VALUES
                                                  ('Java基础', 1), ('Spring框架', 2), ('数据库', 3),
                                                  ('前端技术', 4), ('DevOps', 5), ('面试总结', 6);
+
+-- 简历信息表扩展字段（增量更新，旧数据不受影响）
+ALTER TABLE `resume_info`
+    ADD COLUMN `marital_status` tinyint DEFAULT NULL COMMENT '婚姻状况(0未婚 1已婚 2离异)' AFTER `gender`,
+    ADD COLUMN `work_years` int DEFAULT NULL COMMENT '工作年限' AFTER `marital_status`,
+    ADD COLUMN `expected_salary` varchar(50) DEFAULT NULL COMMENT '期望薪资' AFTER `work_years`,
+    ADD COLUMN `highest_education` varchar(20) DEFAULT NULL COMMENT '最高学历' AFTER `expected_salary`,
+    ADD COLUMN `job_search_status` tinyint DEFAULT NULL COMMENT '求职状态(0离职-随时到岗 1在职-暂不流动 2在职-考虑机会)' AFTER `highest_education`,
+    ADD COLUMN `hukou` varchar(100) DEFAULT NULL COMMENT '户籍所在地' AFTER `job_search_status`,
+    ADD COLUMN `self_evaluation` text COMMENT '自我评价' AFTER `summary`,
+    ADD COLUMN `certificates` text COMMENT '证书荣誉(JSON数组)' AFTER `projects`,
+    ADD COLUMN `interests` varchar(500) DEFAULT NULL COMMENT '兴趣爱好' AFTER `certificates`;

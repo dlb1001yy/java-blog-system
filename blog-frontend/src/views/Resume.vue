@@ -16,6 +16,16 @@
           <span><el-icon><Message /></el-icon> {{ resume.email }}</span>
           <span><el-icon><Location /></el-icon> {{ resume.address }}</span>
         </div>
+        <div class="basic-info">
+          <span v-if="genderText">{{ genderText }}</span>
+          <span v-if="age">{{ age }}</span>
+          <span v-if="maritalText">{{ maritalText }}</span>
+          <span v-if="resume.workYears != null">{{ resume.workYears }}年经验</span>
+          <span v-if="resume.highestEducation">{{ resume.highestEducation }}</span>
+          <span v-if="jobSearchText">{{ jobSearchText }}</span>
+          <span v-if="resume.expectedSalary">{{ resume.expectedSalary }}</span>
+          <span v-if="resume.hukou">户籍: {{ resume.hukou }}</span>
+        </div>
       </div>
     </div>
 
@@ -26,6 +36,12 @@
         个人简介
       </h2>
       <p class="summary-text" v-html="resume.summary"></p>
+    </div>
+
+    <!-- 自我评价 -->
+    <div class="card" v-if="resume.selfEvaluation">
+      <h2 class="section-title"><el-icon><EditPen /></el-icon>自我评价</h2>
+      <p class="summary-text" v-html="resume.selfEvaluation"></p>
     </div>
 
     <!-- 技能特长 -->
@@ -64,7 +80,7 @@
               <span class="timeline-date">{{ work.startDate }} - {{ work.endDate }}</span>
             </div>
             <p class="timeline-position">{{ work.position }}</p>
-            <p class="timeline-desc">{{ work.description }}</p>
+            <p class="summary-text" v-html="work.description"></p>
           </div>
         </div>
       </div>
@@ -83,7 +99,7 @@
             <span class="project-date">{{ project.date }}</span>
           </div>
           <p class="project-role">{{ project.role }}</p>
-          <p class="project-desc">{{ project.description }}</p>
+          <p class="summary-text" v-html="project.description"></p>
           <div class="project-tech" v-if="project.technologies">
             <el-tag 
               v-for="tech in project.technologies" 
@@ -120,6 +136,29 @@
       </div>
     </div>
 
+    <!-- 证书荣誉 -->
+    <div class="card" v-if="certificates.length">
+      <h2 class="section-title"><el-icon><Medal /></el-icon>证书荣誉</h2>
+      <div class="timeline">
+        <div class="timeline-item" v-for="(cert, index) in certificates" :key="index">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <h3>{{ cert.name }}</h3>
+              <span class="timeline-date">{{ cert.date }}</span>
+            </div>
+            <p class="timeline-position" v-if="cert.issuer">{{ cert.issuer }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 兴趣爱好 -->
+    <div class="card" v-if="resume.interests">
+      <h2 class="section-title"><el-icon><Star /></el-icon>兴趣爱好</h2>
+      <p class="summary-text">{{ resume.interests }}</p>
+    </div>
+
     <!-- 下载按钮 -->
     <div class="download-section">
       <el-button type="primary" size="large" :icon="Download" @click="downloadResume">
@@ -128,68 +167,16 @@
     </div>
     </div>
   </div>
+  <el-empty v-else description="暂无简历信息" />
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import {
   Phone, Message, Location, User, Cpu, Briefcase,
-  Folder, Reading, Download
+  Folder, Reading, Download, EditPen, Medal, Star
 } from '@element-plus/icons-vue'
 import articleApi from '@/api/article'
-
-// 默认示例数据（后端无数据时展示）
-const defaultResume = {
-  name: '张三',
-  jobTitle: 'Java开发工程师',
-  phone: '138-0000-0000',
-  email: 'zhangsan@example.com',
-  address: '北京市朝阳区',
-  avatar: '',
-  summary: '5年Java开发经验，熟练掌握Spring Boot、微服务架构、MySQL、Redis等技术栈。具备良好的编码习惯和团队协作能力，善于解决技术难题。',
-  skills: JSON.stringify([
-    { name: 'Java', level: '精通', percent: 90, color: '#67C23A' },
-    { name: 'Spring Boot', level: '精通', percent: 85, color: '#409EFF' },
-    { name: 'MySQL', level: '熟练', percent: 80, color: '#E6A23C' },
-    { name: 'Redis', level: '熟练', percent: 75, color: '#F56C6C' },
-    { name: 'Vue.js', level: '熟悉', percent: 70, color: '#909399' }
-  ]),
-  workExperience: JSON.stringify([
-    {
-      company: 'ABC科技有限公司',
-      position: '高级Java开发工程师',
-      startDate: '2021-03',
-      endDate: '至今',
-      description: '负责核心业务系统的架构设计和开发，优化系统性能，带领小组完成多个重要项目。'
-    },
-    {
-      company: 'XYZ互联网公司',
-      position: 'Java开发工程师',
-      startDate: '2019-07',
-      endDate: '2021-02',
-      description: '参与电商平台的开发与维护，负责订单模块、支付模块的功能迭代。'
-    }
-  ]),
-  projects: JSON.stringify([
-    {
-      name: '企业级博客系统',
-      role: '核心开发',
-      date: '2023-01',
-      description: '基于Spring Boot + Vue.js开发的全栈博客系统，支持文章管理、评论、标签分类等功能。',
-      technologies: ['Spring Boot', 'Vue.js', 'MySQL', 'Redis', 'MyBatis-Plus']
-    }
-  ]),
-  education: JSON.stringify([
-    {
-      school: '某某大学',
-      major: '计算机科学与技术',
-      degree: '本科',
-      startDate: '2015-09',
-      endDate: '2019-06',
-      description: ''
-    }
-  ])
-}
 
 const resume = ref(null)
 
@@ -229,14 +216,38 @@ const education = computed(() => {
   }
 })
 
+const certificates = computed(() => {
+  if (!resume.value?.certificates) return []
+  try { return JSON.parse(resume.value.certificates) } catch { return [] }
+})
+const genderText = computed(() => {
+  const g = resume.value?.gender
+  return g === 0 ? '男' : g === 1 ? '女' : ''
+})
+const maritalText = computed(() => {
+  const m = resume.value?.maritalStatus
+  return m === 0 ? '未婚' : m === 1 ? '已婚' : m === 2 ? '离异' : ''
+})
+const jobSearchText = computed(() => {
+  const s = resume.value?.jobSearchStatus
+  return s === 0 ? '离职-随时到岗' : s === 1 ? '在职-暂不流动' : s === 2 ? '在职-考虑机会' : ''
+})
+const age = computed(() => {
+  if (!resume.value?.birthDate) return ''
+  const birth = new Date(resume.value.birthDate)
+  const now = new Date()
+  let a = now.getFullYear() - birth.getFullYear()
+  const m = now.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) a--
+  return a > 0 ? a + '岁' : ''
+})
+
 const fetchResume = async () => {
   try {
     const res = await articleApi.getResume()
-    // 如果后端返回空数据，使用示例数据
-    resume.value = res.data || defaultResume
+    resume.value = res.data || null
   } catch {
-    // 请求失败也使用示例数据
-    resume.value = defaultResume
+    resume.value = null
   }
 }
 
@@ -464,5 +475,20 @@ onMounted(() => {
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+.basic-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+.basic-info span {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  font-size: 13px;
 }
 </style>
