@@ -80,8 +80,8 @@
           >
             <text class="related-title">{{ item.title }}</text>
             <image
-              v-if="item.coverImage"
-              :src="item.coverImage"
+              v-if="resolveFileUrl(item.coverImage)"
+              :src="resolveFileUrl(item.coverImage)"
               class="related-cover"
               mode="aspectFill"
             />
@@ -105,6 +105,7 @@
 import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import api from '@/common/api.js'
+import { resolveFileUrl } from '@/common/config.js'
 import { parseMarkdown } from '@/utils/markdown.js'
 import Icon from '@/components/Icon.vue'
 import Skeleton from '@/components/Skeleton.vue'

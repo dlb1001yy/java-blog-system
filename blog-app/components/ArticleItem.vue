@@ -2,13 +2,14 @@
   <view class="article-item" @click="goDetail">
     <!-- 封面图（若有） -->
     <image
-      v-if="article.coverImage"
-      :src="article.coverImage"
+      v-if="coverUrl && !coverError"
+      :src="coverUrl"
       class="cover"
       mode="aspectFill"
+      @error="coverError = true"
     />
     <!-- 内容区 -->
-    <view :class="['content', article.coverImage ? '' : 'full']">
+    <view :class="['content', (coverUrl && !coverError) ? '' : 'full']">
       <!-- 顶部 meta 行：类型徽章 + 日期 -->
       <view class="meta">
         <text :class="['badge', `type-${article.type}`]">{{ typeMap[article.type] }}</text>
@@ -41,10 +42,18 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { resolveFileUrl } from '@/common/config.js'
 
 const props = defineProps({ article: Object })
 const emit = defineEmits(['click'])
+
+// 封面图加载失败标记：article 切换时重置，失败后回退纯文本布局
+const coverError = ref(false)
+watch(() => props.article?.id, () => { coverError.value = false })
+
+// 封面 URL：相对路径拼接服务器 origin，完整 URL 原样返回
+const coverUrl = computed(() => resolveFileUrl(props.article?.coverImage))
 
 // 文章类型映射
 const typeMap = { 0: '原创', 1: '转载', 2: '翻译' }
