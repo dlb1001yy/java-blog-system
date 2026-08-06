@@ -20,6 +20,13 @@ spring:
       database: 5
       password: 123456
       timeout: 3000ms
+    elasticsearch:
+      repositories:
+        enabled: true
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 5s
+    socket-timeout: 30s
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
@@ -44,11 +51,26 @@ jwt:
   header: Authorization
   prefix: "Bearer "
 
-# 文件上传路径
+# 文件上传路径（旧版 FileUtils 使用，保持向后兼容）
 file:
   upload-path: D:\\my-project\\java-blog-system\\blog-backend\\uploads\\
   allowed-types: jpg,jpeg,png,gif,webp,md,markdown
   max-size: 10485760  # 10MB
+
+# 文件存储策略配置（策略模式，通过 storage.type 切换）
+storage:
+  type: local  # local | oss
+  local:
+    upload-path: D:\\my-project\\java-blog-system\\blog-backend\\uploads\\
+    url-prefix: /uploads/
+    allowed-types: jpg,jpeg,png,gif,webp,md,markdown
+    max-size: 10485760  # 10MB
+  oss:
+    endpoint: oss-cn-hangzhou.aliyuncs.com
+    access-key-id: your-access-key-id
+    access-key-secret: your-access-key-secret
+    bucket-name: your-bucket-name
+    url-prefix: https://your-bucket-name.oss-cn-hangzhou.aliyuncs.com/
 
 # 网站配置
 blog:

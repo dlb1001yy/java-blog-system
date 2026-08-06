@@ -20,6 +20,8 @@
 		<mybatis-plus.version>3.5.5</mybatis-plus.version>
 		<jjwt.version>0.11.5</jjwt.version>
 		<hutool.version>5.8.22</hutool.version>
+		<aliyun-oss.version>3.17.4</aliyun-oss.version>
+		<jsoup.version>1.17.2</jsoup.version>
 	</properties>
 
 	<dependencies>
@@ -43,6 +45,10 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-elasticsearch</artifactId>
 		</dependency>
 
 		<!-- MyBatis Plus -->
@@ -97,6 +103,20 @@
 			<groupId>com.github.xiaoymin</groupId>
 			<artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
 			<version>4.3.0</version>
+		</dependency>
+
+		<!-- Aliyun OSS SDK -->
+		<dependency>
+			<groupId>com.aliyun.oss</groupId>
+			<artifactId>aliyun-sdk-oss</artifactId>
+			<version>${aliyun-oss.version}</version>
+		</dependency>
+
+		<!-- Jsoup (XSS 过滤) -->
+		<dependency>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>${jsoup.version}</version>
 		</dependency>
 	</dependencies>
 

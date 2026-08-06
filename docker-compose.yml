@@ -50,6 +50,33 @@ services:
       retries: 5
       start_period: 10s
 
+  # ========== Elasticsearch 全文检索 ==========
+  elasticsearch:
+    build:
+      context: ./elasticsearch
+      dockerfile: Dockerfile
+    image: blog-elasticsearch:8.11.1-ik
+    container_name: blog-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - TZ=Asia/Shanghai
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - blog-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"\\(green\\|yellow\\)\"' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
   # ========== 后端服务 ==========
   blog-backend:
     build:
@@ -63,6 +90,8 @@ services:
       mysql:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      elasticsearch:
         condition: service_healthy
     ports:
       - "8080:8080"
@@ -117,6 +146,8 @@ volumes:
     name: blog_redis_data
   uploads_data:
     name: blog_uploads_data
+  es_data:
+    name: blog_es_data
 
 # ========== 网络 ==========
 networks:

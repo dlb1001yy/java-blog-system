@@ -4,6 +4,8 @@ package com.dlbyy.blog.common.exception;
 import com.dlbyy.blog.common.Result;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -27,6 +29,16 @@ public class GlobalExceptionHandler {
     public Result<?> handleBusinessException(BusinessException e, HttpServletRequest request) {
         log.error("业务异常 | uri={} | msg={}", request.getRequestURI(), e.getMessage());
         return Result.error(e.getCode(), e.getMessage());
+    }
+
+    /**
+     * 限流异常：返回 HTTP 429 Too Many Requests
+     */
+    @ExceptionHandler(RateLimitException.class)
+    public ResponseEntity<Result<?>> handleRateLimitException(RateLimitException e, HttpServletRequest request) {
+        log.warn("接口限流 | uri={} | msg={}", request.getRequestURI(), e.getMessage());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(Result.error(429, e.getMessage()));
     }
 
     /**

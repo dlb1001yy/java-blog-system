@@ -1,58 +1,48 @@
 package com.dlbyy.blog.security;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
+import com.dlbyy.blog.utils.JwtUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
-import java.util.Date;
-
+/**
+ * JWT Token Provider（委托 {@link JwtUtils} 实现双 Token 生成与校验）
+ */
 @Component
+@RequiredArgsConstructor
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret}")
-    private String jwtSecret;
+    private final JwtUtils jwtUtils;
 
-    @Value("${jwt.expiration}")
-    private long jwtExpiration;
-
-    private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    /**
+     * 生成 AccessToken（兼容旧调用，等价于 generateAccessToken）
+     */
+    public String generateToken(Authentication authentication) {
+        return generateAccessToken(authentication);
     }
 
-    public String generateToken(Authentication authentication) {
+    /**
+     * 生成 AccessToken（30 分钟）
+     */
+    public String generateAccessToken(Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        Date expiryDate = new Date(new Date().getTime() + jwtExpiration);
+        return jwtUtils.generateAccessToken(userDetails.getUsername());
+    }
 
-        return Jwts.builder()
-                .setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date())
-                .setExpiration(expiryDate)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
-                .compact();
+    /**
+     * 生成 RefreshToken（7 天）
+     */
+    public String generateRefreshToken(Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        return jwtUtils.generateRefreshToken(userDetails.getUsername());
     }
 
     public String getUsernameFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-        return claims.getSubject();
+        return jwtUtils.getUsernameFromToken(token);
     }
 
     public boolean validateToken(String token) {
-        try {
-            Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
-        }
+        return jwtUtils.validateToken(token);
     }
 }

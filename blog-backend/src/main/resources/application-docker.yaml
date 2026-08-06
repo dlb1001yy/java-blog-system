@@ -20,12 +20,29 @@ spring:
       database: 5
       password: 123456
       timeout: 3000ms
+    elasticsearch:
+      repositories:
+        enabled: true
+  elasticsearch:
+    # 使用容器名 elasticsearch 作为主机
+    uris: http://elasticsearch:9200
+    connection-timeout: 5s
+    socket-timeout: 30s
 
 # 文件上传路径（Linux 容器内路径，通过数据卷持久化）
 file:
   upload-path: /app/uploads/
   allowed-types: jpg,jpeg,png,gif,webp,md,markdown
   max-size: 10485760  # 10MB
+
+# 文件存储策略（Docker 环境默认使用本地存储）
+storage:
+  type: local
+  local:
+    upload-path: /app/uploads/
+    url-prefix: /uploads/
+    allowed-types: jpg,jpeg,png,gif,webp,md,markdown
+    max-size: 10485760
 
 # 网站配置
 blog:
