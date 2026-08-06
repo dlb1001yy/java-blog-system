@@ -3,11 +3,10 @@ FROM eclipse-temurin:17-jdk-jammy AS builder
 
 WORKDIR /build
 
-# 下载并安装 Maven 3.9.6（约 10MB，远小于完整 Maven 镜像的 800MB+）
-RUN apt-get update && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -fsSL https://archive.apache.org/dist/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.tar.gz -o /tmp/maven.tar.gz \
-    && tar xzf /tmp/maven.tar.gz -C /opt/ \
+# 使用 Docker ADD 指令直接下载 Maven（无需 apt-get，无需 curl）
+# 使用阿里云镜像加速下载
+ADD https://maven.aliyun.com/repository/public/org/apache/maven/apache-maven/3.9.6/apache-maven-3.9.6-bin.tar.gz /tmp/maven.tar.gz
+RUN tar xzf /tmp/maven.tar.gz -C /opt/ \
     && rm /tmp/maven.tar.gz \
     && ln -s /opt/apache-maven-3.9.6/bin/mvn /usr/local/bin/mvn
 
