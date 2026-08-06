@@ -1,5 +1,6 @@
 export const BASE_URL = 'http://localhost:8080/api' // 生产环境请更换为实际域名
 export const TOKEN_KEY = 'uni_app_token'
+export const REFRESH_TOKEN_KEY = 'uni_app_refresh_token'
 
 // 服务器 origin（去掉 /api 后缀），用于拼接相对路径的文件 URL
 const SERVER_ORIGIN = BASE_URL.replace(/\/api$/, '')

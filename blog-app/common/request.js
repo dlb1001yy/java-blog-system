@@ -1,4 +1,4 @@
-import { BASE_URL, TOKEN_KEY } from './config.js'
+import { BASE_URL, TOKEN_KEY, REFRESH_TOKEN_KEY } from './config.js'
 
 const pendingRequest = new Map()
 
@@ -45,6 +45,7 @@ const request = (options) => {
         } else if (res.statusCode === 401) {
           // Token过期，跳转登录
           uni.removeStorageSync(TOKEN_KEY)
+          uni.removeStorageSync(REFRESH_TOKEN_KEY)
           uni.showToast({ title: '登录已过期', icon: 'none' })
           setTimeout(() => uni.reLaunch({ url: '/pages/mine/login' }), 1500)
           reject(res)

@@ -68,7 +68,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { TOKEN_KEY } from '@/common/config.js'
+import { TOKEN_KEY, REFRESH_TOKEN_KEY } from '@/common/config.js'
 import api from '@/common/api.js'
 import Icon from '@/components/Icon.vue'
 
@@ -88,7 +88,8 @@ const handleLogin = async () => {
     const res = await api.login(form.value)
 
     // 保存 Token
-    uni.setStorageSync(TOKEN_KEY, res.data.token)
+    uni.setStorageSync(TOKEN_KEY, res.data.accessToken)
+    uni.setStorageSync(REFRESH_TOKEN_KEY, res.data.refreshToken)
 
     uni.showToast({ title: '登录成功', icon: 'success' })
 

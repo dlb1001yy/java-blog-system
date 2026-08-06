@@ -6,9 +6,9 @@ export const useUserStore = defineStore('user', () => {
   const userInfo = ref(JSON.parse(localStorage.getItem('userInfo') || 'null'))
 
   const setUser = (data) => {
-    token.value = data.token
+    token.value = data.accessToken
     userInfo.value = data
-    localStorage.setItem('token', data.token)
+    localStorage.setItem('token', data.accessToken)
     localStorage.setItem('userInfo', JSON.stringify(data))
   }
 

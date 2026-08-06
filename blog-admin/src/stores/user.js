@@ -9,9 +9,10 @@ export const useUserStore = defineStore('user', () => {
 
   const login = async (loginForm) => {
     const res = await authApi.login(loginForm)
-    token.value = res.data.token
+    token.value = res.data.accessToken
     username.value = res.data.username
-    localStorage.setItem('admin_token', res.data.token)
+    localStorage.setItem('admin_token', res.data.accessToken)
+    localStorage.setItem('admin_refresh_token', res.data.refreshToken)
     localStorage.setItem('admin_username', res.data.username)
     return res
   }
@@ -21,6 +22,7 @@ export const useUserStore = defineStore('user', () => {
     username.value = ''
     userInfo.value = {}
     localStorage.removeItem('admin_token')
+    localStorage.removeItem('admin_refresh_token')
     localStorage.removeItem('admin_username')
   }
 

@@ -68,7 +68,7 @@
 <script setup>
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app' // UniApp 的生命周期从这里引入
-import { TOKEN_KEY } from '@/common/config.js'
+import { TOKEN_KEY, REFRESH_TOKEN_KEY } from '@/common/config.js'
 import api from '@/common/api.js'
 import Icon from '@/components/Icon.vue'
 import TabBar from '@/components/TabBar.vue'
@@ -133,6 +133,7 @@ const handleLogout = () => {
     success: (res) => {
       if (res.confirm) {
         uni.removeStorageSync(TOKEN_KEY)
+        uni.removeStorageSync(REFRESH_TOKEN_KEY)
         userInfo.value = {}
         refreshLoginState() // 立即刷新视图，无需等待 onShow
         uni.showToast({ title: '已退出' })
