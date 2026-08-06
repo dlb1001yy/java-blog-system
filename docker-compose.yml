@@ -87,6 +87,7 @@ services:
     restart: unless-stopped
     environment:
       TZ: Asia/Shanghai
+      BLOG_SEARCH_ENABLED: ${BLOG_SEARCH_ENABLED:-false}
     depends_on:
       mysql:
         condition: service_healthy

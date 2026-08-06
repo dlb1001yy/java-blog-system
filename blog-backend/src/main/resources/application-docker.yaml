@@ -22,7 +22,7 @@ spring:
       timeout: 3000ms
     elasticsearch:
       repositories:
-        enabled: true
+        enabled: false  # 禁用自动配置，由 ElasticsearchConfig 按条件显式开启
   elasticsearch:
     # 使用容器名 elasticsearch 作为主机
     uris: http://elasticsearch:9200
@@ -49,3 +49,6 @@ blog:
   name: "Java码农笔记"
   description: "记录Java学习之路，分享技术心得"
   domain: "http://localhost:8080"
+  # Elasticsearch 开关：通过环境变量 BLOG_SEARCH_ENABLED 控制
+  search:
+    enabled: ${BLOG_SEARCH_ENABLED:false}

@@ -22,7 +22,7 @@ spring:
       timeout: 3000ms
     elasticsearch:
       repositories:
-        enabled: true
+        enabled: false  # 禁用自动配置，由 ElasticsearchConfig 按条件显式开启
   elasticsearch:
     uris: http://localhost:9200
     connection-timeout: 5s
@@ -77,3 +77,7 @@ blog:
   name: "Java码农笔记"
   description: "记录Java学习之路，分享技术心得"
   domain: "http://localhost:8080"
+  # Elasticsearch 开关：false=不启用ES（本地/低内存），true=启用ES全文检索
+  # Docker 环境通过 BLOG_SEARCH_ENABLED 环境变量覆盖
+  search:
+    enabled: false

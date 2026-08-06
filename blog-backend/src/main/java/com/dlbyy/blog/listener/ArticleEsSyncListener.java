@@ -8,6 +8,7 @@ import com.dlbyy.blog.event.ArticlePublishedEvent;
 import com.dlbyy.blog.service.ArticleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component
+@ConditionalOnProperty(name = "blog.search.enabled", havingValue = "true")
 @RequiredArgsConstructor
 public class ArticleEsSyncListener {
 
