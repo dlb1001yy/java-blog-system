@@ -467,6 +467,8 @@ location /api {
 
 ### 1. 环境准备
 
+> 详细的 Docker 安装步骤（含前置检查、多种安装方式、镜像加速、日志轮转、常见问题排查等）请参考 [Docker环境安装指南.md](Docker环境安装指南.md)
+
 在 Ubuntu 22.04 服务器上安装 Docker Engine、Docker Compose 插件与 Git：
 
 ```bash
