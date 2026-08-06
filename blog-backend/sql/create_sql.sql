@@ -1,3 +1,6 @@
+-- 设置客户端连接字符集，防止中文乱码
+SET NAMES utf8mb4;
+
 -- 创建数据库
 CREATE DATABASE IF NOT EXISTS dlbyy_zp_blog DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE dlbyy_zp_blog;
