@@ -4,8 +4,9 @@ FROM eclipse-temurin:17-jdk-jammy AS builder
 WORKDIR /build
 
 # 下载并安装 Maven 3.9.6（约 10MB，远小于完整 Maven 镜像的 800MB+）
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* \
-    && curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/apache/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.tar.gz -o /tmp/maven.tar.gz \
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL https://archive.apache.org/dist/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.tar.gz -o /tmp/maven.tar.gz \
     && tar xzf /tmp/maven.tar.gz -C /opt/ \
     && rm /tmp/maven.tar.gz \
     && ln -s /opt/apache-maven-3.9.6/bin/mvn /usr/local/bin/mvn
