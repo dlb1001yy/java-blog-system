@@ -31,7 +31,7 @@
 ### 1. 初始化数据库
 
 ```bash
-mysql -uroot -p < sql/create_sql.sql
+mysql -uroot -p < sql/01-create_sql.sql
 ```
 
 数据库名：`dlbyy_zp_blog`（utf8mb4）
@@ -175,7 +175,7 @@ blog-backend/
 │       ├── ResumeInfoMapper.xml
 │       ├── TagMapper.xml
 │       └── UserMapper.xml
-├── sql/create_sql.sql                    # 数据库初始化脚本
+├── sql/01-create_sql.sql                    # 数据库初始化脚本
 ├── uploads/                              # 上传文件目录
 └── pom.xml
 ```

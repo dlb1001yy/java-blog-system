@@ -20,8 +20,8 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      # 数据库初始化脚本，首次启动自动执行
-      - ./blog-backend/sql/create_sql.sql:/docker-entrypoint-initdb.d/create_sql.sql:ro
+      # 挂载整个 sql 目录，新增 .sql 文件自动执行（按文件名排序）
+      - ./blog-backend/sql:/docker-entrypoint-initdb.d/:ro
     networks:
       - blog-net
     healthcheck:

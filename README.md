@@ -99,7 +99,7 @@ blog-backend/
 ├── src/main/resources/
 │   ├── application.yaml              # 配置文件
 │   └── mapper/                       # MyBatis XML
-├── sql/create_sql.sql                # 数据库初始化脚本
+├── sql/01-create_sql.sql                # 数据库初始化脚本
 ├── uploads/                          # 上传文件目录
 └── pom.xml
 ```
@@ -235,7 +235,7 @@ blog-app/
 
 ```bash
 # 登录 MySQL，执行初始化脚本
-mysql -uroot -p < blog-backend/sql/create_sql.sql
+mysql -uroot -p < blog-backend/sql/01-create_sql.sql
 ```
 
 数据库名：`dlbyy_zp_blog`（utf8mb4）
