@@ -3,11 +3,21 @@ package com.dlbyy.blog.common;
 import lombok.Data;
 import java.io.Serializable;
 
+/**
+ * 统一 API 响应格式
+ *
+ * @param <T> 业务数据类型
+ */
 @Data
 public class Result<T> implements Serializable {
     private Integer code;
     private String message;
     private T data;
+    private Long timestamp;
+
+    public Result() {
+        this.timestamp = System.currentTimeMillis();
+    }
 
     public static <T> Result<T> success() {
         return success(null);

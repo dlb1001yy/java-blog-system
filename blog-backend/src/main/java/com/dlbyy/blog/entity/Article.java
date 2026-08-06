@@ -24,7 +24,9 @@ public class Article {
     private Integer commentCount;
     private Integer isTop;
     private Integer isPublish;
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 
     @TableField(exist = false)

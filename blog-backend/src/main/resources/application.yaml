@@ -29,9 +29,13 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: auto
+      # 逻辑删除配置
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
+      # 自动填充配置说明：
+      # 自动填充通过 MetaObjectHandler Bean 实现（见 config/MyMetaObjectHandler.java）
+      # 实体字段需标注 @TableField(fill = FieldFill.INSERT) 或 @TableField(fill = FieldFill.INSERT_UPDATE)
 
 jwt:
   # 确保密钥长度至少为 64 个字符（满足 HS512 算法 512 位的要求）
