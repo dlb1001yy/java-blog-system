@@ -465,6 +465,8 @@ location /api {
 
 通过 Docker Compose 一键部署 blog-backend、blog-admin、blog-frontend 三个项目，含 MySQL 与 Redis，适用于 Ubuntu 22.04 LTS 服务器。
 
+> **部署操作文档**：从镜像拉取到访问测试的完整操作步骤，请参考 [部署操作手册.md](部署操作手册.md)
+
 ### 1. 环境准备
 
 > 详细的 Docker 安装步骤（含前置检查、多种安装方式、镜像加速、日志轮转、常见问题排查等）请参考 [Docker环境安装指南.md](Docker环境安装指南.md)
