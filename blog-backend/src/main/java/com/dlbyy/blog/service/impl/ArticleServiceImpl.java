@@ -50,7 +50,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                     .map(ArticleTag::getTagId)
                     .collect(Collectors.toList());
             List<Tag> tags = tagMapper.selectBatchIds(tagIds);
-            article.setTags(tags);
+            article.setTagList(tags);
         }
         
         // 填充作者名

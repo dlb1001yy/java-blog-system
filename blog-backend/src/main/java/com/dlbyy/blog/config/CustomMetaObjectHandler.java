@@ -10,25 +10,29 @@ import java.time.LocalDateTime;
 /**
  * MyBatis-Plus 自动填充处理器
  * <p>
- * 配合实体字段上的 @TableField(fill = FieldFill.INSERT) /
- * @TableField(fill = FieldFill.INSERT_UPDATE) 使用：
+ * 配合 {@link com.dlbyy.blog.entity.BaseEntity} 使用，统一填充：
  * <ul>
- *     <li>INSERT 时自动填充 createTime 与 updateTime</li>
- *     <li>UPDATE 时自动填充 updateTime</li>
+ *     <li>INSERT 时填充 createTime、updateTime、isDeleted(0)</li>
+ *     <li>UPDATE 时填充 updateTime</li>
  * </ul>
+ * 实体字段需标注 @TableField(fill = FieldFill.INSERT) 或
+ * @TableField(fill = FieldFill.INSERT_UPDATE)。
  */
 @Slf4j
 @Component
-public class MyMetaObjectHandler implements MetaObjectHandler {
+public class CustomMetaObjectHandler implements MetaObjectHandler {
 
     private static final String FIELD_CREATE_TIME = "createTime";
     private static final String FIELD_UPDATE_TIME = "updateTime";
+    private static final String FIELD_IS_DELETED = "isDeleted";
+    private static final Integer NOT_DELETED = 0;
 
     @Override
     public void insertFill(MetaObject metaObject) {
         LocalDateTime now = LocalDateTime.now();
         this.strictInsertFill(metaObject, FIELD_CREATE_TIME, LocalDateTime.class, now);
         this.strictInsertFill(metaObject, FIELD_UPDATE_TIME, LocalDateTime.class, now);
+        this.strictInsertFill(metaObject, FIELD_IS_DELETED, Integer.class, NOT_DELETED);
     }
 
     @Override
