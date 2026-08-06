@@ -461,6 +461,286 @@ location /api {
 
 打包前需修改 `blog-app/common/config.js` 中的 `BASE_URL` 为生产域名。
 
+## Docker 部署（Ubuntu 22）
+
+通过 Docker Compose 一键部署 blog-backend、blog-admin、blog-frontend 三个项目，含 MySQL 与 Redis，适用于 Ubuntu 22.04 LTS 服务器。
+
+### 1. 环境准备
+
+在 Ubuntu 22.04 服务器上安装 Docker Engine、Docker Compose 插件与 Git：
+
+```bash
+# 更新包索引
+sudo apt update
+
+# 安装 Docker Engine
+sudo apt install -y ca-certificates curl gnupg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# 将当前用户加入 docker 组（免 sudo，需重新登录生效）
+sudo usermod -aG docker $USER
+
+# 安装 Git
+sudo apt install -y git
+
+# 验证安装
+docker --version
+docker compose version
+git --version
+```
+
+### 2. 从 Gitee 克隆代码
+
+```bash
+# 替换为你的 Gitee 仓库地址
+git clone https://gitee.com/<你的用户名>/<仓库名>.git java-blog-system
+cd java-blog-system
+```
+
+> 如果仓库为私有，克隆时会提示输入 Gitee 用户名与密码（或 Access Token）。
+
+### 3. 目录结构
+
+克隆后项目根目录应包含以下 Docker 相关文件：
+
+```
+java-blog-system/
+├── docker-compose.yml          # Docker Compose 编排文件
+├── .dockerignore               # 根级忽略规则
+├── blog-backend/
+│   ├── Dockerfile              # 后端多阶段构建
+│   ├── .dockerignore
+│   └── src/main/resources/
+│       └── application-docker.yaml  # Docker 环境配置
+├── blog-admin/
+│   ├── Dockerfile              # 管理后台多阶段构建
+│   ├── .dockerignore
+│   └── nginx.conf              # nginx 配置
+└── blog-frontend/
+    ├── Dockerfile              # 前台门户多阶段构建
+    ├── .dockerignore
+    └── nginx.conf              # nginx 配置
+```
+
+### 4. 配置说明
+
+#### 端口映射
+
+| 服务 | 容器端口 | 宿主端口 | 说明 |
+|------|----------|----------|------|
+| blog-frontend | 80 | 8082 | 前台门户 |
+| blog-admin | 80 | 8081 | 管理后台（路径 /admin/） |
+| blog-backend | 8080 | 8080 | 后端 API |
+| mysql | 3306 | 3306 | 数据库（可选关闭） |
+| redis | 6379 | 6379 | 缓存（可选关闭） |
+
+> 如需修改端口，编辑 `docker-compose.yml` 中对应服务的 `ports` 配置。
+
+#### 数据卷
+
+| 卷名 | 容器路径 | 说明 |
+|------|----------|------|
+| blog_mysql_data | /var/lib/mysql | MySQL 数据持久化 |
+| blog_redis_data | /data | Redis 数据持久化 |
+| blog_uploads_data | /app/uploads | 上传文件持久化 |
+
+#### 默认凭据
+
+| 项目 | 用户名 | 密码 |
+|------|--------|------|
+| MySQL | root | 123456 |
+| Redis | — | 123456 |
+| 管理后台登录 | admin | admin123 |
+
+> 生产环境请务必修改 `docker-compose.yml` 中的 MySQL/Redis 密码，以及 `blog-backend/src/main/resources/application-docker.yaml` 中对应的连接密码。
+
+### 5. 一键启动
+
+在项目根目录执行：
+
+```bash
+# 构建镜像并后台启动全部服务
+docker compose up -d --build
+```
+
+首次构建需要下载基础镜像并编译后端与前端，耗时较长（约 5-15 分钟，取决于网络与服务器性能）。后续启动会利用缓存，速度较快。
+
+查看启动进度：
+
+```bash
+# 查看全部服务状态
+docker compose ps
+
+# 实时查看日志（等待后端启动完成）
+docker compose logs -f blog-backend
+```
+
+当 blog-backend 日志出现 `Started JavaBlogApplication` 字样时，说明后端已就绪。
+
+### 6. 访问地址
+
+启动完成后，通过浏览器访问（将 `<服务器IP>` 替换为实际 IP，本机部署使用 `localhost`）：
+
+| 服务 | 地址 |
+|------|------|
+| 前台门户 | http://\<服务器IP\>:8082 |
+| 管理后台 | http://\<服务器IP\>:8081/admin/ |
+| 后端 API | http://\<服务器IP\>:8080/api |
+| 接口文档 | http://\<服务器IP\>:8080/api/doc.html |
+
+管理后台默认账号：`admin` / `admin123`
+
+### 7. 常用运维命令
+
+```bash
+# 查看所有服务状态
+docker compose ps
+
+# 查看某服务日志（实时跟随）
+docker compose logs -f blog-backend
+docker compose logs -f blog-frontend
+docker compose logs -f blog-admin
+
+# 重启单个服务
+docker compose restart blog-backend
+
+# 停止全部服务（保留数据）
+docker compose down
+
+# 停止并删除数据卷（⚠️ 清空所有数据）
+docker compose down -v
+
+# 重新构建并启动单个服务（修改代码后）
+docker compose up -d --build blog-backend
+
+# 重新构建并启动全部服务
+docker compose up -d --build
+
+# 进入容器排查问题
+docker exec -it blog-backend bash
+docker exec -it blog-mysql mysql -uroot -p123456
+docker exec -it blog-redis redis-cli -a 123456
+```
+
+### 8. 数据持久化与备份
+
+#### 数据卷位置
+
+Docker 数据卷默认存储在 `/var/lib/docker/volumes/` 下：
+
+```bash
+# 查看数据卷列表
+docker volume ls | grep blog
+
+# 查看数据卷详情
+docker volume inspect blog_mysql_data
+```
+
+#### MySQL 备份与恢复
+
+```bash
+# 备份数据库（导出到当前目录）
+docker exec blog-mysql mysqldump -uroot -p123456 --single-transaction dlbyy_zp_blog > backup_$(date +%Y%m%d_%H%M%S).sql
+
+# 恢复数据库（从备份文件导入）
+docker exec -i blog-mysql mysql -uroot -p123456 dlbyy_zp_blog < backup_20260101_120000.sql
+```
+
+#### 上传文件备份
+
+```bash
+# 备份上传文件目录
+docker run --rm -v blog_uploads_data:/data -v $(pwd):/backup alpine tar czf /backup/uploads_backup_$(date +%Y%m%d).tar.gz -C /data .
+
+# 恢复上传文件目录
+docker run --rm -v blog_uploads_data:/data -v $(pwd):/backup alpine tar xzf /backup/uploads_backup_20260101.tar.gz -C /data
+```
+
+### 9. 常见问题排查
+
+#### 端口被占用
+
+```bash
+# 查看占用端口的进程
+sudo lsof -i :8080
+sudo lsof -i :8081
+sudo lsof -i :8082
+
+# 停止占用进程或修改 docker-compose.yml 中的端口映射
+```
+
+#### 后端无法连接数据库
+
+1. 确认 MySQL 容器已健康启动：`docker compose ps mysql`
+2. 查看后端日志：`docker compose logs blog-backend`
+3. 确认 `application-docker.yaml` 中数据库 host 为 `mysql`（容器名）
+4. 如修改了 MySQL 密码，需同步修改 `application-docker.yaml` 与 `docker-compose.yml`
+
+#### 镜像构建缓慢（Maven/npm 下载慢）
+
+- 后端 Dockerfile 已配置 Maven 依赖预下载缓存层，重复构建会加速
+- 前端 Dockerfile 已配置使用 npmmirror 镜像源加速 npm 安装
+- 可配置 Docker 镜像加速器加速基础镜像拉取：
+
+```bash
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json <<'EOF'
+{
+  "registry-mirrors": [
+    "https://docker.m.daocloud.io",
+    "https://dockerproxy.com"
+  ]
+}
+EOF
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+
+#### 前端页面空白或 404
+
+1. 确认后端健康检查通过：`docker compose ps blog-backend`（状态应为 healthy）
+2. 确认 nginx 配置正确：`docker exec blog-admin cat /etc/nginx/conf.d/default.conf`
+3. 管理后台必须访问 `http://<IP>:8081/admin/`（含尾部 `/admin/` 路径）
+4. 前台门户访问 `http://<IP>:8082/`
+
+#### 数据库未自动初始化
+
+MySQL 仅在数据卷为空（首次启动）时执行 `/docker-entrypoint-initdb.d/` 中的脚本。如需重新初始化：
+
+```bash
+# 停止并删除数据卷（⚠️ 清空所有数据）
+docker compose down -v
+# 重新启动
+docker compose up -d --build
+```
+
+#### 上传文件无法访问
+
+确认上传目录数据卷已正确挂载，且后端 `application-docker.yaml` 中 `file.upload-path` 为 `/app/uploads/`：
+
+```bash
+# 检查挂载
+docker exec blog-backend ls -la /app/uploads/
+# 检查上传接口
+curl -I http://localhost:8080/api/uploads/
+```
+
+### 10. 更新部署
+
+当 Gitee 仓库有新代码时，拉取并重新构建：
+
+```bash
+# 拉取最新代码
+git pull origin main
+
+# 重新构建并启动（仅重建有变更的服务）
+docker compose up -d --build
+```
+
 ## License
 
 MIT

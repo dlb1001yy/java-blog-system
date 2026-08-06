@@ -1,0 +1,28 @@
+# 依赖目录（容器内重新安装，加速构建）
+**/node_modules
+
+# 构建产物
+**/target
+**/dist
+
+# 版本控制
+**/.git
+**/.gitignore
+
+# IDE 配置
+**/.vscode
+**/.idea
+**/.trae
+
+# 日志文件
+**/*.log
+
+# 系统文件
+**/.DS_Store
+**/Thumbs.db
+
+# 上传文件（运行时通过数据卷挂载，不打入镜像）
+blog-backend/uploads
+
+# 文档
+**/*.md

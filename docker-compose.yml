@@ -1,0 +1,121 @@
+# Java 博客系统 Docker Compose 编排
+# 使用：docker compose up -d --build
+# 前台门户：http://<服务器IP>:8082
+# 管理后台：http://<服务器IP>:8081/admin/
+# 后端 API：http://<服务器IP>:8080/api
+# 接口文档：http://<服务器IP>:8080/api/doc.html
+
+services:
+  # ========== MySQL 数据库 ==========
+  mysql:
+    image: mysql:8.0
+    container_name: blog-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: dlbyy_zp_blog
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # 数据库初始化脚本，首次启动自动执行
+      - ./blog-backend/sql/create_sql.sql:/docker-entrypoint-initdb.d/create_sql.sql:ro
+    networks:
+      - blog-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ========== Redis 缓存 ==========
+  redis:
+    image: redis:7-alpine
+    container_name: blog-redis
+    restart: unless-stopped
+    command: redis-server --requirepass 123456 --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - blog-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "123456", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ========== 后端服务 ==========
+  blog-backend:
+    build:
+      context: ./blog-backend
+      dockerfile: Dockerfile
+    container_name: blog-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    volumes:
+      # 上传文件持久化
+      - uploads_data:/app/uploads
+    networks:
+      - blog-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/portal/stats || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  # ========== 管理后台 ==========
+  blog-admin:
+    build:
+      context: ./blog-admin
+      dockerfile: Dockerfile
+    container_name: blog-admin
+    restart: unless-stopped
+    depends_on:
+      blog-backend:
+        condition: service_healthy
+    ports:
+      - "8081:80"
+    networks:
+      - blog-net
+
+  # ========== 前台门户 ==========
+  blog-frontend:
+    build:
+      context: ./blog-frontend
+      dockerfile: Dockerfile
+    container_name: blog-frontend
+    restart: unless-stopped
+    depends_on:
+      blog-backend:
+        condition: service_healthy
+    ports:
+      - "8082:80"
+    networks:
+      - blog-net
+
+# ========== 数据卷 ==========
+volumes:
+  mysql_data:
+    name: blog_mysql_data
+  redis_data:
+    name: blog_redis_data
+  uploads_data:
+    name: blog_uploads_data
+
+# ========== 网络 ==========
+networks:
+  blog-net:
+    name: blog-net
+    driver: bridge
