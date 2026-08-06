@@ -57,6 +57,8 @@ services:
       dockerfile: Dockerfile
     container_name: blog-backend
     restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
     depends_on:
       mysql:
         condition: service_healthy
@@ -70,7 +72,8 @@ services:
     networks:
       - blog-net
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/portal/stats || exit 1"]
+      # eclipse-temurin JRE 镜像无 curl，使用 bash /dev/tcp 检测端口连通性
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080' || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 10
