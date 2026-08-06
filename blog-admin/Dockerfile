@@ -17,8 +17,8 @@ FROM nginx:1.25-alpine
 # 清空默认配置
 RUN rm -rf /usr/share/nginx/html/*
 
-# 复制构建产物（vite base 为 /admin/，产物在 dist/admin/ 下）
-COPY --from=builder /build/dist /usr/share/nginx/html
+# 复制构建产物到 /admin/ 子目录（与 nginx root 配置对应）
+COPY --from=builder /build/dist /usr/share/nginx/html/admin
 
 # 复制自定义 nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
