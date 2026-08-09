@@ -695,14 +695,19 @@ sudo mkdir -p /etc/docker
 sudo tee /etc/docker/daemon.json <<'EOF'
 {
   "registry-mirrors": [
+    "https://docker.xuanyuan.me",
+    "https://docker.1ms.run",
     "https://docker.m.daocloud.io",
-    "https://dockerproxy.com"
+    "https://docker.1panel.live",
+    "https://dockerproxy.link"
   ]
 }
 EOF
 sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
+
+也可一键配置：`sudo bash scripts/configure-docker-mirror.sh`
 
 #### 前端页面空白或 404
 

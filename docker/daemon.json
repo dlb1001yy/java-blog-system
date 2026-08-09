@@ -1,0 +1,9 @@
+{
+  "registry-mirrors": [
+    "https://docker.xuanyuan.me",
+    "https://docker.1ms.run",
+    "https://docker.m.daocloud.io",
+    "https://docker.1panel.live",
+    "https://dockerproxy.link"
+  ]
+}

@@ -202,6 +202,8 @@ docker ps
 
 ### 6.2 配置国内镜像加速器
 
+也可使用项目内一键脚本配置：`sudo bash scripts/configure-docker-mirror.sh`
+
 国内网络环境拉取 Docker Hub 镜像可能超时，建议配置镜像加速：
 
 ```bash
@@ -209,10 +211,11 @@ sudo mkdir -p /etc/docker
 sudo tee /etc/docker/daemon.json <<'EOF'
 {
   "registry-mirrors": [
+    "https://docker.xuanyuan.me",
+    "https://docker.1ms.run",
     "https://docker.m.daocloud.io",
-    "https://dockerproxy.com",
-    "https://docker.mirrors.ustc.edu.cn",
-    "https://hub-mirror.c.163.com"
+    "https://docker.1panel.live",
+    "https://dockerproxy.link"
   ],
   "log-driver": "json-file",
   "log-opts": {
