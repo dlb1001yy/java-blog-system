@@ -709,6 +709,35 @@ sudo systemctl restart docker
 
 也可一键配置：`sudo bash scripts/configure-docker-mirror.sh`
 
+#### 离线镜像部署（服务器下载慢或无外网时）
+
+如果服务器拉取镜像仍然很慢，可在**另一台有外网的 Linux/macOS 机器**上提前导出镜像，再拷贝到服务器加载：
+
+1. 外网机器上（需已安装 Docker），在项目目录执行导出：
+
+   ```bash
+   bash scripts/export-images.sh
+   ```
+
+   会在项目根目录生成 `images/` 目录（内含 mysql、redis、node、nginx、temurin 等基镜像 tar 包）。
+2. 将 `images/` 目录拷贝到服务器项目根目录（scp / U盘）：
+
+   ```bash
+   scp -r images user@服务器IP:/项目路径/
+   ```
+3. 服务器上加载镜像：
+
+   ```bash
+   sudo bash scripts/load-images.sh
+   ```
+4. 正常启动：
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+> 说明：此方式只解决镜像层下载；构建时的 Maven/npm 依赖下载仍走阿里云/npmmirror 国内镜像（体积小）。
+
 #### 前端页面空白或 404
 
 1. 确认后端健康检查通过：`docker compose ps blog-backend`（状态应为 healthy）
