@@ -17,8 +17,8 @@ FROM nginx:1.25-alpine
 # 清空默认配置
 RUN rm -rf /usr/share/nginx/html/*
 
-# 复制构建产物
-COPY --from=builder /build/dist /usr/share/nginx/html
+# 复制构建产物到 /blog 子目录
+COPY --from=builder /build/dist /usr/share/nginx/html/blog
 
 # 复制自定义 nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
