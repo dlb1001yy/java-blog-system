@@ -34,19 +34,24 @@ const pageTitle = ref('')
 
 const fetchArticles = async () => {
   const params = { current: currentPage.value, size: pageSize.value }
+  let res
   if (route.query.keyword) {
     params.keyword = route.query.keyword
     pageTitle.value = `搜索: ${route.query.keyword}`
-  } else if (route.params.id) {
-    params.categoryId = route.params.id
-    pageTitle.value = '分类文章'
-  } else if (route.query.tagId) {
-    params.tagId = route.query.tagId
-    pageTitle.value = '标签文章'
+    // 关键词搜索走 Elasticsearch 全文检索接口
+    res = await articleApi.searchArticles(params)
   } else {
-    pageTitle.value = '全部文章'
+    if (route.params.id) {
+      params.categoryId = route.params.id
+      pageTitle.value = '分类文章'
+    } else if (route.query.tagId) {
+      params.tagId = route.query.tagId
+      pageTitle.value = '标签文章'
+    } else {
+      pageTitle.value = '全部文章'
+    }
+    res = await articleApi.getArticles(params)
   }
-  const res = await articleApi.getArticles(params)
   articleList.value = res.data.records
   total.value = res.data.total
 }

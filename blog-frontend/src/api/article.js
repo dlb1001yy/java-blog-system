@@ -6,6 +6,11 @@ export default {
     return request.get('/portal/articles/page', { params })
   },
 
+  // 搜索文章（Elasticsearch 全文检索）
+  searchArticles(params) {
+    return request.get('/portal/articles/search', { params })
+  },
+
   // 获取站点统计信息
   getStats() {
     return request.get('/portal/stats')
