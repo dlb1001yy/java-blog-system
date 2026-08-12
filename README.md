@@ -316,8 +316,17 @@ npm run dev
 
 ### 移动端配置（blog-app/common/config.js）
 
+使用 uni-app 条件编译自动区分环境，H5 调试与 APK 打包无需手动改地址：
+
 ```js
-export const BASE_URL = 'http://localhost:8080/api' // 生产环境请更换为实际域名
+// #ifdef H5
+export const BASE_URL = 'http://localhost:8080/api'
+// #endif
+
+// #ifdef APP-PLUS
+export const BASE_URL = 'http://gz.aeert.com:19612/api'
+// #endif
+
 export const TOKEN_KEY = 'uni_app_token'
 ```
 
@@ -444,11 +453,14 @@ cd blog-admin    # 或 blog-frontend
 npm run build
 ```
 
-产物位于 `dist/`，使用 nginx 部署时配置 `/api` 反向代理到后端：
+- `blog-admin` 的 Vite `base` 为 `/admin/`，产物需部署到 nginx 的 `html/admin/` 子目录
+- `blog-frontend` 的 Vite `base` 为 `/blog/`，产物需部署到 nginx 的 `html/blog/` 子目录
+
+两个项目均通过 nginx 代理 `/api` 到后端，容器内部代理到 `blog-backend:8080`，外部统一入口代理到后端 8080 端口：
 
 ```nginx
-location /api {
-    proxy_pass http://localhost:8080;
+location /api/ {
+    proxy_pass http://localhost:8080/api/;
 }
 ```
 
@@ -459,7 +471,7 @@ location /api {
 - 发行 → 小程序-微信
 - 发行 → 原生 App-云打包
 
-打包前需修改 `blog-app/common/config.js` 中的 `BASE_URL` 为生产域名。
+无需手动修改配置：`blog-app/common/config.js` 已通过 uni-app 条件编译自动区分环境——H5 调试走 `http://localhost:8080/api`，APK 云打包自动使用 `http://gz.aeert.com:19612/api`。
 
 ## Docker 部署（Ubuntu 22）
 
@@ -591,10 +603,17 @@ docker compose logs -f blog-backend
 
 | 服务 | 地址 |
 |------|------|
-| 前台门户 | http://\<服务器IP\>:8082 |
+| 前台门户 | http://\<服务器IP\>:8082/blog/ |
 | 管理后台 | http://\<服务器IP\>:8081/admin/ |
 | 后端 API | http://\<服务器IP\>:8080/api |
 | 接口文档 | http://\<服务器IP\>:8080/api/doc.html |
+
+如配置了外部 Nginx（80 端口）统一入口，也可通过以下地址访问：
+
+| 服务 | 地址 |
+|------|------|
+| 前台门户 | http://\<服务器IP\>/blog/ |
+| 管理后台 | http://\<服务器IP\>/admin/ |
 
 管理后台默认账号：`admin` / `admin123`
 
@@ -743,7 +762,7 @@ sudo systemctl restart docker
 1. 确认后端健康检查通过：`docker compose ps blog-backend`（状态应为 healthy）
 2. 确认 nginx 配置正确：`docker exec blog-admin cat /etc/nginx/conf.d/default.conf`
 3. 管理后台必须访问 `http://<IP>:8081/admin/`（含尾部 `/admin/` 路径）
-4. 前台门户访问 `http://<IP>:8082/`
+4. 前台门户必须访问 `http://<IP>:8082/blog/`（含 `/blog/` 子路径，根路径会自动重定向）
 
 #### 数据库未自动初始化
 

@@ -76,10 +76,17 @@ docker compose up -d --build
 
 | 服务 | 地址 |
 |------|------|
-| 前台门户 | http://localhost:8082 |
+| 前台门户 | http://localhost:8082/blog/ |
 | 管理后台 | http://localhost:8081/admin/ |
 | 后端 API | http://localhost:8080/api |
 | 接口文档 | http://localhost:8080/api/doc.html |
+
+如配置了外部 Nginx（80 端口）统一入口，也可通过以下地址访问：
+
+| 服务 | 地址 |
+|------|------|
+| 前台门户 | http://localhost/blog/ |
+| 管理后台 | http://localhost/admin/ |
 
 默认账号：`admin` / `admin123`
 

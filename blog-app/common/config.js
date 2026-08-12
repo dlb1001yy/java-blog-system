@@ -1,4 +1,11 @@
-export const BASE_URL = 'http://localhost:8080/api' // 生产环境请更换为实际域名
+// #ifdef H5
+export const BASE_URL = 'http://localhost:8080/api'
+// #endif
+
+// #ifdef APP-PLUS
+export const BASE_URL = 'http://gz.aeert.com:19612/api'
+// #endif
+
 export const TOKEN_KEY = 'uni_app_token'
 export const REFRESH_TOKEN_KEY = 'uni_app_refresh_token'
 
