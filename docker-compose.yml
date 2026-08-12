@@ -20,7 +20,9 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      # 挂载整个 sql 目录，新增 .sql 文件自动执行（按文件名排序）
+      # 挂载整个 sql 目录：该目录下的 .sql 仅在【首次建库（数据目录为空）】时按文件名顺序执行一次。
+      # 已有旧库的表结构变更（如新增字段）由后端 DataInitializer 在每次启动时幂等补全，
+      # 不会因 docker compose 重新部署而丢失更新。
       - ./blog-backend/sql:/docker-entrypoint-initdb.d/:ro
     networks:
       - blog-net
