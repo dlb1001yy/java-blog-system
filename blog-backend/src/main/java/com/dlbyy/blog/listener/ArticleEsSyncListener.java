@@ -1,7 +1,6 @@
 package com.dlbyy.blog.listener;
 
 import com.dlbyy.blog.entity.Article;
-import com.dlbyy.blog.entity.Tag;
 import com.dlbyy.blog.es.ArticleDocument;
 import com.dlbyy.blog.es.ArticleRepository;
 import com.dlbyy.blog.event.ArticlePublishedEvent;
@@ -12,8 +11,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-
-import java.util.stream.Collectors;
 
 /**
  * 文章 ES 同步事件监听器
@@ -69,7 +66,7 @@ public class ArticleEsSyncListener {
             return;
         }
         articleService.fillArticleInfo(article);
-        ArticleDocument doc = convertToDocument(article);
+        ArticleDocument doc = ArticleDocumentConverter.convert(article);
         articleRepository.save(doc);
         log.info("ES 同步成功 | articleId={} | type={} | title={}", articleId, type, doc.getTitle());
     }
@@ -80,41 +77,5 @@ public class ArticleEsSyncListener {
     private void handleDelete(Long articleId) {
         articleRepository.deleteById(articleId);
         log.info("ES 删除成功 | articleId={}", articleId);
-    }
-
-    /**
-     * 将 Article 实体转换为 ES 文档
-     */
-    private ArticleDocument convertToDocument(Article article) {
-        ArticleDocument doc = new ArticleDocument();
-        doc.setId(article.getId());
-        doc.setUserId(article.getUserId());
-        doc.setCategoryId(article.getCategoryId());
-        doc.setTitle(article.getTitle());
-        doc.setSummary(article.getSummary());
-        doc.setContent(article.getContent());
-        // 优先使用冗余字段；为空时由 tagList 拼接
-        String tags = article.getTags();
-        if ((tags == null || tags.isEmpty()) && article.getTagList() != null) {
-            tags = article.getTagList().stream()
-                    .map(Tag::getName)
-                    .collect(Collectors.joining(","));
-        }
-        doc.setTags(tags);
-        doc.setStatus(article.getStatus());
-        doc.setType(article.getType());
-        doc.setCoverImage(article.getCoverImage());
-        doc.setSourceUrl(article.getSourceUrl());
-        doc.setSourceName(article.getSourceName());
-        doc.setViewCount(article.getViewCount());
-        doc.setLikeCount(article.getLikeCount());
-        doc.setCommentCount(article.getCommentCount());
-        doc.setIsTop(article.getIsTop());
-        doc.setIsPublish(article.getIsPublish());
-        doc.setCreateTime(article.getCreateTime());
-        doc.setUpdateTime(article.getUpdateTime());
-        doc.setCategoryName(article.getCategoryName());
-        doc.setAuthorName(article.getAuthorName());
-        return doc;
     }
 }

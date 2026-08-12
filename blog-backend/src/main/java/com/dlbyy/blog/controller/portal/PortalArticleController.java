@@ -145,12 +145,13 @@ public class PortalArticleController {
             }
         }
 
-        // 回退：数据库模糊查询
+        // 回退：数据库模糊查询（字段范围与 ES 检索保持一致：标题/摘要/正文）
         Page<Article> page = new Page<>(current, size);
         LambdaQueryWrapper<Article> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Article::getIsPublish, 1)
                .and(w -> w.like(Article::getTitle, keyword)
-                         .or().like(Article::getSummary, keyword))
+                         .or().like(Article::getSummary, keyword)
+                         .or().like(Article::getContent, keyword))
                .orderByDesc(Article::getCreateTime);
 
         Page<Article> result = articleService.page(page, wrapper);
