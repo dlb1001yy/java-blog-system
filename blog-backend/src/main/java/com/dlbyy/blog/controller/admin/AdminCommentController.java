@@ -9,6 +9,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/admin/comments")
 @RequiredArgsConstructor
@@ -30,13 +33,39 @@ public class AdminCommentController {
         return Result.success(commentService.page(page, wrapper));
     }
 
-    @PutMapping("/{id}/audit")
-    public Result<?> audit(@PathVariable Long id, @RequestParam Integer status) {
+    @PutMapping("/{id}/approve")
+    public Result<?> approve(@PathVariable Long id, @RequestParam Integer status) {
         Comment comment = new Comment();
         comment.setId(id);
         comment.setStatus(status);
         commentService.updateById(comment);
         return Result.success("审核成功", null);
+    }
+
+    @PutMapping("/{id}/reject")
+    public Result<?> reject(@PathVariable Long id) {
+        Comment comment = new Comment();
+        comment.setId(id);
+        comment.setStatus(2);
+        commentService.updateById(comment);
+        return Result.success("拒绝成功", null);
+    }
+
+    @PutMapping("/batch-approve")
+    public Result<?> batchApprove(@RequestBody List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Result.success("批量审核成功", null);
+        }
+        List<Comment> comments = ids.stream()
+                .map(id -> {
+                    Comment comment = new Comment();
+                    comment.setId(id);
+                    comment.setStatus(1);
+                    return comment;
+                })
+                .collect(Collectors.toList());
+        commentService.updateBatchById(comments);
+        return Result.success("批量审核成功", null);
     }
 
     @DeleteMapping("/{id}")
