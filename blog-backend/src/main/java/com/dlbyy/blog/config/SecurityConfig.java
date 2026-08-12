@@ -1,5 +1,6 @@
 package com.dlbyy.blog.config;
 
+import com.dlbyy.blog.properties.SecurityProperties;
 import com.dlbyy.blog.security.JwtAuthenticationEntryPoint;
 import com.dlbyy.blog.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +33,9 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public PasswordEncoder passwordEncoder(SecurityProperties securityProperties) {
+        // BCrypt 强度（盐值轮数）由 SecurityProperties 统一配置，默认 12 轮
+        return new BCryptPasswordEncoder(securityProperties.getBcryptStrength());
     }
 
     @Bean

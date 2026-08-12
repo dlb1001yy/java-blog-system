@@ -1,10 +1,12 @@
 package com.dlbyy.blog.utils;
 
+import com.dlbyy.blog.properties.SecurityProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -14,10 +16,11 @@ import java.util.Date;
  * JWT 双 Token 工具类
  * <p>
  * <ul>
- *     <li>AccessToken — 30 分钟，用于接口鉴权</li>
- *     <li>RefreshToken — 7 天，用于刷新 AccessToken</li>
+ *     <li>AccessToken — 默认 15 分钟（可配置），用于接口鉴权</li>
+ *     <li>RefreshToken — 默认 7 天（可配置），用于刷新 AccessToken</li>
  * </ul>
- * 支持 Redis 黑名单校验：登出时将 Token 加入黑名单，剩余有效期内自动失效。
+ * 支持 Redis 黑名单校验：登出/改密/锁定时将 Token 加入黑名单，剩余有效期内自动失效。
+ * 黑名单同时覆盖 AccessToken 与 RefreshToken（含 jti 维度，便于主动吊销）。
  */
 @Slf4j
 @Component
@@ -27,19 +30,28 @@ public class JwtUtils {
     @Value("${jwt.secret}")
     private String secret;
 
-    /** AccessToken 有效期：30 分钟（毫秒） */
-    private static final long ACCESS_TOKEN_EXPIRATION = 30 * 60 * 1000L;
+    private final SecurityProperties securityProperties;
 
-    /** RefreshToken 有效期：7 天（毫秒） */
-    private static final long REFRESH_TOKEN_EXPIRATION = 7 * 24 * 60 * 60 * 1000L;
+    /** AccessToken 有效期（毫秒），由 security.login.access-token-minutes 配置，默认 15 分钟 */
+    private long getAccessTokenExpiration() {
+        return (long) securityProperties.getAccessTokenMinutes() * 60 * 1000L;
+    }
+
+    /** RefreshToken 有效期（毫秒），由 security.login.refresh-token-days 配置，默认 7 天 */
+    private long getRefreshTokenExpiration() {
+        return (long) securityProperties.getRefreshTokenDays() * 24 * 60 * 60 * 1000L;
+    }
 
     private static final String CLAIM_TOKEN_TYPE = "token_type";
     private static final String TYPE_ACCESS = "access";
     private static final String TYPE_REFRESH = "refresh";
 
     private static final String BLACKLIST_PREFIX = "jwt:blacklist:";
+    /** 记录某用户当前有效的 refresh token（用于登出/改密时主动吊销） */
+    private static final String REFRESH_SET_PREFIX = "jwt:refresh:";
 
     private final RedisUtils redisUtils;
+    private final StringRedisTemplate stringRedisTemplate;
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
@@ -48,17 +60,46 @@ public class JwtUtils {
     // ==================== Token 生成 ====================
 
     /**
-     * 生成 AccessToken（30 分钟）
+     * 生成 AccessToken（默认 15 分钟）
      */
     public String generateAccessToken(String username) {
-        return buildToken(username, ACCESS_TOKEN_EXPIRATION, TYPE_ACCESS);
+        return buildToken(username, getAccessTokenExpiration(), TYPE_ACCESS);
     }
 
     /**
-     * 生成 RefreshToken（7 天）
+     * 生成 RefreshToken（默认 7 天），并记录到 Redis 集合，便于登出/改密时主动吊销
      */
     public String generateRefreshToken(String username) {
-        return buildToken(username, REFRESH_TOKEN_EXPIRATION, TYPE_REFRESH);
+        String token = buildToken(username, getRefreshTokenExpiration(), TYPE_REFRESH);
+        stringRedisTemplate.opsForSet().add(REFRESH_SET_PREFIX + username, token);
+        return token;
+    }
+
+    /**
+     * 校验 refresh token 是否仍有效（签名有效 + 未过期 + 未被吊销）。
+     * 吊销场景：1) 加入黑名单；2) 不在该用户有效 refresh 集合中（登出/改密后旧 token 失效）。
+     */
+    public boolean isValidRefreshToken(String token) {
+        if (!validateToken(token) || !isRefreshToken(token)) {
+            return false;
+        }
+        String username = getUsernameFromToken(token);
+        Boolean member = stringRedisTemplate.opsForSet().isMember(REFRESH_SET_PREFIX + username, token);
+        return Boolean.TRUE.equals(member);
+    }
+
+    /**
+     * 吊销某用户所有 refresh token（登出 / 改密 / 锁定时调用）
+     */
+    public void revokeAllRefreshTokens(String username) {
+        stringRedisTemplate.delete(REFRESH_SET_PREFIX + username);
+    }
+
+    /**
+     * 吊销指定 refresh token
+     */
+    public void revokeRefreshToken(String username, String token) {
+        stringRedisTemplate.opsForSet().remove(REFRESH_SET_PREFIX + username, token);
     }
 
     private String buildToken(String username, long expiration, String tokenType) {

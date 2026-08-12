@@ -29,6 +29,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         if (user.getStatus() == 0) {
             throw new UsernameNotFoundException("账号已被禁用");
         }
+        // 兜底：若数据库记录的锁定时间仍未过期，则拒绝登录（主锁定逻辑在 LoginAttemptService/AuthController 层）
+        if (user.getLockUntil() != null && user.getLockUntil().isAfter(java.time.LocalDateTime.now())) {
+            throw new UsernameNotFoundException("账号已被锁定，请稍后再试");
+        }
         
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + user.getRole());
         return new org.springframework.security.core.userdetails.User(

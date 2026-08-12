@@ -10,6 +10,11 @@ export default {
   logout() {
     return request.post('/auth/logout')
   },
+
+  // 刷新访问令牌（refresh token 由 HTTP-only Cookie 自动携带）
+  refresh() {
+    return request.post('/auth/refresh')
+  },
   
   // 获取用户信息
   getUserInfo() {

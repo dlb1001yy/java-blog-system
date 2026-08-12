@@ -23,6 +23,10 @@ public class User {
     private String signature;
     private String role;
     private Integer status;
+    /** 连续登录失败次数（用于账户锁定，主要由 Redis 记录，此处便于管理员查看） */
+    private Integer failCount;
+    /** 账户锁定到期时间（null 表示未锁定） */
+    private LocalDateTime lockUntil;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
     @TableField(fill = FieldFill.INSERT_UPDATE)

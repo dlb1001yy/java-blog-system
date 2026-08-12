@@ -51,6 +51,21 @@ jwt:
   header: Authorization
   prefix: "Bearer "
 
+# 安全认证增强配置（限流 / 账户锁定 / 密码加密 / Cookie）
+# 可动态调整无需改代码
+security:
+  login:
+    ip-limit-count: 5          # 单个 IP 每分钟最多登录尝试次数
+    ip-window-seconds: 60      # IP 限流窗口（秒）
+    user-fail-threshold: 5     # 同一用户名连续失败达到该次数锁定账户
+    lock-minutes: 15           # 账户锁定时长（分钟）
+    alert-enabled: true        # 达到锁定阈值是否触发告警通知
+    bcrypt-strength: 12        # BCrypt 加密强度（盐值轮数）
+    access-token-minutes: 15   # 访问令牌有效期（分钟）
+    refresh-token-days: 7      # 刷新令牌有效期（天）
+    cookie-secure: true        # refresh Cookie 是否带 Secure（本地 HTTP 联调置 false）
+    cookie-same-site: "None"    # refresh Cookie SameSite 策略
+
 # 文件上传路径（旧版 FileUtils 使用，保持向后兼容）
 file:
   upload-path: D:\\my-project\\java-blog-system\\blog-backend\\uploads\\

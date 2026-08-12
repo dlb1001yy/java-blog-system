@@ -18,6 +18,8 @@ CREATE TABLE `sys_user` (
                             `signature` varchar(255) DEFAULT NULL COMMENT '个性签名',
                             `role` varchar(20) DEFAULT 'user' COMMENT '角色 admin/user',
                             `status` tinyint DEFAULT 1 COMMENT '状态 0:禁用 1:正常',
+                            `fail_count` int DEFAULT 0 COMMENT '连续登录失败次数（锁定辅助）',
+                            `lock_until` datetime DEFAULT NULL COMMENT '账户锁定到期时间（NULL 表示未锁定）',
                             `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
                             `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                             PRIMARY KEY (`id`),
