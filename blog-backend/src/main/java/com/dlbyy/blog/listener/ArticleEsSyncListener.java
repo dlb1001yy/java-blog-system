@@ -2,6 +2,7 @@ package com.dlbyy.blog.listener;
 
 import com.dlbyy.blog.entity.Article;
 import com.dlbyy.blog.es.ArticleDocument;
+import com.dlbyy.blog.es.ArticleDocumentConverter;
 import com.dlbyy.blog.es.ArticleRepository;
 import com.dlbyy.blog.event.ArticlePublishedEvent;
 import com.dlbyy.blog.service.ArticleService;
