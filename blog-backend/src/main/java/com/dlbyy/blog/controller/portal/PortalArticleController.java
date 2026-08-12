@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.Criteria;
@@ -173,7 +172,7 @@ public class PortalArticleController {
         query.setPageable(PageRequest.of(Math.max(current - 1, 0), size));
 
         SearchHits<ArticleDocument> hits = elasticsearchOperations.search(
-                query, ArticleDocument.class, IndexCoordinates.of("blog_article"));
+                query, ArticleDocument.class);
 
         List<Long> ids = hits.getSearchHits().stream()
                 .map(SearchHit::getContent)
