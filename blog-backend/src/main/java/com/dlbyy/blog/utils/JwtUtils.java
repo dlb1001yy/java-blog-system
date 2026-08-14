@@ -71,7 +71,10 @@ public class JwtUtils {
      */
     public String generateRefreshToken(String username) {
         String token = buildToken(username, getRefreshTokenExpiration(), TYPE_REFRESH);
-        stringRedisTemplate.opsForSet().add(REFRESH_SET_PREFIX + username, token);
+        String key = REFRESH_SET_PREFIX + username;
+        stringRedisTemplate.opsForSet().add(key, token);
+        // 为 SET 设置 TTL，匹配 RefreshToken 有效期，避免过期 token 永久残留
+        stringRedisTemplate.expire(key, getRefreshTokenExpiration(), java.util.concurrent.TimeUnit.MILLISECONDS);
         return token;
     }
 

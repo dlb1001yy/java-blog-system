@@ -8,6 +8,48 @@ const generateRequestKey = (config) => {
   return [method, url, JSON.stringify(params), JSON.stringify(data)].join('&')
 }
 
+// 刷新令牌的并发去重：同一时刻多个 401 只触发一次刷新请求
+let refreshing = null
+function refreshTokenOnce() {
+  if (!refreshing) {
+    const refreshToken = uni.getStorageSync(REFRESH_TOKEN_KEY)
+    if (!refreshToken) {
+      return Promise.reject(new Error('no refresh token'))
+    }
+    refreshing = new Promise((resolve, reject) => {
+      uni.request({
+        url: BASE_URL + '/auth/refresh',
+        method: 'POST',
+        header: {
+          'Content-Type': 'application/json',
+          'X-Refresh-Token': refreshToken
+        },
+        success: (res) => {
+          if (res.statusCode === 200 && res.data.code === 200) {
+            uni.setStorageSync(TOKEN_KEY, res.data.data.accessToken)
+            uni.setStorageSync(REFRESH_TOKEN_KEY, res.data.data.refreshToken)
+            resolve(res.data.data.accessToken)
+          } else {
+            reject(new Error('refresh failed'))
+          }
+        },
+        fail: (err) => reject(err)
+      })
+    }).finally(() => {
+      refreshing = null
+    })
+  }
+  return refreshing
+}
+
+// 清除登录态并跳转登录页
+function clearAuthAndRedirect() {
+  uni.removeStorageSync(TOKEN_KEY)
+  uni.removeStorageSync(REFRESH_TOKEN_KEY)
+  uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' })
+  setTimeout(() => uni.reLaunch({ url: '/pages/mine/login' }), 1500)
+}
+
 const request = (options) => {
   // 防止重复提交
   const requestKey = generateRequestKey(options)
@@ -42,12 +84,25 @@ const request = (options) => {
             uni.showToast({ title: res.data.message || '请求失败', icon: 'none' })
             reject(res.data)
           }
+        } else if (res.statusCode === 401 && !options._retry) {
+          // Token 过期，尝试静默刷新
+          options._retry = true
+          refreshTokenOnce()
+            .then((newToken) => {
+              // 用新令牌重试原请求
+              pendingRequest.delete(requestKey)
+              options.header = options.header || {}
+              options.header['Authorization'] = `Bearer ${newToken}`
+              request(options).then(resolve).catch(reject)
+            })
+            .catch(() => {
+              // 刷新失败，清除登录态并跳转登录页
+              clearAuthAndRedirect()
+              reject(res)
+            })
         } else if (res.statusCode === 401) {
-          // Token过期，跳转登录
-          uni.removeStorageSync(TOKEN_KEY)
-          uni.removeStorageSync(REFRESH_TOKEN_KEY)
-          uni.showToast({ title: '登录已过期', icon: 'none' })
-          setTimeout(() => uni.reLaunch({ url: '/pages/mine/login' }), 1500)
+          // 已重试过仍 401，直接跳转登录
+          clearAuthAndRedirect()
           reject(res)
         } else {
           uni.showToast({ title: '网络异常', icon: 'none' })

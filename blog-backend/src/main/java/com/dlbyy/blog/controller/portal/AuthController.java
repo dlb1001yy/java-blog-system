@@ -72,6 +72,7 @@ public class AuthController {
 
             Map<String, Object> response = new HashMap<>();
             response.put("accessToken", accessToken);
+            response.put("refreshToken", refreshToken);
             response.put("username", username);
             return Result.success("登录成功", response);
         } catch (BadCredentialsException e) {
@@ -89,8 +90,11 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public Result<?> refresh(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
-        // 从 HTTP-only Cookie 读取 refresh token，无需前端传参
+        // 优先从 HTTP-only Cookie 读取，回退到 X-Refresh-Token 请求头（兼容移动端非浏览器客户端）
         String refreshToken = cookieUtils.getRefreshTokenFromRequest(httpRequest);
+        if (refreshToken == null || refreshToken.isBlank()) {
+            refreshToken = httpRequest.getHeader("X-Refresh-Token");
+        }
         if (refreshToken == null || refreshToken.isBlank()) {
             throw new BusinessException("RefreshToken 缺失或已过期");
         }
@@ -100,10 +104,17 @@ public class AuthController {
         }
 
         String username = jwtUtils.getUsernameFromToken(refreshToken);
+        // Refresh Token 轮换：吊销旧 Token，签发新 Token
+        jwtUtils.revokeRefreshToken(username, refreshToken);
         String newAccessToken = jwtUtils.generateAccessToken(username);
+        String newRefreshToken = jwtUtils.generateRefreshToken(username);
+
+        // 更新 Cookie（浏览器客户端）
+        cookieUtils.addRefreshCookie(httpResponse, newRefreshToken);
 
         Map<String, Object> response = new HashMap<>();
         response.put("accessToken", newAccessToken);
+        response.put("refreshToken", newRefreshToken);
         return Result.success("刷新成功", response);
     }
 

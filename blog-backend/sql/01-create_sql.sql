@@ -150,7 +150,7 @@ CREATE TABLE `sys_config` (
 
 -- 初始化管理员账号 (密码: admin123)
 INSERT INTO `sys_user` (`username`, `password`, `nickname`, `role`, `status`)
-VALUES ('admin', '$2a$10$Eblj1bNwQX5fZQvXQxQJZOVpO0ZQ7Q2LqXzQ8Q9Q0Q0Q0Q0Q0Q0Q', '管理员', 'admin', 1);
+VALUES ('admin', '$2a$12$hXcsSy38q6OZE3WLA71IVOIMyIM0Xp/gLS.D8gZAB12v1rqtYuKD.', '管理员', 'admin', 1);
 
 -- 初始化分类
 INSERT INTO `blog_category` (`name`, `sort`) VALUES

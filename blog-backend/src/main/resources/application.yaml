@@ -46,8 +46,8 @@ mybatis-plus:
 
 jwt:
   # 确保密钥长度至少为 64 个字符（满足 HS512 算法 512 位的要求）
-  secret: ThisIsASecureSecretKeyForJwtTokenGenerationAndValidationMakeItLongEnough123
-  expiration: 86400000  # 24小时
+  # 生产环境通过 JWT_SECRET 环境变量覆盖
+  secret: ${JWT_SECRET:ThisIsASecureSecretKeyForJwtTokenGenerationAndValidationMakeItLongEnough123}
   header: Authorization
   prefix: "Bearer "
 
