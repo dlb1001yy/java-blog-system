@@ -59,6 +59,7 @@ security:
     ip-window-seconds: 60      # IP 限流窗口（秒）
     user-fail-threshold: 5     # 同一用户名连续失败达到该次数锁定账户
     lock-minutes: 15           # 账户锁定时长（分钟）
+    captcha-enabled: true      # 是否开启登录图形验证码校验
     alert-enabled: true        # 达到锁定阈值是否触发告警通知
     bcrypt-strength: 12        # BCrypt 加密强度（盐值轮数）
     access-token-minutes: 15   # 访问令牌有效期（分钟）

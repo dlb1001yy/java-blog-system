@@ -336,7 +336,7 @@ export const TOKEN_KEY = 'uni_app_token'
 
 ## 单元测试
 
-后端基于 `spring-boot-starter-test`（JUnit 5 + Mockito + AssertJ）编写了**纯单元测试**：不启动 Spring 上下文、不依赖 MySQL / Redis，随时可离线运行。当前覆盖认证安全核心链路，共 46 个用例。
+后端基于 `spring-boot-starter-test`（JUnit 5 + Mockito + AssertJ）编写了**纯单元测试**：不启动 Spring 上下文、不依赖 MySQL / Redis，随时可离线运行。当前覆盖认证安全核心链路，共 56 个用例。
 
 ### 覆盖范围
 
@@ -344,7 +344,8 @@ export const TOKEN_KEY = 'uni_app_token'
 |--------|--------|----------|
 | `LoginAttemptServiceTest` | 16 | IP 限流（允许/触发限流告警/脚本返回 null/空 IP 回退 unknown）、账户锁定判断（无记录/锁定中/过期自动清理）、剩余锁定时长、连续失败计数（未达阈值/首失败设 TTL/达阈值锁定+告警/null 计数兜底）、登录成功清理计数 |
 | `JwtUtilsTest` | 16 | 双 Token 生成与类型区分（access/refresh）、签发-解析往返（用户名/有效期）、Token 校验（合法/篡改签名/乱码/黑名单）、RefreshToken 有效性（在集合中/已吊销/传错类型）、吊销（单个/全部）、黑名单写入（剩余 TTL） |
-| `AuthControllerTest` | 14 | 登录全分支（空用户名 400/锁定 423/IP 限流 429/成功 200/密码错误 401/触发锁定 423/其他异常 401/X-Forwarded-For 多级代理取 IP）、刷新令牌（缺失/无效清 Cookie/X-Refresh-Token 头兜底/有效轮换）、登出（带 Bearer 吊销全部令牌/无令牌直接清 Cookie） |
+| `AuthControllerTest` | 16 | 登录全分支（空用户名 400/锁定 423/IP 限流 429/成功 200/密码错误 401/触发锁定 423/其他异常 401/X-Forwarded-For 多级代理取 IP/验证码错误 400 不消耗限流额度/锁定优先于验证码）、刷新令牌（缺失/无效清 Cookie/X-Refresh-Token 头兜底/有效轮换）、登出（带 Bearer 吊销全部令牌/无令牌直接清 Cookie） |
+| `CaptchaServiceTest` | 8 | 验证码生成（base64 data URI/Redis TTL 60s/4 位文本）、校验（匹配/大小写不敏感+trim/不匹配/Key 不存在/空参/开关关闭/一次性消费） |
 
 ### 运行方式
 
@@ -370,11 +371,22 @@ mvn test                                                                     # �
 
 | 前缀 | 鉴权 | 说明 |
 |------|------|------|
-| `/auth/**` | 公开 | 登录、登出 |
+| `/auth/**` | 公开 | 登录、登出、图形验证码 |
 | `/portal/**` | 公开 | 前台接口（文章/分类/标签/评论/简历/留言/统计） |
 | `/admin/**` | 需 Token | 管理后台接口 |
 | `/user/**` | 需 Token | 当前用户信息 |
 | `/uploads/**` | 公开 | 上传文件静态访问 |
+
+### 登录验证码
+
+登录采用图形验证码人机验证，校验顺序：用户名空检查 → 账户锁定检查 → **验证码校验** → IP 限流 → 认证（验证码失败不消耗限流额度）。
+
+| 接口 | 说明 |
+|------|------|
+| `GET /auth/captcha` | 返回 `{captchaId, image}`，image 为 base64 data URI，可直接用于 `<img src>`；有效期 60 秒，一次性消费 |
+| `POST /auth/login` | 请求体增加 `captchaId`、`captchaCode`（忽略大小写） |
+
+> 配置开关：`security.login.captcha-enabled`（默认 true）。本地联调可设为 false 跳过校验。
 
 ### 鉴权方式
 

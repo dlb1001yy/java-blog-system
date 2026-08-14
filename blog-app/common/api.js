@@ -1,5 +1,8 @@
 import request from './request.js'
 
+// 获取图形验证码
+export const getCaptcha = () => request({ url: '/auth/captcha', method: 'GET' })
+
 export default {
   // 文章
   getArticles(params) {

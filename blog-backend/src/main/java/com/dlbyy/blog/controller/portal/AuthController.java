@@ -3,6 +3,7 @@ package com.dlbyy.blog.controller.portal;
 import com.dlbyy.blog.common.Result;
 import com.dlbyy.blog.common.exception.BusinessException;
 import com.dlbyy.blog.security.JwtTokenProvider;
+import com.dlbyy.blog.service.CaptchaService;
 import com.dlbyy.blog.service.LoginAttemptService;
 import com.dlbyy.blog.utils.CookieUtils;
 import com.dlbyy.blog.utils.JwtUtils;
@@ -35,6 +36,15 @@ public class AuthController {
     private final JwtUtils jwtUtils;
     private final LoginAttemptService loginAttemptService;
     private final CookieUtils cookieUtils;
+    private final CaptchaService captchaService;
+
+    /**
+     * 获取图形验证码
+     */
+    @GetMapping("/captcha")
+    public Result<?> getCaptcha() {
+        return Result.success(captchaService.generate());
+    }
 
     @PostMapping("/login")
     public Result<?> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
@@ -50,13 +60,18 @@ public class AuthController {
             return Result.error(423, "账户已被锁定，请 " + minutes + " 分钟后再试");
         }
 
-        // 2) 单 IP 维度登录限流
+        // 2.5) 图形验证码校验（在限流前拦截自动化攻击，且失败不消耗限流额度）
+        if (!captchaService.verify(request.getCaptchaId(), request.getCaptchaCode())) {
+            return Result.error(400, "验证码错误或已过期");
+        }
+
+        // 3) 单 IP 维度登录限流
         String clientIp = getClientIp(httpRequest);
         if (!loginAttemptService.tryAcquireIp(clientIp)) {
             return Result.error(429, "登录尝试过于频繁，请稍后再试");
         }
 
-        // 3) 认证（Spring Security 内部已用 BCrypt 校验密码）
+        // 4) 认证（Spring Security 内部已用 BCrypt 校验密码）
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, request.getPassword())
@@ -157,5 +172,7 @@ public class AuthController {
     public static class LoginRequest {
         private String username;
         private String password;
+        private String captchaId;
+        private String captchaCode;
     }
 }

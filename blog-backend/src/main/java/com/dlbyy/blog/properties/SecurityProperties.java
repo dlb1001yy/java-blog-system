@@ -25,6 +25,9 @@ public class SecurityProperties {
     /** 账户锁定时长（分钟） */
     private int lockMinutes = 15;
 
+    /** 是否开启登录图形验证码校验 */
+    private boolean captchaEnabled = true;
+
     /** 是否开启锁定告警通知 */
     private boolean alertEnabled = true;
 

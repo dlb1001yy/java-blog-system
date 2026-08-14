@@ -47,6 +47,22 @@
           />
         </view>
 
+        <!-- 验证码输入项：输入框 + 点击图片刷新 -->
+        <view class="input-item">
+          <input
+            v-model="form.captchaCode"
+            placeholder="请输入验证码"
+            class="input"
+            placeholder-class="placeholder"
+          />
+          <image
+            class="captcha-image"
+            :src="captchaImage"
+            mode="aspectFill"
+            @click="refreshCaptcha"
+          />
+        </view>
+
         <!-- 登录按钮 -->
         <button
           class="login-btn"
@@ -68,19 +84,42 @@
 
 <script setup>
 import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { TOKEN_KEY, REFRESH_TOKEN_KEY } from '@/common/config.js'
-import api from '@/common/api.js'
+import api, { getCaptcha } from '@/common/api.js'
 import Icon from '@/components/Icon.vue'
 
 const form = ref({
   username: 'admin',
-  password: 'admin123'
+  password: 'admin123',
+  captchaId: '',
+  captchaCode: ''
 })
 const loading = ref(false)
+const captchaImage = ref('')
+
+// 获取图形验证码（captchaId 一次性消费，失败后需刷新）
+const refreshCaptcha = async () => {
+  try {
+    const res = await getCaptcha()
+    form.value.captchaId = res.data.captchaId
+    captchaImage.value = res.data.image
+    form.value.captchaCode = ''
+  } catch (e) {
+    // 网络请求错误已在 request.js 中统一处理
+  }
+}
+
+onLoad(() => {
+  refreshCaptcha()
+})
 
 const handleLogin = async () => {
   if (!form.value.username || !form.value.password) {
     return uni.showToast({ title: '请输入账号和密码', icon: 'none' })
+  }
+  if (!form.value.captchaCode) {
+    return uni.showToast({ title: '请输入验证码', icon: 'none' })
   }
 
   loading.value = true
@@ -107,6 +146,8 @@ const handleLogin = async () => {
   } catch (error) {
     // 网络请求错误已在 request.js 中统一处理，此处可留空
     console.error('Login failed', error)
+    // 验证码已被一次性消费，失败后刷新
+    refreshCaptcha()
   } finally {
     loading.value = false
   }
@@ -208,6 +249,14 @@ const handleLogin = async () => {
 
 .placeholder {
   color: $color-text-tertiary;
+}
+
+// 图形验证码图片
+.captcha-image {
+  width: 260rpx;
+  height: 80rpx;
+  margin-left: 10px;
+  border-radius: $radius-lg;
 }
 
 // 登录按钮

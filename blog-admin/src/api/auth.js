@@ -1,5 +1,8 @@
 import request from './request'
 
+// 获取图形验证码
+export const getCaptcha = () => request.get('/auth/captcha')
+
 export default {
   // 登录
   login(data) {

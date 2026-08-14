@@ -53,6 +53,25 @@
             />
           </el-form-item>
 
+          <el-form-item prop="captchaCode">
+            <div class="captcha-item">
+              <el-input
+                v-model="loginForm.captchaCode"
+                placeholder="验证码"
+                :prefix-icon="Key"
+                size="large"
+              />
+              <img
+                v-if="captchaImage"
+                class="captcha-img"
+                :src="captchaImage"
+                alt="验证码"
+                title="点击刷新"
+                @click="refreshCaptcha"
+              />
+            </div>
+          </el-form-item>
+
           <el-form-item>
             <el-button
               type="primary"
@@ -75,27 +94,46 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { User, Lock } from '@element-plus/icons-vue'
+import { User, Lock, Key } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
+import { getCaptcha } from '@/api/auth'
 
 const router = useRouter()
 const userStore = useUserStore()
 
 const loginFormRef = ref()
 const loading = ref(false)
+const captchaImage = ref('')
 
 const loginForm = reactive({
   username: 'admin',
-  password: 'admin123'
+  password: 'admin123',
+  captchaId: '',
+  captchaCode: ''
 })
 
 const loginRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  captchaCode: [{ required: true, message: '请输入验证码', trigger: 'blur' }]
 }
+
+// 获取图形验证码（captchaId 一次性消费，失败/过期后需刷新）
+const refreshCaptcha = async () => {
+  try {
+    const res = await getCaptcha()
+    loginForm.captchaId = res.data.captchaId
+    captchaImage.value = res.data.image
+    loginForm.captchaCode = ''
+  } catch (e) {
+    // 加载失败静默处理，可点击图片区域重试
+  }
+}
+
+onMounted(refreshCaptcha)
 
 const handleLogin = async () => {
   await loginFormRef.value.validate(async (valid) => {
@@ -108,6 +146,7 @@ const handleLogin = async () => {
       router.push('/dashboard')
     } catch (error) {
       ElMessage.error('登录失败，请检查用户名和密码')
+      refreshCaptcha()
     } finally {
       loading.value = false
     }
@@ -285,6 +324,25 @@ const handleLogin = async () => {
 
 :deep(.el-input--large .el-input__wrapper) {
   padding: 6px 12px;
+}
+
+/* 图形验证码 */
+.captcha-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.captcha-item :deep(.el-input) {
+  flex: 1;
+}
+
+.captcha-img {
+  height: 40px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .login-btn {

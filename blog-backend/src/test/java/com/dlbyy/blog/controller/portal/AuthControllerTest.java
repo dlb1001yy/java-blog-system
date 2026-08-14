@@ -3,6 +3,7 @@ package com.dlbyy.blog.controller.portal;
 import com.dlbyy.blog.common.Result;
 import com.dlbyy.blog.common.exception.BusinessException;
 import com.dlbyy.blog.security.JwtTokenProvider;
+import com.dlbyy.blog.service.CaptchaService;
 import com.dlbyy.blog.service.LoginAttemptService;
 import com.dlbyy.blog.utils.CookieUtils;
 import com.dlbyy.blog.utils.JwtUtils;
@@ -56,13 +57,16 @@ class AuthControllerTest {
     @Mock
     private CookieUtils cookieUtils;
 
+    @Mock
+    private CaptchaService captchaService;
+
     private AuthController authController;
 
     @BeforeEach
     void setUp() {
-        // @RequiredArgsConstructor 生成的构造器，手动注入全部 mock 协作者
+        // @RequiredArgsConstructor 生成的构造器，手动注入全部 mock 协作者（末尾为 CaptchaService）
         authController = new AuthController(
-                authenticationManager, jwtTokenProvider, jwtUtils, loginAttemptService, cookieUtils);
+                authenticationManager, jwtTokenProvider, jwtUtils, loginAttemptService, cookieUtils, captchaService);
     }
 
     /** 构造登录请求体 */
@@ -115,8 +119,42 @@ class AuthControllerTest {
         }
 
         @Test
+        @DisplayName("账户锁定检查优先于验证码：锁定时返回 423，验证码服务完全未被调用")
+        void lockedAccount_returns423_beforeCaptchaVerification() {
+            when(loginAttemptService.isLocked("admin")).thenReturn(true);
+            when(loginAttemptService.getRemainingLockMillis("admin")).thenReturn(600000L);
+            // 不 stub captchaService.verify：若锁定检查晚于验证码，将得到 400 而非 423
+
+            Result<?> result = authController.login(
+                    loginRequest("admin", "password"), new MockHttpServletRequest(), new MockHttpServletResponse());
+
+            assertThat(result.getCode()).isEqualTo(423);
+            // 锁定在验证码之前，验证码校验不应被触发
+            verify(captchaService, never()).verify(any(), any());
+        }
+
+        @Test
+        @DisplayName("验证码错误或已过期时返回 400，且不消耗 IP 限流额度、不计失败次数、不进入认证")
+        void captchaFailed_returns400_withoutRateLimitConsumption() {
+            when(loginAttemptService.isLocked("admin")).thenReturn(false);
+            when(captchaService.verify(any(), any())).thenReturn(false);
+
+            Result<?> result = authController.login(
+                    loginRequest("admin", "password"), new MockHttpServletRequest(), new MockHttpServletResponse());
+
+            assertThat(result.getCode()).isEqualTo(400);
+            assertThat(result.getMessage()).contains("验证码");
+            // 验证码失败在限流之前被拦截：不消耗限流额度、不计入失败次数、不触发认证
+            verify(captchaService).verify(any(), any());
+            verify(loginAttemptService, never()).tryAcquireIp(any());
+            verify(loginAttemptService, never()).onLoginFailure(anyString());
+            verify(authenticationManager, never()).authenticate(any());
+        }
+
+        @Test
         @DisplayName("IP 限流未通过时返回 429")
         void ipRateLimited_returns429() {
+            when(captchaService.verify(any(), any())).thenReturn(true);
             when(loginAttemptService.tryAcquireIp(anyString())).thenReturn(false);
 
             Result<?> result = authController.login(
@@ -129,6 +167,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("认证成功返回 200，data 含 accessToken/refreshToken/username，并下发 refresh Cookie")
         void success_returns200_withTokens() {
+            when(captchaService.verify(any(), any())).thenReturn(true);
             when(loginAttemptService.tryAcquireIp(anyString())).thenReturn(true);
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenReturn(new UsernamePasswordAuthenticationToken("admin", null, Collections.emptyList()));
@@ -155,6 +194,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("凭证错误且未达到锁定阈值时返回 401")
         void badCredentials_belowThreshold_returns401() {
+            when(captchaService.verify(any(), any())).thenReturn(true);
             when(loginAttemptService.tryAcquireIp(anyString())).thenReturn(true);
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenThrow(new BadCredentialsException("用户名或密码错误"));
@@ -171,6 +211,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("凭证错误且达到锁定阈值时返回 423")
         void badCredentials_reachThreshold_returns423() {
+            when(captchaService.verify(any(), any())).thenReturn(true);
             when(loginAttemptService.tryAcquireIp(anyString())).thenReturn(true);
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenThrow(new BadCredentialsException("用户名或密码错误"));
@@ -186,6 +227,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("认证过程抛出其他异常时返回 401，且不记录登录失败")
         void unexpectedException_returns401_withoutFailureCount() {
+            when(captchaService.verify(any(), any())).thenReturn(true);
             when(loginAttemptService.tryAcquireIp(anyString())).thenReturn(true);
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenThrow(new RuntimeException("认证服务不可用"));
@@ -203,6 +245,7 @@ class AuthControllerTest {
         void clientIp_takesFirstFromXForwardedFor() {
             MockHttpServletRequest httpRequest = new MockHttpServletRequest();
             httpRequest.addHeader("X-Forwarded-For", "1.2.3.4, 5.6.7.8");
+            when(captchaService.verify(any(), any())).thenReturn(true);
             // 仅对第一个 IP stub 为被限流，间接验证 getClientIp 的解析结果
             when(loginAttemptService.tryAcquireIp("1.2.3.4")).thenReturn(false);
 

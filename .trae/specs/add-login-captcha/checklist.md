@@ -1,0 +1,13 @@
+- [x] CaptchaService 存在且使用 Hutool CaptchaUtil（未新增 Maven 依赖），验证码存 Redis TTL 60s
+- [x] verify 使用 getAndDelete 实现一次性消费，比对忽略大小写
+- [x] SecurityProperties.captchaEnabled（默认 true）+ application.yaml / application-docker.yaml 配置项存在（docker 文件无 security 块，继承主配置）
+- [x] GET /auth/captcha 可匿名访问（经 RequestSignatureFilter 放行，与 /portal GET 行为一致），返回 captchaId + base64 图片
+- [x] LoginRequest 含 captchaId/captchaCode；login 校验顺序为 用户名空 → 锁定 → 验证码 → IP限流 → 认证
+- [x] 验证码失败返回 400 "验证码错误或已过期"，且不消耗限流额度、不累加失败计数
+- [x] captcha-enabled=false 时登录行为与现状一致
+- [x] blog-admin Login.vue 展示验证码图片，点击可刷新，登录请求携带验证码字段，失败后自动刷新
+- [x] blog-app login.vue 同样支持验证码展示/刷新/提交
+- [x] CaptchaServiceTest 新增且 AuthControllerTest 已更新（含验证码失败 400 场景），mvn test 全绿（56 个用例全部通过）
+- [x] blog-admin npm run build 成功（built in 16.13s）
+- [x] README.md 与 项目开发文档合集.md 已同步验证码接口与测试说明
+- [x] 未改动 blog-frontend
