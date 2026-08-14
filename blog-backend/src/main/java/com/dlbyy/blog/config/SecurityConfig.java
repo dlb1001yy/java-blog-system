@@ -65,7 +65,7 @@ public class SecurityConfig {
                 .requestMatchers("/admin/**").authenticated()
                 .anyRequest().permitAll()
             )
-            .addFilterBefore(requestSignatureFilter, JwtAuthenticationFilter.class)
+            .addFilterBefore(requestSignatureFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
