@@ -106,6 +106,7 @@ blog-backend/
 │   │   │   ├── AdminCommentController.java
 │   │   │   ├── AdminDashboardController.java
 │   │   │   ├── AdminFileController.java
+│   │   │   ├── AdminConfigController.java        # 系统配置（站点/上传）
 │   │   │   ├── AdminLinkController.java
 │   │   │   ├── AdminMessageController.java
 │   │   │   ├── AdminResumeController.java
@@ -202,6 +203,7 @@ blog-backend/
 | `/auth/**` | 公开 | 登录、登出 |
 | `/portal/**` | 公开 | 前台接口（文章/分类/标签/评论/简历/留言/统计） |
 | `/admin/**` | 需 Token | 管理后台接口 |
+| `/admin/config/**` | 需 Token | 系统配置（站点配置、上传配置） |
 | `/user/**` | 需 Token | 当前用户信息 |
 | `/uploads/**` | 公开 | 上传文件静态访问 |
 
@@ -222,6 +224,30 @@ Authorization: Bearer <token>
   "data": { ... }
 }
 ```
+
+## 系统配置接口
+
+后台「系统设置」页面通过以下接口读写站点配置与上传配置，配置以键值形式持久化到 `sys_config` 表（见 `Config` 实体 / `ConfigService`）。
+
+| 方法 | 路径 | 说明 | 请求体 |
+|------|------|------|--------|
+| PUT | `/admin/config/site` | 保存网站配置 | `{ blogName, blogDescription, blogDomain }` |
+| GET | `/admin/config/site` | 获取网站配置 | — |
+| PUT | `/admin/config/upload` | 保存上传配置 | `{ uploadPath, allowedTypes, maxSize }` |
+| GET | `/admin/config/upload` | 获取上传配置 | — |
+
+说明：
+
+- 所有接口均需 JWT 鉴权（`/admin/**` 受保护）。
+- `maxSize` 单位为 **MB**，保存时自动转换为字节写入数据库与运行时 `StorageProperties.LocalConfig`。
+- 保存上传配置后，会**动态改写运行时的本地存储参数**（`uploadPath` / `allowedTypes` / `maxSize`），使上传校验立即生效，无需重启（仅对 `storage.type=local` 生效）。
+- 字段说明：
+  - `blogName`：站点名称
+  - `blogDescription`：站点描述
+  - `blogDomain`：站点域名
+  - `uploadPath`：上传文件存储路径
+  - `allowedTypes`：允许上传的文件类型，逗号分隔（如 `jpg,png,gif,webp`）
+  - `maxSize`：上传文件大小上限（MB）
 
 ## 接口文档
 
