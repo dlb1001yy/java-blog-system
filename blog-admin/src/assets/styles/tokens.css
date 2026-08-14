@@ -1,36 +1,36 @@
 /* 设计令牌系统 - 集中定义颜色、阴影、圆角、间距、字号等设计变量 */
 :root {
   /* 颜色 - 主色 */
-  --color-primary: #6366F1;
-  --color-primary-light: #818CF8;
-  --color-primary-dark: #4F46E5;
-  --color-secondary: #06B6D4;
-  --color-accent: #8B5CF6;
+  --color-primary: #059669;
+  --color-primary-light: #10B981;
+  --color-primary-dark: #047857;
+  --color-secondary: #0D9488;
+  --color-accent: #14B8A6;
 
   /* 渐变 */
-  --gradient-primary: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
-  --gradient-sidebar: linear-gradient(180deg, #1E1B4B 0%, #312E81 100%);
+  --gradient-primary: linear-gradient(135deg, #059669 0%, #14B8A6 100%);
+  --gradient-sidebar: linear-gradient(180deg, #0F2A23 0%, #143D31 100%);
 
   /* 中性背景 */
-  --bg-page: #F8FAFC;
+  --bg-page: #FAFAF9;
   --bg-card: #FFFFFF;
-  --bg-subtle: #F1F5F9;
+  --bg-subtle: #F5F5F4;
 
   /* 文字 */
-  --text-primary: #0F172A;
-  --text-regular: #475569;
-  --text-secondary: #94A3B8;
+  --text-primary: #1C1917;
+  --text-regular: #57534E;
+  --text-secondary: #A8A29E;
   --text-on-gradient: #FFFFFF;
 
   /* 边框 */
-  --border-color: #E2E8F0;
+  --border-color: #E7E5E4;
 
   /* 阴影 - 柔和彩色 */
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
   --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
   --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.10), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
-  --shadow-primary: 0 8px 20px -4px rgba(99, 102, 241, 0.35);
+  --shadow-primary: 0 8px 20px -4px rgba(5, 150, 105, 0.35);
 
   /* 圆角 */
   --radius-sm: 8px;
@@ -68,13 +68,13 @@
   --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Element Plus 主题覆盖 */
-  --el-color-primary: #6366F1;
-  --el-color-primary-light-3: #818CF8;
-  --el-color-primary-light-5: #A5B4FC;
-  --el-color-primary-light-7: #C7D2FE;
-  --el-color-primary-light-8: #E0E7FF;
-  --el-color-primary-light-9: #EEF2FF;
-  --el-color-primary-dark-2: #4F46E5;
+  --el-color-primary: #059669;
+  --el-color-primary-light-3: #34D399;
+  --el-color-primary-light-5: #6EE7B7;
+  --el-color-primary-light-7: #A7F3D0;
+  --el-color-primary-light-8: #D1FAE5;
+  --el-color-primary-light-9: #ECFDF5;
+  --el-color-primary-dark-2: #047857;
   --el-border-radius-base: 8px;
   --el-font-family: var(--font-sans);
 }

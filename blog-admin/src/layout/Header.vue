@@ -197,6 +197,6 @@ const handleCommand = (command) => {
 }
 
 :deep(.el-avatar) {
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.3);
 }
 </style>

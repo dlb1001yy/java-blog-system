@@ -144,25 +144,25 @@ const fetchTrend = async () => {
     xAxis: {
       type: 'category',
       data: res.data.map(item => item.date),
-      axisLine: { lineStyle: { color: '#dcdfe6' } },
-      axisLabel: { color: '#94A3B8' }
+      axisLine: { lineStyle: { color: '#E7E5E4' } },
+      axisLabel: { color: '#A8A29E' }
     },
     yAxis: {
       type: 'value',
       axisLine: { show: false },
-      axisLabel: { color: '#94A3B8' },
-      splitLine: { lineStyle: { color: '#F1F5F9' } }
+      axisLabel: { color: '#A8A29E' },
+      splitLine: { lineStyle: { color: '#F5F5F4' } }
     },
     series: [{
       name: '发布文章',
       type: 'line',
       smooth: true,
       data: res.data.map(item => item.count),
-      itemStyle: { color: '#6366F1' },
+      itemStyle: { color: '#059669' },
       areaStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: 'rgba(99, 102, 241, 0.3)' },
-          { offset: 1, color: 'rgba(99, 102, 241, 0.01)' }
+          { offset: 0, color: 'rgba(5, 150, 105, 0.3)' },
+          { offset: 1, color: 'rgba(5, 150, 105, 0.01)' }
         ])
       }
     }]
@@ -185,7 +185,7 @@ const fetchTypeStats = async () => {
       label: { show: false },
       emphasis: { label: { show: true, fontSize: 18, fontWeight: 'bold' } },
       data: [
-        { value: res.data.original, name: '原创', itemStyle: { color: '#6366F1' } },
+        { value: res.data.original, name: '原创', itemStyle: { color: '#059669' } },
         { value: res.data.reproduced, name: '转载', itemStyle: { color: '#F59E0B' } },
         { value: res.data.translated, name: '翻译', itemStyle: { color: '#10B981' } }
       ]
@@ -205,16 +205,16 @@ const fetchCategoryStats = async () => {
     xAxis: {
       type: 'category',
       data: res.data.map(item => item.name),
-      axisLabel: { color: '#94A3B8', rotate: 30 }
+      axisLabel: { color: '#A8A29E', rotate: 30 }
     },
-    yAxis: { type: 'value', axisLabel: { color: '#94A3B8' } },
+    yAxis: { type: 'value', axisLabel: { color: '#A8A29E' } },
     series: [{
       type: 'bar',
       data: res.data.map(item => item.count),
       itemStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: '#6366F1' },
-          { offset: 1, color: '#818CF8' }
+          { offset: 0, color: '#059669' },
+          { offset: 1, color: '#10B981' }
         ]),
         borderRadius: [4, 4, 0, 0]
       },
@@ -282,11 +282,11 @@ onMounted(() => {
 }
 
 .stat-card--primary {
-  background: linear-gradient(135deg, #6366F1, #818CF8);
+  background: linear-gradient(135deg, #059669, #10B981);
 }
 
 .stat-card--secondary {
-  background: linear-gradient(135deg, #06B6D4, #22D3EE);
+  background: linear-gradient(135deg, #0D9488, #2DD4BF);
 }
 
 .stat-card--warning {

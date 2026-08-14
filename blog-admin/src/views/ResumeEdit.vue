@@ -258,14 +258,14 @@ onMounted(() => fetchResume())
   transition: box-shadow var(--transition-base);
 }
 :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px var(--color-primary) inset, 0 0 0 4px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 1px var(--color-primary) inset, 0 0 0 4px rgba(5, 150, 105, 0.1);
 }
 :deep(.el-textarea__inner) {
   border-radius: var(--radius-md);
   transition: box-shadow var(--transition-base);
 }
 :deep(.el-textarea__inner:focus) {
-  box-shadow: 0 0 0 1px var(--color-primary) inset, 0 0 0 4px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 1px var(--color-primary) inset, 0 0 0 4px rgba(5, 150, 105, 0.1);
 }
 
 :deep(.el-tabs__item) {

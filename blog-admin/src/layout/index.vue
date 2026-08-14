@@ -104,8 +104,8 @@ const appStore = useAppStore()
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.06), transparent 50%),
-              radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.05), transparent 50%);
+  background: radial-gradient(circle at 20% 20%, rgba(5, 150, 105, 0.06), transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(20, 184, 166, 0.05), transparent 50%);
   pointer-events: none;
   z-index: 0;
 }

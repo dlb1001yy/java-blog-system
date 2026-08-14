@@ -131,7 +131,7 @@ const handleLogin = async () => {
   justify-content: center;
   padding: var(--space-8);
   overflow: hidden;
-  background: linear-gradient(135deg, #4F46E5 0%, #6366F1 40%, #8B5CF6 100%);
+  background: linear-gradient(135deg, #047857 0%, #059669 40%, #14B8A6 100%);
   color: #fff;
 }
 
@@ -280,7 +280,7 @@ const handleLogin = async () => {
 }
 
 :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px var(--color-primary) inset, 0 0 0 4px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 1px var(--color-primary) inset, 0 0 0 4px rgba(5, 150, 105, 0.1);
 }
 
 :deep(.el-input--large .el-input__wrapper) {
@@ -301,7 +301,7 @@ const handleLogin = async () => {
 
 :deep(.login-btn:hover) {
   transform: translateY(-2px);
-  box-shadow: 0 12px 24px -6px rgba(99, 102, 241, 0.5);
+  box-shadow: 0 12px 24px -6px rgba(5, 150, 105, 0.5);
 }
 
 :deep(.login-btn:active) {

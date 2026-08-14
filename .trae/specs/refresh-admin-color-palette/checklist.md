@@ -1,0 +1,15 @@
+- [x] `tokens.css` 中 `--color-primary` 为 `#059669`
+- [x] `tokens.css` 中 `--gradient-primary` 使用 `#059669 → #14B8A6`
+- [x] `tokens.css` 中 `--gradient-sidebar` 使用深森林绿（#0F2A23 → #143D31）
+- [x] `tokens.css` 中中性背景为暖石色（`--bg-page: #FAFAF9`、`--bg-subtle: #F5F5F4`）
+- [x] `tokens.css` 中文字色为暖石色（`--text-primary: #1C1917`、`--text-regular: #57534E`、`--text-secondary: #A8A29E`）
+- [x] `tokens.css` 中 `--border-color` 为 `#E7E5E4`
+- [x] `tokens.css` 中 `--shadow-primary` 使用 `rgba(5, 150, 105, 0.35)`
+- [x] `tokens.css` 中 `--el-color-primary` 及全部 light/dark 变量已更新为翡翠绿系
+- [x] `global.css` 滚动条色值已从靛蓝替换为森林绿
+- [x] `layout/index.vue` 渐变光斑已替换为森林绿/翡翠色
+- [x] `layout/Header.vue` 头像描边已替换为森林绿
+- [x] `Login.vue` 品牌渐变、按钮阴影已替换为森林绿
+- [x] `Dashboard.vue` 图表色值和统计卡渐变已替换为森林绿
+- [x] `ArticleEdit.vue`、`ResumeEdit.vue`、`Settings.vue` 聚焦阴影已替换为森林绿
+- [x] 全局搜索 `6366F1`、`818CF8`、`4F46E5`、`8B5CF6`、`rgba(99, 102, 241`、`rgba(139, 92, 246` 返回零结果
