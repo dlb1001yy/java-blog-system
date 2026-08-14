@@ -1,0 +1,9 @@
+- [x] blog-backend/pom.xml 包含 scope=test 的 spring-boot-starter-test 依赖
+- [x] 未修改任何 src/main 生产代码（仅 pom.xml 与 src/test 新增）
+- [x] LoginAttemptServiceTest 覆盖 tryAcquireIp（允许/限流告警/null 返回/空 IP）、isLocked（无 Key/未过期/已过期清理）、getRemainingLockMillis、onLoginFailure（未达阈值/首败 TTL/达阈值锁定+告警/null 计数）、onLoginSuccess
+- [x] JwtUtilsTest 覆盖双 Token 生成与类型区分、subject/有效期解析、validateToken（合法/篡改/黑名单）、isValidRefreshToken（成员/非成员/AccessToken/无效）、revokeAll/revoke/addToBlacklist（剩余>0/已过期）
+- [x] AuthControllerTest 覆盖 login 全部分支（400/423 锁定/429 限流/200 成功/401 凭证错误/423 触发锁定/401 其他异常/X-Forwarded-For）
+- [x] AuthControllerTest 覆盖 refresh（缺失/无效/ Header 兜底/有效轮换）与 logout（带/不带 Bearer）
+- [x] 所有测试为纯单元测试：不启动 Spring 上下文，不连接 Redis/MySQL
+- [x] `mvn test -Dtest="LoginAttemptServiceTest,JwtUtilsTest,AuthControllerTest"` 在 blog-backend 下全部通过
+- [x] tasks.md 中所有任务已勾选
