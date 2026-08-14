@@ -8,9 +8,10 @@ server:
 spring:
   datasource:
     # 使用容器名 mysql 作为主机，数据库名与默认配置一致
+    # 账号密码通过 MYSQL_USERNAME / MYSQL_PASSWORD 环境变量注入（docker-compose environment 或宿主机环境）
     url: jdbc:mysql://mysql:3306/dlbyy_zp_blog?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
-    username: root
-    password: 123456
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
@@ -18,7 +19,8 @@ spring:
       host: redis
       port: 6379
       database: 5
-      password: 123456
+      # Redis 密码通过 REDIS_PASSWORD 环境变量注入（docker-compose environment 或宿主机环境）
+      password: ${REDIS_PASSWORD:123456}
       timeout: 3000ms
     elasticsearch:
       repositories:

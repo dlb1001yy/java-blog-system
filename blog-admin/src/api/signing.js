@@ -1,6 +1,7 @@
 // 纯 JS HMAC-SHA256 实现，兼容 HTTP 非安全上下文（不依赖 crypto.subtle）
 
-const SIGNING_SECRET = 'BlogApiSigningSecret2024!'
+// 签名密钥：来自 Vite 环境变量（.env.development / .env.production / CI 注入），兜底为开发默认值
+const SIGNING_SECRET = import.meta.env.VITE_API_SIGNING_SECRET || 'BlogApiSigningSecret2024!'
 
 // ---------------------------------------------------------------------------
 // UTF-8 helpers

@@ -1,3 +1,4 @@
+# 敏感配置统一走环境变量（${VAR:默认}），冒号后为本地开发默认值，生产环境通过环境变量注入真实值
 server:
   port: 8080
   servlet:
@@ -6,8 +7,9 @@ server:
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/dlbyy_zp_blog?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    username: root
-    password: 123456
+    # 数据库账号密码通过 MYSQL_USERNAME / MYSQL_PASSWORD 环境变量覆盖
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
   servlet:
     multipart:
@@ -18,7 +20,8 @@ spring:
       host: localhost
       port: 6379
       database: 5
-      password: 123456
+      # Redis 密码通过 REDIS_PASSWORD 环境变量覆盖
+      password: ${REDIS_PASSWORD:123456}
       timeout: 3000ms
     elasticsearch:
       repositories:
@@ -46,7 +49,7 @@ mybatis-plus:
 
 jwt:
   # 确保密钥长度至少为 64 个字符（满足 HS512 算法 512 位的要求）
-  # 生产环境通过 JWT_SECRET 环境变量覆盖
+  # 生产环境必须通过 JWT_SECRET 环境变量注入强随机值，勿用默认值
   secret: ${JWT_SECRET:ThisIsASecureSecretKeyForJwtTokenGenerationAndValidationMakeItLongEnough123}
   header: Authorization
   prefix: "Bearer "
@@ -68,7 +71,7 @@ security:
     cookie-same-site: "None"    # refresh Cookie SameSite 策略
   signing:
     enabled: true                # 是否开启请求签名验证（false 时完全跳过，行为与之前一致）
-    secret: ${API_SIGNING_SECRET:BlogApiSigningSecret2024!}  # 签名密钥，生产环境通过环境变量覆盖
+    secret: ${API_SIGNING_SECRET:BlogApiSigningSecret2024!}  # 签名密钥，生产环境必须通过环境变量注入强随机值，勿用默认值
     timestamp-window-seconds: 60 # 请求时间戳有效窗口（秒），超过则拒绝
 
 # 文件上传路径（旧版 FileUtils 使用，保持向后兼容）
@@ -86,11 +89,12 @@ storage:
     allowed-types: jpg,jpeg,png,gif,webp,md,markdown
     max-size: 10485760  # 10MB
   oss:
-    endpoint: oss-cn-hangzhou.aliyuncs.com
-    access-key-id: your-access-key-id
-    access-key-secret: your-access-key-secret
-    bucket-name: your-bucket-name
-    url-prefix: https://your-bucket-name.oss-cn-hangzhou.aliyuncs.com/
+    # OSS 四项配置通过同名环境变量注入，以下仅为占位默认值
+    endpoint: ${OSS_ENDPOINT:oss-cn-hangzhou.aliyuncs.com}
+    access-key-id: ${OSS_ACCESS_KEY_ID:your-access-key-id}
+    access-key-secret: ${OSS_ACCESS_KEY_SECRET:your-access-key-secret}
+    bucket-name: ${OSS_BUCKET_NAME:your-bucket-name}
+    url-prefix: ${OSS_URL_PREFIX:https://your-bucket-name.oss-cn-hangzhou.aliyuncs.com/}
 
 # 网站配置
 blog:

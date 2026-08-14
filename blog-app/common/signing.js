@@ -1,7 +1,7 @@
 // Minimal HMAC-SHA256 implementation for uni-app (no Web Crypto dependency)
 // Works in all JS environments (H5, APP-PLUS, MP-WEIXIN, etc.)
 
-const SIGNING_SECRET = 'BlogApiSigningSecret2024!'
+import { SIGNING_SECRET } from './env.js'
 
 // ---------------------------------------------------------------------------
 // UTF-8 helpers

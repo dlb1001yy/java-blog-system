@@ -1,0 +1,11 @@
+- [x] application.yaml：MySQL/Redis 账密、OSS 密钥均为 `${ENV:默认}` 占位，本地无环境变量时行为不变
+- [x] application-docker.yaml：账密同样占位化
+- [x] SignatureProperties 无硬编码密钥默认值（空串）
+- [x] docker-compose.yml：MYSQL_ROOT_PASSWORD/REDIS_PASSWORD 及 healthcheck 均为 `${VAR:-默认}` 插值；backend environment 注入 MYSQL_PASSWORD/REDIS_PASSWORD/JWT_SECRET/API_SIGNING_SECRET
+- [x] .env.example 存在且入 git，含全部变量与中文说明；根 .gitignore 忽略 .env（发现 .env 原已被跟踪，已 git rm --cached 修正）
+- [x] blog-admin 签名密钥读取 import.meta.env.VITE_API_SIGNING_SECRET（含默认回退）；.env.development/.env.production 存在
+- [x] blog-app 签名密钥改由 common/env.js 常量提供
+- [x] mvn test 全部通过（56 用例）
+- [x] blog-admin npm run build 成功
+- [x] README.md 与 部署操作手册.md 已补充环境变量说明
+- [x] 未修改任何业务逻辑代码（仅配置、常量来源与文档）

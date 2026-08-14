@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Vite env files (local overrides may contain real secrets; .env.development/.env.production are committed as templates)
+.env.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -262,6 +262,12 @@ spring:
       database: 5
 ```
 
+敏感配置（数据库密码、Redis 密码、JWT 密钥、API 签名密钥等）支持通过环境变量注入，配置文件中已使用 `${ENV:默认值}` 占位（可先不改 yaml，直接用环境变量覆盖）：
+
+- **Docker 部署**：`cp .env.example .env` 后填写真实值再启动（`.env` 已被 `.gitignore` 忽略，不入 git）
+- **裸机运行**：`export MYSQL_PASSWORD=... JWT_SECRET=...`，或在 IDEA 运行配置的环境变量中填写
+- **前端签名密钥**：blog-admin 见 `.env.development` / `.env.production` 中的 `VITE_API_SIGNING_SECRET`（须与后端 `API_SIGNING_SECRET` 一致）；blog-app 见 `common/env.js`
+
 启动：
 
 ```bash
@@ -304,15 +310,17 @@ npm run dev
 
 ### 后端配置（application.yaml）
 
-| 配置项 | 默认值 | 说明 |
-|--------|--------|------|
-| server.port | 8080 | 服务端口 |
-| server.servlet.context-path | /api | 接口前缀 |
-| spring.datasource | — | MySQL 数据源 |
-| spring.data.redis | — | Redis 连接 |
-| jwt.secret | — | JWT 密钥（≥64 字符） |
-| jwt.expiration | 86400000 | Token 有效期 24h |
-| file.upload-path | — | 文件上传目录 |
+| 配置项 | 环境变量 | 默认值（本地开发） | 说明 |
+|--------|----------|--------------------|------|
+| server.port | — | 8080 | 服务端口 |
+| server.servlet.context-path | — | /api | 接口前缀 |
+| spring.datasource.* | MYSQL_USERNAME / MYSQL_PASSWORD | root / 123456 | MySQL 数据源（用户名/密码） |
+| spring.data.redis.password | REDIS_PASSWORD | 123456 | Redis 密码 |
+| jwt.secret | JWT_SECRET | 内置开发默认值 | JWT 密钥（≥64 字符，生产必改） |
+| jwt.expiration | — | 86400000 | Token 有效期 24h |
+| security.signing.secret | API_SIGNING_SECRET | 内置开发默认值 | API 签名密钥（生产必改） |
+| storage.oss.* | OSS_ENDPOINT 等 | 占位符 | OSS 密钥（启用 oss 存储时配置） |
+| file.upload-path | — | — | 文件上传目录 |
 
 ### 前端配置（vite.config.js）
 

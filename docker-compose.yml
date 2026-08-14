@@ -1,5 +1,8 @@
 # Java 博客系统 Docker Compose 编排
 # 使用：docker compose up -d --build
+# 敏感配置（数据库/Redis 密码、JWT 与 API 签名密钥等）支持通过项目根目录 .env 覆盖：
+#   将 .env.example 复制为 .env 后按需修改（.env 不入 git）；
+#   未设置时使用下方 ${VAR:-默认值} 中的默认值。
 # 前台门户：http://<服务器IP>:8082
 # 管理后台：http://<服务器IP>:8081/admin/
 # 后端 API：http://<服务器IP>:8080/api
@@ -13,7 +16,7 @@ services:
     restart: unless-stopped
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
-      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
       MYSQL_DATABASE: dlbyy_zp_blog
       TZ: Asia/Shanghai
     ports:
@@ -27,7 +30,7 @@ services:
     networks:
       - blog-net
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-123456}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -38,7 +41,7 @@ services:
     image: redis:7-alpine
     container_name: blog-redis
     restart: unless-stopped
-    command: redis-server --requirepass 123456 --appendonly yes
+    command: redis-server --requirepass ${REDIS_PASSWORD:-123456} --appendonly yes
     ports:
       - "6379:6379"
     volumes:
@@ -46,7 +49,7 @@ services:
     networks:
       - blog-net
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "123456", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-123456}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -90,6 +93,11 @@ services:
     environment:
       TZ: Asia/Shanghai
       BLOG_SEARCH_ENABLED: ${BLOG_SEARCH_ENABLED:-false}
+      MYSQL_USERNAME: ${MYSQL_USERNAME:-root}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-123456}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-123456}
+      JWT_SECRET: ${JWT_SECRET:-ThisIsASecureSecretKeyForJwtTokenGenerationAndValidationMakeItLongEnough123}
+      API_SIGNING_SECRET: ${API_SIGNING_SECRET:-BlogApiSigningSecret2024!}
     depends_on:
       mysql:
         condition: service_healthy

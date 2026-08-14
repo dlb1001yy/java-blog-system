@@ -16,8 +16,8 @@ public class SignatureProperties {
     /** 是否开启请求签名校验 */
     private boolean enabled = true;
 
-    /** HMAC 签名密钥 */
-    private String secret = "BlogApiSigningSecret2024!";
+    /** 签名密钥：由配置（security.signing.secret / API_SIGNING_SECRET 环境变量）提供，代码中不内置密钥 */
+    private String secret = "";
 
     /** 时间戳允许的最大误差（秒） */
     private int timestampWindowSeconds = 60;
