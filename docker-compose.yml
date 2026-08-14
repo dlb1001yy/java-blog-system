@@ -7,6 +7,7 @@
 # 管理后台：http://<服务器IP>:8081/admin/
 # 后端 API：http://<服务器IP>:8080/api
 # 接口文档：http://<服务器IP>:8080/api/doc.html
+# 监控（可选）：http://<服务器IP>:3000 （Grafana，启用方式见 README「监控体系」）
 
 services:
   # ========== MySQL 数据库 ==========
@@ -148,6 +149,44 @@ services:
     networks:
       - blog-net
 
+  # ========== Prometheus 指标采集（可选，通过 .env 中 COMPOSE_PROFILES 包含 monitor 启用） ==========
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: blog-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=15d'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - blog-net
+    profiles: ["monitor"]
+
+  # ========== Grafana 可视化（可选，与 Prometheus 同组启用） ==========
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: blog-grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      TZ: Asia/Shanghai
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin123}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    networks:
+      - blog-net
+    profiles: ["monitor"]
+
 # ========== 数据卷 ==========
 volumes:
   mysql_data:
@@ -158,6 +197,10 @@ volumes:
     name: blog_uploads_data
   es_data:
     name: blog_es_data
+  prometheus_data:
+    name: blog_prometheus_data
+  grafana_data:
+    name: blog_grafana_data
 
 # ========== 网络 ==========
 networks:

@@ -852,6 +852,65 @@ git pull origin main
 docker compose up -d --build
 ```
 
+## 监控体系（Actuator + Prometheus + Grafana，可选）
+
+系统内置可选监控链路，通过 `monitor` 服务分组启用，无需手动安装配置即可获得指标采集与仪表盘可视化。
+
+### 架构
+
+```
+blog-backend（Spring Boot Actuator 暴露 /api/actuator/prometheus 指标）
+        ↓ 每 15s 抓取
+Prometheus（时序存储，默认保留 15 天）
+        ↓ 数据源与仪表盘自动预置
+Grafana（预置「Java 博客系统监控」仪表盘，可视化展示）
+```
+
+### 启用方式
+
+在 `.env` 中将 `monitor` 加入 `COMPOSE_PROFILES`（可与 `search` 组合）：
+
+```env
+COMPOSE_PROFILES=search,monitor
+```
+
+然后重新启动：
+
+```bash
+docker compose up -d --build
+```
+
+> 未启用 `monitor` 时，`prometheus` 与 `grafana` 两个可选服务不会启动，其余服务照常运行，不受任何影响。
+
+### 访问地址
+
+| 服务 | 地址 | 说明 |
+|------|------|------|
+| Grafana | http://\<服务器IP\>:3000 | 默认账号 `admin` / `admin123`，生产环境通过 `.env` 中 `GRAFANA_ADMIN_PASSWORD` 修改 |
+| Prometheus | http://\<服务器IP\>:9090 | 指标查询与 Targets 抓取状态 |
+| 后端健康检查 | http://\<服务器IP\>:8080/api/actuator/health | 后端运行状态 |
+
+### 预置仪表盘面板一览
+
+「Java 博客系统监控」仪表盘包含以下面板：
+
+- 当前 QPS
+- p95 延迟(ms)
+- 5xx 错误率(%)
+- 活跃线程数
+- CPU 使用率(%)
+- 堆内存使用(MB)
+- QPS 趋势（按 URI）
+- JVM 堆内存
+- GC 暂停速率
+- HikariCP 连接池
+
+### 安全说明
+
+Actuator 仅暴露 `health`、`info`、`prometheus` 三个端点；`env`、`beans` 等敏感端点未暴露，避免配置与运行时信息泄露。
+
+> 完整部署与排障步骤（验证命令、Targets DOWN 排查、Grafana 密码重置等）见 [部署操作手册.md](部署操作手册.md) 第 10 节。
+
 ## License
 
 MIT

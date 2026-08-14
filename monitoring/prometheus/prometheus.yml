@@ -1,0 +1,11 @@
+# Prometheus 抓取配置
+# 仅抓取后端应用指标（MySQL/Redis 等基础设施监控可后续按需扩展 exporter）
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: blog-backend
+    metrics_path: /api/actuator/prometheus   # 后端 context-path 为 /api
+    static_configs:
+      - targets: ['blog-backend:8080']        # compose 网络内服务名互访

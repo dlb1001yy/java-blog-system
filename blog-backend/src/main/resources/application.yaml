@@ -5,6 +5,8 @@ server:
     context-path: /api
 
 spring:
+  application:
+    name: blog-backend
   datasource:
     url: jdbc:mysql://localhost:3306/dlbyy_zp_blog?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     # 数据库账号密码通过 MYSQL_USERNAME / MYSQL_PASSWORD 环境变量覆盖
@@ -46,6 +48,19 @@ mybatis-plus:
       # 自动填充配置说明：
       # 自动填充通过 CustomMetaObjectHandler Bean 实现（见 config/CustomMetaObjectHandler.java）
       # 实体字段需标注 @TableField(fill = FieldFill.INSERT) 或 @TableField(fill = FieldFill.INSERT_UPDATE)
+
+# 监控指标（Actuator）：端点经 context-path 暴露为 /api/actuator/**
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus   # 仅暴露必要端点，不暴露 env/beans 等敏感端点
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}  # 所有指标带 application 标签，便于 Prometheus 识别
 
 jwt:
   # 确保密钥长度至少为 64 个字符（满足 HS512 算法 512 位的要求）
