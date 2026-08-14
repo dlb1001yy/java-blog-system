@@ -1,4 +1,5 @@
 import { BASE_URL, TOKEN_KEY, REFRESH_TOKEN_KEY } from './config.js'
+import { signRequest } from './signing.js'
 
 const pendingRequest = new Map()
 
@@ -66,6 +67,17 @@ const request = (options) => {
   return new Promise((resolve, reject) => {
     const token = uni.getStorageSync(TOKEN_KEY)
 
+    // Generate request signature for authenticated requests
+    let signHeaders = {}
+    if (token) {
+      const sign = signRequest(options.method || 'GET', options.url)
+      signHeaders = {
+        'X-Timestamp': sign.timestamp,
+        'X-Nonce': sign.nonce,
+        'X-Signature': sign.signature
+      }
+    }
+
     uni.request({
       url: BASE_URL + options.url,
       method: options.method || 'GET',
@@ -73,6 +85,7 @@ const request = (options) => {
       header: {
         'Content-Type': 'application/json',
         'Authorization': token ? `Bearer ${token}` : '',
+        ...signHeaders,
         ...options.header
       },
       success: (res) => {

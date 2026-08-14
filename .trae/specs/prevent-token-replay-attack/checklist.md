@@ -1,0 +1,14 @@
+- [x] `SignatureProperties.java` 包含 enabled / secret / timestampWindowSeconds 字段，且 `@ConfigurationProperties(prefix = "security.signing")`
+- [x] `application.yaml` 中 `security.signing` 配置块存在，secret 使用 `${API_SIGNING_SECRET:默认值}` 环境变量优先
+- [x] `RequestSignatureFilter` 继承 `OncePerRequestFilter`，仅对 `/user/` 和 `/admin/` 路径生效（`shouldNotFilter` 返回其他路径 true）
+- [x] 签名算法为 `HMAC-SHA256(secret, method + "\n" + uri + "\n" + timestamp + "\n" + nonce)` → Hex
+- [x] 时间戳校验：`|serverTime - timestamp| > timestampWindowSeconds` 时返回 403
+- [x] Nonce 防重放：使用 Redis `SETNX` + TTL（= timestampWindowSeconds），已存在则返回 403
+- [x] 签名缺失 / 验证失败时返回 HTTP 403 + JSON `Result.error(403, message)`
+- [x] `RequestSignatureFilter` 注册在 `JwtAuthenticationFilter` 之前
+- [x] `JwtUtils.java`、`JwtAuthenticationFilter.java`、`AuthController.java` 零改动
+- [x] blog-admin `request.js` 请求拦截器自动添加 `X-Timestamp`、`X-Nonce`、`X-Signature` 头
+- [x] blog-app `request.js` 自动添加签名相关头
+- [x] 前后端签名算法一致（method + "\n" + uri + "\n" + timestamp + "\n" + nonce，HMAC-SHA256，Hex 编码）
+- [x] `security.signing.enabled = false` 时过滤器完全跳过，行为与当前一致
+- [x] `/auth/**` 和 `/portal/**` 不受签名验证影响

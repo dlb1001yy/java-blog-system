@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
+import { signRequest } from './signing'
 
 const request = axios.create({
   baseURL: '/api',
@@ -9,10 +10,15 @@ const request = axios.create({
 
 // 请求拦截器：自动附加 access token
 request.interceptors.request.use(
-  config => {
+  async config => {
     const token = localStorage.getItem('admin_token')
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`
+      // Add request signature for authenticated routes
+      const { timestamp, nonce, signature } = await signRequest(config.method?.toUpperCase() || 'GET', config.url)
+      config.headers['X-Timestamp'] = timestamp
+      config.headers['X-Nonce'] = nonce
+      config.headers['X-Signature'] = signature
     }
     return config
   },

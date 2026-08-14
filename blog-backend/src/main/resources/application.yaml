@@ -65,6 +65,10 @@ security:
     refresh-token-days: 7      # 刷新令牌有效期（天）
     cookie-secure: true        # refresh Cookie 是否带 Secure（本地 HTTP 联调置 false）
     cookie-same-site: "None"    # refresh Cookie SameSite 策略
+  signing:
+    enabled: true                # 是否开启请求签名验证（false 时完全跳过，行为与之前一致）
+    secret: ${API_SIGNING_SECRET:BlogApiSigningSecret2024!}  # 签名密钥，生产环境通过环境变量覆盖
+    timestamp-window-seconds: 60 # 请求时间戳有效窗口（秒），超过则拒绝
 
 # 文件上传路径（旧版 FileUtils 使用，保持向后兼容）
 file:

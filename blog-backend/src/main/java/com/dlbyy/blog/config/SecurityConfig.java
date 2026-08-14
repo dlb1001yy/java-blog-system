@@ -3,6 +3,7 @@ package com.dlbyy.blog.config;
 import com.dlbyy.blog.properties.SecurityProperties;
 import com.dlbyy.blog.security.JwtAuthenticationEntryPoint;
 import com.dlbyy.blog.security.JwtAuthenticationFilter;
+import com.dlbyy.blog.security.RequestSignatureFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +32,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final RequestSignatureFilter requestSignatureFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder(SecurityProperties securityProperties) {
@@ -63,6 +65,7 @@ public class SecurityConfig {
                 .requestMatchers("/admin/**").authenticated()
                 .anyRequest().permitAll()
             )
+            .addFilterBefore(requestSignatureFilter, JwtAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
