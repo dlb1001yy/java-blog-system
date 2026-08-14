@@ -99,6 +99,10 @@ blog-backend/
 ├── src/main/resources/
 │   ├── application.yaml              # 配置文件
 │   └── mapper/                       # MyBatis XML
+├── src/test/java/com/dlbyy/blog/     # 单元测试（Mockito，见"单元测试"章节）
+│   ├── controller/portal/AuthControllerTest.java
+│   ├── service/LoginAttemptServiceTest.java
+│   └── utils/JwtUtilsTest.java
 ├── sql/01-create_sql.sql                # 数据库初始化脚本
 ├── uploads/                          # 上传文件目录
 └── pom.xml
@@ -329,6 +333,36 @@ export const BASE_URL = 'http://gz.aeert.com:19612/api'
 
 export const TOKEN_KEY = 'uni_app_token'
 ```
+
+## 单元测试
+
+后端基于 `spring-boot-starter-test`（JUnit 5 + Mockito + AssertJ）编写了**纯单元测试**：不启动 Spring 上下文、不依赖 MySQL / Redis，随时可离线运行。当前覆盖认证安全核心链路，共 46 个用例。
+
+### 覆盖范围
+
+| 测试类 | 用例数 | 覆盖内容 |
+|--------|--------|----------|
+| `LoginAttemptServiceTest` | 16 | IP 限流（允许/触发限流告警/脚本返回 null/空 IP 回退 unknown）、账户锁定判断（无记录/锁定中/过期自动清理）、剩余锁定时长、连续失败计数（未达阈值/首失败设 TTL/达阈值锁定+告警/null 计数兜底）、登录成功清理计数 |
+| `JwtUtilsTest` | 16 | 双 Token 生成与类型区分（access/refresh）、签发-解析往返（用户名/有效期）、Token 校验（合法/篡改签名/乱码/黑名单）、RefreshToken 有效性（在集合中/已吊销/传错类型）、吊销（单个/全部）、黑名单写入（剩余 TTL） |
+| `AuthControllerTest` | 14 | 登录全分支（空用户名 400/锁定 423/IP 限流 429/成功 200/密码错误 401/触发锁定 423/其他异常 401/X-Forwarded-For 多级代理取 IP）、刷新令牌（缺失/无效清 Cookie/X-Refresh-Token 头兜底/有效轮换）、登出（带 Bearer 吊销全部令牌/无令牌直接清 Cookie） |
+
+### 运行方式
+
+```bash
+cd blog-backend
+mvn test "-Dtest=LoginAttemptServiceTest,JwtUtilsTest,AuthControllerTest"   # 仅认证相关
+mvn test                                                                     # 全部测试
+```
+
+> **JDK 要求**：编译目标为 Java 17，需确保 `JAVA_HOME` 指向 JDK 17+（而非 JRE 8）。Windows 下若默认 PATH 是 JRE 8，先执行：
+> ```powershell
+> $env:JAVA_HOME='C:\Users\dlb\.jdks\graalvm-jdk-21.0.7'
+> $env:Path="$env:JAVA_HOME\bin;$env:Path"
+> ```
+
+### 已知边界说明
+
+`JwtUtils.addToBlacklist` 中"剩余有效期 ≤ 0 则跳过"分支实际不可达：jjwt 解析已过期 Token 时会先抛 `ExpiredJwtException`。测试按真实行为断言（过期 Token 不会写入黑名单）；若需对过期 Token 静默跳过，应在 `getExpirationFromToken` 处捕获该异常。
 
 ## 接口约定
 
