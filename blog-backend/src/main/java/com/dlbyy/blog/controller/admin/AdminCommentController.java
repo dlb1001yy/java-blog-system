@@ -34,7 +34,8 @@ public class AdminCommentController {
     }
 
     @PutMapping("/{id}/approve")
-    public Result<?> approve(@PathVariable Long id, @RequestParam Integer status) {
+    public Result<?> approve(@PathVariable Long id,
+                             @RequestParam(required = false, defaultValue = "1") Integer status) {
         Comment comment = new Comment();
         comment.setId(id);
         comment.setStatus(status);
