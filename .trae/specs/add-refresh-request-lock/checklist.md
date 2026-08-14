@@ -1,0 +1,9 @@
+- [x] blog-admin `refreshTokenOnce()` 的 refresh 请求标记了 `_isRefresh: true`
+- [x] blog-admin 请求拦截器在 `refreshing` 非 null 时对业务请求执行 `await refreshing` 等待
+- [x] blog-admin `await refreshing` 成功后用新 token 覆盖 `config.headers['Authorization']`
+- [x] blog-admin `await refreshing` 失败时静默 catch，请求照常发出不中断
+- [x] blog-admin `_isRefresh` 请求跳过锁等待，不会死锁
+- [x] blog-app `request()` 函数在 `refreshing` 非 null 时执行 `await refreshing` 等待
+- [x] blog-app 锁等待成功后用新 token 覆盖 `Authorization` 头
+- [x] blog-app 锁等待失败时静默 catch，请求照常发出不中断
+- [x] blog-app `refreshTokenOnce()` 使用 `uni.request` 直连，不受请求锁影响

@@ -10,7 +10,18 @@ const request = axios.create({
 
 // 请求拦截器：自动附加 access token + 请求签名
 request.interceptors.request.use(
-  config => {
+  async config => {
+    // 请求锁：刷新进行中时，业务请求等待刷新完成再用新 token 发出
+    if (refreshing && !config._isRefresh) {
+      try {
+        const newToken = await refreshing
+        if (newToken) {
+          localStorage.setItem('admin_token', newToken)
+        }
+      } catch {
+        // 刷新失败，静默放行，由响应拦截器处理 401
+      }
+    }
     const token = localStorage.getItem('admin_token')
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`
@@ -28,7 +39,11 @@ request.interceptors.request.use(
 let refreshing = null
 function refreshTokenOnce() {
   if (!refreshing) {
-    refreshing = request.post('/auth/refresh')
+    refreshing = request({
+        url: '/auth/refresh',
+        method: 'post',
+        _isRefresh: true
+      })
       .then(res => {
         const newToken = res.data.accessToken
         localStorage.setItem('admin_token', newToken)

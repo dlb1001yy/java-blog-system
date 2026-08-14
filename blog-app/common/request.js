@@ -51,7 +51,16 @@ function clearAuthAndRedirect() {
   setTimeout(() => uni.reLaunch({ url: '/pages/mine/login' }), 1500)
 }
 
-const request = (options) => {
+const request = async (options) => {
+  // 请求锁：刷新进行中时，等待刷新完成再用新 token 发出
+  if (refreshing) {
+    try {
+      await refreshing
+    } catch {
+      // 刷新失败，静默放行，由 401 处理逻辑跳转登录
+    }
+  }
+
   // 防止重复提交
   const requestKey = generateRequestKey(options)
   if (pendingRequest.has(requestKey)) {
