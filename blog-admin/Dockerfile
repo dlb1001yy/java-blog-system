@@ -8,8 +8,14 @@ COPY package.json package-lock.json* ./
 RUN npm install --registry=https://registry.npmmirror.com
 
 # 复制源码并构建
+# VITE_API_SIGNING_SECRET 通过 docker-compose build args 注入（与后端 API_SIGNING_SECRET 同源），
+# 未注入时 signing.js 回退到仓库内 .env.production 的默认值
+ARG VITE_API_SIGNING_SECRET
 COPY . .
-RUN npm run build
+RUN if [ -n "$VITE_API_SIGNING_SECRET" ]; then \
+      echo "VITE_API_SIGNING_SECRET=$VITE_API_SIGNING_SECRET" > .env.production.local; \
+    fi && \
+    npm run build
 
 # ====== 第二阶段：nginx 运行 ======
 FROM nginx:1.25-alpine

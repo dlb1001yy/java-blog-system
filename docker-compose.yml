@@ -138,6 +138,11 @@ services:
     build:
       context: ./blog-admin
       dockerfile: Dockerfile
+      # 签名密钥构建期注入前端静态包：必须与后端 API_SIGNING_SECRET 一致，
+      # 否则 /admin/**、/user/** 接口统一返回 403 "请求签名验证失败"。
+      # 修改 .env 中 API_SIGNING_SECRET 后需重建：docker compose build blog-admin && docker compose up -d blog-admin
+      args:
+        VITE_API_SIGNING_SECRET: ${API_SIGNING_SECRET:-BlogApiSigningSecret2024!}
     container_name: blog-admin
     restart: unless-stopped
     depends_on:
