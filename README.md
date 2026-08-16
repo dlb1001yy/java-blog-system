@@ -605,7 +605,7 @@ java-blog-system/
 | blog-frontend | 80 | 8082 | 前台门户 |
 | blog-admin | 80 | 8081 | 管理后台（路径 /admin/） |
 | blog-backend | 8080 | 8080 | 后端 API |
-| mysql | 3306 | 3306 | 数据库（可选关闭） |
+| mysql | 3306 | 3306 | 数据库（默认仅绑定 127.0.0.1，远程访问走 SSH 隧道，见部署手册 9.8） |
 | redis | 6379 | 6379 | 缓存（可选关闭） |
 | prometheus | 9090 | 9090 | 指标采集（可选，启用 monitor 分组） |
 | grafana | 3000 | 3000 | 监控可视化（可选，启用 monitor 分组） |
