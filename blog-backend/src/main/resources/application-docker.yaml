@@ -30,6 +30,12 @@ spring:
     uris: http://elasticsearch:9200
     connection-timeout: 5s
     socket-timeout: 30s
+  # 生产环境关闭 SpringDoc / Knife4j 文档端点（配合 swagger.enabled=false 双重关闭）
+  springdoc:
+    api-docs:
+      enabled: false
+    swagger-ui:
+      enabled: false
 
 # 文件上传路径（Linux 容器内路径，通过数据卷持久化）
 file:

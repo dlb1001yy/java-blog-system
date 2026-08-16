@@ -1,0 +1,4 @@
+- [x] application-docker.yaml 的 spring 节点下包含 `springdoc.api-docs.enabled: false`
+- [x] application-docker.yaml 的 spring 节点下包含 `springdoc.swagger-ui.enabled: false`
+- [x] 默认 profile（application.yaml）未改动，本地 Knife4j 文档行为不变
+- [x] YAML 语法正确（缩进层级无误，应用可正常解析启动）
