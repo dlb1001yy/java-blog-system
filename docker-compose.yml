@@ -16,12 +16,16 @@ services:
     container_name: blog-mysql
     restart: unless-stopped
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    # MYSQL_USER/MYSQL_PASSWORD/MYSQL_DATABASE 仅在首次建库（数据目录为空）时生效；
+    # 已有数据卷的老部署需在 .env 中把 MYSQL_DATABASE/MYSQL_USERNAME/MYSQL_PASSWORD 指回原值（dlbyy_zp_blog/root/原密码）。
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
-      MYSQL_DATABASE: dlbyy_zp_blog
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-dlbyy_z}
+      MYSQL_USER: ${MYSQL_USERNAME:-blog_app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-123456}
       TZ: Asia/Shanghai
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT:-127.0.0.1:3306}"
     volumes:
       - mysql_data:/var/lib/mysql
       # 挂载整个 sql 目录：该目录下的 .sql 仅在【首次建库（数据目录为空）】时按文件名顺序执行一次。
@@ -94,9 +98,11 @@ services:
     environment:
       TZ: Asia/Shanghai
       BLOG_SEARCH_ENABLED: ${BLOG_SEARCH_ENABLED:-false}
-      MYSQL_USERNAME: ${MYSQL_USERNAME:-root}
+      MYSQL_USERNAME: ${MYSQL_USERNAME:-blog_app}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-123456}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-123456}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
       JWT_SECRET: ${JWT_SECRET:-ThisIsASecureSecretKeyForJwtTokenGenerationAndValidationMakeItLongEnough123}
       API_SIGNING_SECRET: ${API_SIGNING_SECRET:-BlogApiSigningSecret2024!}
     depends_on:

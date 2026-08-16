@@ -8,7 +8,7 @@ spring:
   application:
     name: blog-backend
   datasource:
-    url: jdbc:mysql://localhost:3306/dlbyy_zp_blog?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE:dlbyy_zp_blog}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     # 数据库账号密码通过 MYSQL_USERNAME / MYSQL_PASSWORD 环境变量覆盖
     username: ${MYSQL_USERNAME:root}
     password: ${MYSQL_PASSWORD:123456}
@@ -88,6 +88,10 @@ security:
     enabled: true                # 是否开启请求签名验证（false 时完全跳过，行为与之前一致）
     secret: ${API_SIGNING_SECRET:BlogApiSigningSecret2024!}  # 签名密钥，生产环境必须通过环境变量注入强随机值，勿用默认值
     timestamp-window-seconds: 60 # 请求时间戳有效窗口（秒），超过则拒绝
+  cors:
+    # 允许携带凭证的跨域来源（逗号分隔）；生产必须改为精确域名，如 https://yourdomain.com,https://admin.yourdomain.com
+    # 默认 * 仅用于本地开发
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
 
 # 文件上传路径（旧版 FileUtils 使用，保持向后兼容）
 file:
@@ -110,6 +114,10 @@ storage:
     access-key-secret: ${OSS_ACCESS_KEY_SECRET:your-access-key-secret}
     bucket-name: ${OSS_BUCKET_NAME:your-bucket-name}
     url-prefix: ${OSS_URL_PREFIX:https://your-bucket-name.oss-cn-hangzhou.aliyuncs.com/}
+
+# API 文档开关：本地开发默认开启，Docker 生产通过 SWAGGER_ENABLED 环境变量默认关闭
+swagger:
+  enabled: ${SWAGGER_ENABLED:true}
 
 # 网站配置
 blog:

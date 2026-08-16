@@ -2,8 +2,8 @@
 SET NAMES utf8mb4;
 
 -- 创建数据库
-CREATE DATABASE IF NOT EXISTS dlbyy_zp_blog DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE dlbyy_zp_blog;
+CREATE DATABASE IF NOT EXISTS dlbyy_z DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE dlbyy_z;
 
 -- 1. 用户表
 CREATE TABLE `sys_user` (
