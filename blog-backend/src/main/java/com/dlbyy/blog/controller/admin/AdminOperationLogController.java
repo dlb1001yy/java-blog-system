@@ -27,7 +27,8 @@ public class AdminOperationLogController {
             @RequestParam(defaultValue = "1") Integer current,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String username,
-            @RequestParam(required = false) String operation) {
+            @RequestParam(required = false) String operation,
+            @RequestParam(required = false) Integer status) {
 
         Page<OperationLog> page = new Page<>(current, size);
         LambdaQueryWrapper<OperationLog> wrapper = new LambdaQueryWrapper<>();
@@ -36,6 +37,9 @@ public class AdminOperationLogController {
         }
         if (operation != null && !operation.isEmpty()) {
             wrapper.like(OperationLog::getOperation, operation);
+        }
+        if (status != null) {
+            wrapper.eq(OperationLog::getStatus, status);
         }
         wrapper.orderByDesc(OperationLog::getCreateTime);
         return Result.success(operationLogMapper.selectPage(page, wrapper));

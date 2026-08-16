@@ -80,6 +80,12 @@ const routes = [
         meta: { title: '友情链接', icon: 'Link' }
       },
       {
+        path: 'operation-log',
+        name: 'OperationLogList',
+        component: () => import('@/views/OperationLogList.vue'),
+        meta: { title: '操作日志', icon: 'Clock' }
+      },
+      {
         path: 'settings',
         name: 'Settings',
         component: () => import('@/views/Settings.vue'),
