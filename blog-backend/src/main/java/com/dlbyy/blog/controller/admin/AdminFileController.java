@@ -1,6 +1,7 @@
 package com.dlbyy.blog.controller.admin;
 
 
+import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.Result;
 import com.dlbyy.blog.utils.FileUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +25,7 @@ public class AdminFileController {
      * 前端 el-upload 组件默认使用 "file" 作为参数名
      */
     @PostMapping("/upload")
+    @Admin("上传文件")
     @Operation(summary = "文件上传")
     public Result<String> upload(@RequestParam("file") MultipartFile file) {
         try {

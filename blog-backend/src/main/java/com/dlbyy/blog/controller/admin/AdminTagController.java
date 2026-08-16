@@ -2,6 +2,7 @@ package com.dlbyy.blog.controller.admin;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.Result;
 import com.dlbyy.blog.entity.Tag;
 import com.dlbyy.blog.service.TagService;
@@ -51,6 +52,7 @@ public class AdminTagController {
     }
 
     @PostMapping
+    @Admin("新增标签")
     @Operation(summary = "新增标签")
     public Result<?> create(@RequestBody Tag tag) {
         tag.setCreateTime(LocalDateTime.now());
@@ -59,6 +61,7 @@ public class AdminTagController {
     }
 
     @PutMapping
+    @Admin("更新标签")
     @Operation(summary = "更新标签")
     public Result<?> update(@RequestBody Tag tag) {
         tagService.updateById(tag);
@@ -66,6 +69,7 @@ public class AdminTagController {
     }
 
     @DeleteMapping("/{id}")
+    @Admin("删除标签")
     @Operation(summary = "删除标签")
     public Result<?> delete(@PathVariable Long id) {
         tagService.removeById(id);

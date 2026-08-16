@@ -2,6 +2,7 @@ package com.dlbyy.blog.controller.admin;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.Result;
 import com.dlbyy.blog.entity.Comment;
 import com.dlbyy.blog.service.CommentService;
@@ -34,6 +35,7 @@ public class AdminCommentController {
     }
 
     @PutMapping("/{id}/approve")
+    @Admin("审核通过评论")
     public Result<?> approve(@PathVariable Long id,
                              @RequestParam(required = false, defaultValue = "1") Integer status) {
         Comment comment = new Comment();
@@ -44,6 +46,7 @@ public class AdminCommentController {
     }
 
     @PutMapping("/{id}/reject")
+    @Admin("驳回评论")
     public Result<?> reject(@PathVariable Long id) {
         Comment comment = new Comment();
         comment.setId(id);
@@ -53,6 +56,7 @@ public class AdminCommentController {
     }
 
     @PutMapping("/batch-approve")
+    @Admin("批量审核评论")
     public Result<?> batchApprove(@RequestBody List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return Result.success("批量审核成功", null);
@@ -70,6 +74,7 @@ public class AdminCommentController {
     }
 
     @DeleteMapping("/{id}")
+    @Admin("删除评论")
     public Result<?> delete(@PathVariable Long id) {
         commentService.removeById(id);
         return Result.success("删除成功", null);

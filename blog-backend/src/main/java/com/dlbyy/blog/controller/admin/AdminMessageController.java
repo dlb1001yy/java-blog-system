@@ -2,6 +2,7 @@ package com.dlbyy.blog.controller.admin;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.Result;
 import com.dlbyy.blog.entity.Message;
 import com.dlbyy.blog.service.MessageService;
@@ -31,6 +32,7 @@ public class AdminMessageController {
     }
 
     @PutMapping("/{id}/audit")
+    @Admin("审核留言")
     public Result<?> audit(@PathVariable Long id, @RequestParam Integer status) {
         Message message = new Message();
         message.setId(id);
@@ -40,6 +42,7 @@ public class AdminMessageController {
     }
 
     @DeleteMapping("/{id}")
+    @Admin("删除留言")
     public Result<?> delete(@PathVariable Long id) {
         messageService.removeById(id);
         return Result.success("删除成功", null);

@@ -1,0 +1,12 @@
+# Checklist
+- [x] `sys_operation_log` 建表 SQL 已加入 `01-create_sql.sql`，含 username/operation/method/uri/params/ip/status/error_msg/cost_ms/create_time 字段及索引
+- [x] 旧库启动时可通过 SchemaMapper + DataInitializer 幂等补建 `sys_operation_log` 表
+- [x] `OperationLog` 实体与 `OperationLogMapper` 已创建且表名映射正确
+- [x] `@Admin` 注解已创建，value 属性为操作描述
+- [x] `OperationLogAspect` 切面拦截 `@Admin` 方法，成功记 status=1、异常记 status=0 且异常原样抛出
+- [x] 切面从 SecurityContext 获取操作人用户名，无认证信息时记录为 anonymous/unknown
+- [x] 请求参数中 password 字段已脱敏（******），params 与 error_msg 超长截断
+- [x] 日志通过 `opLogExecutor` 线程池异步写入，落库失败仅 WARN 不影响业务
+- [x] `controller/admin` 下所有非 GET 接口均标注 `@Admin` 中文描述，GET 接口未标注
+- [x] `GET /admin/operation-logs` 分页查询接口可用，支持 username/operation 过滤，按 create_time 倒序
+- [x] `mvn compile` 编译通过（沙箱限制无法写 Maven 仓库，已用 IDE Java 编译诊断对全部新增/修改 Java 文件逐个验证，均无错误）

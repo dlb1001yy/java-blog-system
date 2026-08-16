@@ -1,5 +1,6 @@
 package com.dlbyy.blog.controller.admin;
 
+import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.Result;
 import com.dlbyy.blog.entity.ResumeInfo;
 import com.dlbyy.blog.service.ResumeInfoService;
@@ -25,6 +26,7 @@ public class AdminResumeController {
     }
 
     @PostMapping
+    @Admin("保存简历信息")
     @Operation(summary = "保存简历信息")
     public Result<?> save(@RequestBody ResumeInfo resumeInfo) {
         ResumeInfo existing = resumeInfoService.getOne(null);
@@ -42,6 +44,7 @@ public class AdminResumeController {
     }
 
     @PutMapping
+    @Admin("更新简历信息")
     @Operation(summary = "更新简历信息")
     public Result<?> update(@RequestBody ResumeInfo resumeInfo) {
         resumeInfo.setUpdateTime(LocalDateTime.now());

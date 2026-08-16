@@ -13,7 +13,8 @@ import org.springframework.stereotype.Component;
  * 数据初始化器：
  * 1) 每次启动幂等补全 sys_user 新增字段（fail_count / lock_until），解决
  *    MySQL initdb 目录仅在首次建库执行、docker 重新部署后旧库字段未更新的问题；
- * 2) 确保内置管理员账号存在且密码以 BCrypt 哈希存储。
+ * 2) 幂等确保后台操作日志表 sys_operation_log 存在（旧库自动补建）；
+ * 3) 确保内置管理员账号存在且密码以 BCrypt 哈希存储。
  */
 @Slf4j
 @Component
@@ -31,6 +32,8 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         // 幂等补全表字段，确保 docker 重新部署后 sys_user 表结构是最新的
         ensureUserColumns();
+        // 幂等确保后台操作日志表存在，供操作日志审计切面写入
+        ensureOperationLogTable();
 
         User admin = userService.getByUsername(DEFAULT_ADMIN_USERNAME);
         if (admin == null) {
@@ -70,6 +73,22 @@ public class DataInitializer implements CommandLineRunner {
         } catch (Exception e) {
             // 表尚未创建（极少数冷启动竞态）时忽略，下次启动重试
             log.warn("[DataInitializer] 补全 sys_user 字段时出错（可忽略，下次启动重试）：{}", e.getMessage());
+        }
+    }
+
+    /**
+     * 幂等确保后台操作日志表 sys_operation_log 存在。仅当表不存在时才执行 CREATE，
+     * 首次部署与已有旧库重复部署均可安全执行。
+     */
+    private void ensureOperationLogTable() {
+        try {
+            if (schemaMapper.countOperationLogTable() == 0) {
+                schemaMapper.createOperationLogTable();
+                log.info("[DataInitializer] 已创建后台操作日志表 sys_operation_log");
+            }
+        } catch (Exception e) {
+            // 建库失败时忽略，下次启动重试
+            log.warn("[DataInitializer] 创建 sys_operation_log 表时出错（可忽略，下次启动重试）：{}", e.getMessage());
         }
     }
 }

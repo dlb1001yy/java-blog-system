@@ -2,6 +2,7 @@ package com.dlbyy.blog.controller.admin;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.annotation.RateLimit;
 import com.dlbyy.blog.common.Result;
 import com.dlbyy.blog.common.exception.BusinessException;
@@ -69,6 +70,7 @@ public class AdminArticleController {
     }
 
     @PostMapping
+    @Admin("新增文章")
     @Operation(summary = "新增文章")
     public Result<?> create(@RequestBody ArticleDTO dto) {
         Article article = new Article();
@@ -103,6 +105,7 @@ public class AdminArticleController {
     }
 
     @PutMapping
+    @Admin("更新文章")
     @Operation(summary = "更新文章")
     public Result<?> update(@RequestBody ArticleDTO dto) {
         Article article = articleService.getById(dto.getId());
@@ -136,6 +139,7 @@ public class AdminArticleController {
     }
 
     @DeleteMapping("/{id}")
+    @Admin("删除文章")
     @Operation(summary = "删除文章")
     public Result<?> delete(@PathVariable Long id) {
         articleService.removeById(id);
@@ -147,6 +151,7 @@ public class AdminArticleController {
     }
 
     @PutMapping("/{id}/publish")
+    @Admin("发布/取消发布文章")
     @Operation(summary = "发布/取消发布文章")
     public Result<?> togglePublish(@PathVariable Long id) {
         Article article = articleService.getById(id);
@@ -164,6 +169,7 @@ public class AdminArticleController {
     }
 
     @PutMapping("/{id}/top")
+    @Admin("置顶/取消置顶文章")
     @Operation(summary = "置顶/取消置顶文章")
     public Result<?> toggleTop(@PathVariable Long id) {
         Article article = articleService.getById(id);
@@ -177,6 +183,7 @@ public class AdminArticleController {
     }
 
     @PostMapping("/import-markdown")
+    @Admin("导入Markdown文件")
     @Operation(summary = "导入 Markdown 文件解析为文章字段")
     @RateLimit(key = "import-markdown", time = 60, count = 10)
     public Result<?> importMarkdown(@RequestParam("file") MultipartFile file) {

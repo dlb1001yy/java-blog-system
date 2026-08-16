@@ -1,5 +1,6 @@
 package com.dlbyy.blog.controller.admin;
 
+import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.Result;
 import com.dlbyy.blog.service.ConfigService;
 import com.dlbyy.blog.storage.StorageProperties;
@@ -40,6 +41,7 @@ public class AdminConfigController {
     }
 
     @PutMapping("/site")
+    @Admin("保存网站配置")
     public Result<Void> saveSite(@RequestBody SiteConfigDTO dto) {
         configService.setByKey(KEY_SITE_NAME, str(dto.getBlogName()), "网站名称");
         configService.setByKey(KEY_SITE_DESC, str(dto.getBlogDescription()), "网站描述");
@@ -57,6 +59,7 @@ public class AdminConfigController {
     }
 
     @PutMapping("/upload")
+    @Admin("保存上传配置")
     public Result<Void> saveUpload(@RequestBody UploadConfigDTO dto) {
         configService.setByKey(KEY_UPLOAD_PATH, str(dto.getUploadPath()), "上传存储路径");
         configService.setByKey(KEY_UPLOAD_TYPES, str(dto.getAllowedTypes()), "允许上传的文件类型");

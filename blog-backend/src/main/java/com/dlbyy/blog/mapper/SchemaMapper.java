@@ -25,4 +25,26 @@ public interface SchemaMapper {
 
     @Update("ALTER TABLE sys_user ADD COLUMN lock_until datetime DEFAULT NULL COMMENT '账户锁定到期时间（NULL 表示未锁定）'")
     void addLockUntilColumn();
+
+    @Select("SELECT COUNT(*) FROM information_schema.tables " +
+            "WHERE table_schema = DATABASE() AND table_name = 'sys_operation_log'")
+    int countOperationLogTable();
+
+    @Update("CREATE TABLE IF NOT EXISTS sys_operation_log (" +
+            "id bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID', " +
+            "username varchar(50) DEFAULT NULL COMMENT '操作人', " +
+            "operation varchar(100) DEFAULT NULL COMMENT '操作描述', " +
+            "method varchar(10) DEFAULT NULL COMMENT 'HTTP方法', " +
+            "uri varchar(255) DEFAULT NULL COMMENT '请求路径', " +
+            "params text COMMENT '请求参数', " +
+            "ip varchar(50) DEFAULT NULL COMMENT '客户端IP', " +
+            "status tinyint DEFAULT 1 COMMENT '操作状态 1:成功 0:失败', " +
+            "error_msg text COMMENT '异常信息', " +
+            "cost_ms bigint DEFAULT NULL COMMENT '耗时毫秒', " +
+            "create_time datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间', " +
+            "PRIMARY KEY (id), " +
+            "KEY idx_username (username), " +
+            "KEY idx_create_time (create_time) " +
+            ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='后台操作日志表'")
+    void createOperationLogTable();
 }

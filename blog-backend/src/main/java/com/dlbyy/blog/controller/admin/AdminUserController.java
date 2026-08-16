@@ -1,5 +1,6 @@
 package com.dlbyy.blog.controller.admin;
 
+import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.Result;
 import com.dlbyy.blog.common.exception.BusinessException;
 import com.dlbyy.blog.entity.User;
@@ -29,6 +30,7 @@ public class AdminUserController {
     private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/create")
+    @Admin("新增用户")
     @Operation(summary = "新增用户（密码强度校验 + BCrypt 加密）")
     public Result<?> createUser(@RequestBody CreateUserRequest request) {
         if (request.getUsername() == null || request.getUsername().isBlank()) {
@@ -53,6 +55,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/change-password")
+    @Admin("修改用户密码")
     @Operation(summary = "修改密码（强度校验 + BCrypt 加密）")
     public Result<?> changePassword(@RequestBody ChangePasswordRequest request) {
         User user = userService.getByUsername(request.getUsername());

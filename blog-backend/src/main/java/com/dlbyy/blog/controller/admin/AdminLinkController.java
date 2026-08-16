@@ -2,6 +2,7 @@ package com.dlbyy.blog.controller.admin;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.Result;
 import com.dlbyy.blog.entity.Link;
 import com.dlbyy.blog.service.LinkService;
@@ -50,6 +51,7 @@ public class AdminLinkController {
     }
 
     @PostMapping
+    @Admin("新增友链")
     @Operation(summary = "新增友链")
     public Result<?> create(@RequestBody Link link) {
         link.setCreateTime(LocalDateTime.now());
@@ -58,6 +60,7 @@ public class AdminLinkController {
     }
 
     @PutMapping
+    @Admin("更新友链")
     @Operation(summary = "更新友链")
     public Result<?> update(@RequestBody Link link) {
         linkService.updateById(link);
@@ -65,6 +68,7 @@ public class AdminLinkController {
     }
 
     @DeleteMapping("/{id}")
+    @Admin("删除友链")
     @Operation(summary = "删除友链")
     public Result<?> delete(@PathVariable Long id) {
         linkService.removeById(id);
