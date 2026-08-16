@@ -915,6 +915,8 @@ docker compose up -d --build
 | elasticsearch-exporter | elasticsearch:9200 | 集群状态（green/yellow/red）、节点 JVM 堆使用率、搜索/索引速率 |
 
 > Elasticsearch 指标需同时启用 `search` 分组（即 `COMPOSE_PROFILES=search,monitor`）才有数据；未启用 search 时，Prometheus Targets 页中该目标显示 **DOWN**、仪表盘 ES 面板无数据，均属预期。
+>
+> 监控镜像（prometheus、grafana 及三个 exporter）单个拉取特别慢时，可经镜像站前缀直拉 + retag，例如：`docker pull docker.m.daocloud.io/prom/mysqld-exporter:v0.15.1` 后 `docker tag` 还原为 `prom/mysqld-exporter:v0.15.1`，详见 [部署操作手册.md](部署操作手册.md) 3.4.1。
 
 ### 预置仪表盘面板一览
 
