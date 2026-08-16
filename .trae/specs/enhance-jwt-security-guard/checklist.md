@@ -1,0 +1,5 @@
+- [x] JwtUtils 含 @PostConstruct 密钥强度校验：空或 <64 字节启动即失败，错误信息含 openssl 指引
+- [x] 本地默认密钥（74 字符）下应用可正常启动，mvn test 全部通过（56 用例，0 失败）
+- [x] .env.example 的 JWT_SECRET 为强随机占位提示，注释含 openssl rand -base64 64 生成命令
+- [x] Token 黑名单 / Redis TTL 同步机制经复核与描述一致（JwtUtils 黑名单段、AuthController 登出调用、refresh 集合 TTL）
+- [x] GlobalExceptionHandler 兜底异常返回统一 500 文案，不向客户端泄露堆栈（stacktrace 仅入日志）

@@ -37,6 +37,14 @@ spring:
     swagger-ui:
       enabled: false
 
+# Actuator 监控端点：生产环境仅暴露必要端点，显式关闭敏感端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+        exclude: env,beans,configprops  # 生产环境关闭敏感端点
+
 # 文件上传路径（Linux 容器内路径，通过数据卷持久化）
 file:
   upload-path: /app/uploads/

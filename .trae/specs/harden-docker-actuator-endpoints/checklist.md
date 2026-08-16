@@ -1,0 +1,4 @@
+- [x] application-docker.yaml 含顶层 management 配置段，include 仅 health,info,prometheus
+- [x] application-docker.yaml 显式 exclude env,beans,configprops 敏感端点
+- [x] application.yaml（默认 profile）未改动，本地 Actuator 行为不变
+- [x] YAML 语法正确（顶层缩进、注释规范，应用可正常解析启动）

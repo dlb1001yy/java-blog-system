@@ -3,6 +3,7 @@ package com.dlbyy.blog.utils;
 import com.dlbyy.blog.properties.SecurityProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +20,7 @@ import java.util.Date;
  *     <li>AccessToken — 默认 15 分钟（可配置），用于接口鉴权</li>
  *     <li>RefreshToken — 默认 7 天（可配置），用于刷新 AccessToken</li>
  * </ul>
+ * 启动时强制校验密钥强度（≥64 字节，HS512），弱密钥直接启动失败。
  * 支持 Redis 黑名单校验：登出/改密/锁定时将 Token 加入黑名单，剩余有效期内自动失效。
  * 黑名单同时覆盖 AccessToken 与 RefreshToken（含 jti 维度，便于主动吊销）。
  */
@@ -55,6 +57,19 @@ public class JwtUtils {
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
+    }
+
+    /**
+     * 启动期校验密钥强度：HS512 要求密钥至少 64 字节，不满足则快速失败，防止弱密钥上线
+     */
+    @PostConstruct
+    public void validateSecretStrength() {
+        if (secret == null || secret.getBytes(java.nio.charset.StandardCharsets.UTF_8).length < 64) {
+            throw new IllegalStateException(
+                "JWT 密钥长度不足 64 字节（HS512 安全要求），当前长度：" +
+                (secret == null ? 0 : secret.getBytes(java.nio.charset.StandardCharsets.UTF_8).length) +
+                "。请使用 openssl rand -base64 64 生成强随机密钥，并通过 JWT_SECRET 环境变量注入");
+        }
     }
 
     // ==================== Token 生成 ====================
