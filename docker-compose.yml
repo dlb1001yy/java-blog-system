@@ -25,7 +25,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-123456}
       TZ: Asia/Shanghai
     ports:
-      - "${MYSQL_PORT:-127.0.0.1:3306}"
+      - "${MYSQL_PORT:-127.0.0.1:3306:3306}"
     volumes:
       - mysql_data:/var/lib/mysql
       # 挂载整个 sql 目录：该目录下的 .sql 仅在【首次建库（数据目录为空）】时按文件名顺序执行一次。
