@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    blog-backend 结构化日志配置（Spring Boot 3.x + Logback，根包 com.dlbyy.blog）
+
+    结构说明：
+      1. CONSOLE        控制台彩色输出（开发/容器 stdout 采集）
+      2. FILE           全量日志滚动文件，经 ASYNC 异步包裹避免磁盘 IO 阻塞业务线程
+      3. ERROR_FILE     ERROR 级别独立滚动文件，同步直挂 root，保证错误日志不因异步丢弃
+      4. root 同时挂 CONSOLE + ASYNC + ERROR_FILE
+
+    轮转策略（FILE / ERROR_FILE 相同）：
+      - SizeAndTimeBasedRollingPolicy：按天 + 按大小（单文件 100MB）双维度滚动
+      - 历史文件 gzip 压缩（.gz），保留 14 天（maxHistory），总量上限 3GB（totalSizeCap）
+
+    路径覆盖：
+      - LOG_FILE 由 application.yml 的 logging.file.name 覆盖，未配置时落到系统临时目录
+      - 错误日志可由 logging.file.error-name 单独覆盖
+-->
+<configuration scan="true">
+
+    <!-- 系统临时目录兜底（logback 嵌套默认值语法有兼容性问题，拆成两步引用更稳妥） -->
+    <property name="TEMP_DIR" value="${java.io.tmpdir:-/tmp}"/>
+
+    <!-- 主日志文件路径：优先读取 Spring 配置 logging.file.name -->
+    <springProperty scope="context" name="LOG_FILE" source="logging.file.name"
+                    defaultValue="${TEMP_DIR}/blog-backend.log"/>
+
+    <!-- 错误日志文件路径：property 无法做字符串替换，故独立定义 springProperty 读取 logging.file.error-name -->
+    <springProperty scope="context" name="LOG_ERROR_FILE" source="logging.file.error-name"
+                    defaultValue="${TEMP_DIR}/blog-backend-error.log"/>
+
+    <!-- 控制台格式：带 ANSI 颜色（%highlight/%cyan 为 logback 内置转换词） -->
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{50}) - %msg%n"/>
+
+    <!-- 文件格式：无 ANSI 码，便于采集与检索 -->
+    <property name="FILE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{50} - %msg%n"/>
+
+    <!-- 1. 控制台输出 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 2. 全量日志滚动文件（业务全量，被 ASYNC 包裹） -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>14</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 3. ERROR 独立滚动文件（同步输出，不异步，保证错误不丢） -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_ERROR_FILE}</file>
+        <filter class="ch.qos.logback.core.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_ERROR_FILE}.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>14</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 异步包裹 FILE：队列满时 neverBlock 直接放行（宁可丢日志不阻塞业务），discardingThreshold=0 表示队列满也不提前丢弃低级别日志 -->
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="FILE"/>
+    </appender>
+
+    <!-- 降噪：第三方库与框架仅保留 WARN 及以上 -->
+    <logger name="org.apache.ibatis" level="WARN"/>
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+    <logger name="org.springframework" level="WARN"/>
+
+    <!-- 业务包显式声明 INFO，便于按环境（dev/prod profile）覆盖 -->
+    <logger name="com.dlbyy.blog" level="INFO"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </root>
+
+</configuration>

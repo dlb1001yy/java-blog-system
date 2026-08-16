@@ -1,0 +1,9 @@
+- [x] logback-spring.xml 存在且包含：CONSOLE + FILE（RollingFileAppender）+ ERROR 独立 appender + AsyncAppender
+- [x] 文件轮转策略：SizeAndTimeBasedRollingPolicy，100MB/天触发，maxHistory 14 天，totalSizeCap 有界，归档 .gz
+- [x] 日志格式统一：时间 | 级别 | 线程 | logger | 消息（文件模式无 ANSI 颜色码）
+- [x] LOG_FILE 通过 springProperty/property 注入，docker 默认 /app/logs/blog-backend.log，本地默认降级临时目录不污染工程目录
+- [x] application.yaml 中 MyBatis log-impl 为 Slf4jImpl（不再 StdOutImpl）
+- [x] application-docker.yaml 定义 LOG_FILE 环境变量占位
+- [x] docker-compose.yml：blog-backend 挂载 backend_logs 卷到 /app/logs，logging json-file max-size 50m / max-file 5，顶层 volumes 含 backend_logs
+- [x] 所有变更文件 XML/YAML 语法正确（Read 复核闭合/缩进）
+- [x] 未运行 mvn test（按用户要求跳过）

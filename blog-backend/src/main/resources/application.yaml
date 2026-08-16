@@ -37,7 +37,8 @@ mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # SQL 日志统一走 SLF4J 管道（配合 logback 轮转），需要排查 SQL 时设置 logging.level.com.dlbyy.blog.mapper=DEBUG
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
   global-config:
     db-config:
       id-type: auto

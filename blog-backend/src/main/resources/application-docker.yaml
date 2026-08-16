@@ -1,5 +1,12 @@
 # Docker 环境配置（通过 --spring.profiles.active=docker 激活）
 # 覆盖 application.yaml 中的数据库、Redis 与文件上传路径配置
+
+# 日志文件路径（logback RollingFileAppender 使用，docker-compose 挂载卷持久化）
+logging:
+  file:
+    name: /app/logs/blog-backend.log
+    error-name: /app/logs/blog-backend-error.log
+
 server:
   port: 8080
   servlet:

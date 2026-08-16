@@ -115,6 +115,8 @@ services:
     volumes:
       # 上传文件持久化
       - uploads_data:/app/uploads
+      # 日志持久化（logback 文件输出，轮转后仍保留在卷中）
+      - backend_logs:/app/logs
     networks:
       - blog-net
     healthcheck:
@@ -124,6 +126,12 @@ services:
       timeout: 10s
       retries: 10
       start_period: 60s
+    # 容器 stdout 日志轮转（json-file 驱动，防止 /var/lib/docker 无限膨胀）
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
 
   # ========== 管理后台 ==========
   blog-admin:
@@ -201,6 +209,8 @@ volumes:
     name: blog_redis_data
   uploads_data:
     name: blog_uploads_data
+  backend_logs:
+    name: blog_backend_logs
   es_data:
     name: blog_es_data
   prometheus_data:
