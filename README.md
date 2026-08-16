@@ -607,6 +607,8 @@ java-blog-system/
 | blog-backend | 8080 | 8080 | 后端 API |
 | mysql | 3306 | 3306 | 数据库（可选关闭） |
 | redis | 6379 | 6379 | 缓存（可选关闭） |
+| prometheus | 9090 | 9090 | 指标采集（可选，启用 monitor 分组） |
+| grafana | 3000 | 3000 | 监控可视化（可选，启用 monitor 分组） |
 
 > 如需修改端口，编辑 `docker-compose.yml` 中对应服务的 `ports` 配置。
 
@@ -625,8 +627,9 @@ java-blog-system/
 | MySQL | root | 123456 |
 | Redis | — | 123456 |
 | 管理后台登录 | admin | admin123 |
+| Grafana（可选，monitor 分组） | admin | admin123 |
 
-> 生产环境请务必修改 `docker-compose.yml` 中的 MySQL/Redis 密码，以及 `blog-backend/src/main/resources/application-docker.yaml` 中对应的连接密码。
+> 生产环境请务必修改 `docker-compose.yml` 中的 MySQL/Redis 密码，以及 `blog-backend/src/main/resources/application-docker.yaml` 中对应的连接密码；Grafana 密码通过 `.env` 中 `GRAFANA_ADMIN_PASSWORD` 修改。
 
 ### 5. 一键启动
 
@@ -881,6 +884,17 @@ docker compose up -d --build
 ```
 
 > 未启用 `monitor` 时，`prometheus` 与 `grafana` 两个可选服务不会启动，其余服务照常运行，不受任何影响。
+
+> **拉取监控镜像特别慢？** Registry Mirrors 对 `prom/prometheus`、`grafana/grafana` 常出现单个镜像极慢，可用镜像站前缀直拉后 retag（本地已有镜像时 compose 不再重复拉取）：
+>
+> ```bash
+> docker pull docker.m.daocloud.io/prom/prometheus:v2.51.0
+> docker tag  docker.m.daocloud.io/prom/prometheus:v2.51.0 prom/prometheus:v2.51.0
+> docker pull docker.m.daocloud.io/grafana/grafana:10.4.2
+> docker tag  docker.m.daocloud.io/grafana/grafana:10.4.2 grafana/grafana:10.4.2
+> ```
+>
+> 某个前缀站也慢时换 `docker.1ms.run`、`docker.xuanyuan.me` 等逐一尝试，详见《部署操作手册.md》3.4.1。
 
 ### 访问地址
 

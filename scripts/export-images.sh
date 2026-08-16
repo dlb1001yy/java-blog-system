@@ -22,6 +22,9 @@ IMAGES=(
 )
 # 可选：如需在服务器离线启用 ES 全文检索，取消下面一行的注释
 # IMAGES+=("docker.elastic.co/elasticsearch/elasticsearch:8.11.1")
+# 可选：如需离线启用 Prometheus + Grafana 监控（monitor 分组），取消下面两行的注释
+# IMAGES+=("prom/prometheus:v2.51.0")
+# IMAGES+=("grafana/grafana:10.4.2")
 
 for img in "${IMAGES[@]}"; do
   # 文件名安全化：/ 与 : 替换为 _
