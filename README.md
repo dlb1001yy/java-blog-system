@@ -857,13 +857,13 @@ docker compose up -d --build
 
 ## 监控体系（Actuator + Prometheus + Grafana，可选）
 
-系统内置可选监控链路，通过 `monitor` 服务分组启用，无需手动安装配置即可获得指标采集与仪表盘可视化。
+系统内置可选监控链路，通过 `monitor` 服务分组启用，无需手动安装配置即可获得指标采集与仪表盘可视化。除后端应用指标（Actuator）外，还内置 MySQL、Redis、Elasticsearch 三个基础设施 exporter，同一套仪表盘即可覆盖数据库、缓存与检索层的核心指标。
 
 ### 架构
 
 ```
 blog-backend（Spring Boot Actuator 暴露 /api/actuator/prometheus 指标）
-        ↓ 每 15s 抓取
+        ↓ 每 15s 抓取（后端 Actuator 指标 + MySQL / Redis / ES 基础设施指标）
 Prometheus（时序存储，默认保留 15 天）
         ↓ 数据源与仪表盘自动预置
 Grafana（预置「Java 博客系统监控」仪表盘，可视化展示）
@@ -883,7 +883,7 @@ COMPOSE_PROFILES=search,monitor
 docker compose up -d --build
 ```
 
-> 未启用 `monitor` 时，`prometheus` 与 `grafana` 两个可选服务不会启动，其余服务照常运行，不受任何影响。
+> 未启用 `monitor` 时，`prometheus`、`grafana` 及三个基础设施 exporter 可选服务不会启动，其余服务照常运行，不受任何影响。
 
 > **拉取监控镜像特别慢？** Registry Mirrors 对 `prom/prometheus`、`grafana/grafana` 常出现单个镜像极慢，可用镜像站前缀直拉后 retag（本地已有镜像时 compose 不再重复拉取）：
 >
@@ -904,24 +904,32 @@ docker compose up -d --build
 | Prometheus | http://\<服务器IP\>:9090 | 指标查询与 Targets 抓取状态 |
 | 后端健康检查 | http://\<服务器IP\>:8080/api/actuator/health | 后端运行状态 |
 
+### 基础设施指标采集（exporter）
+
+三个 exporter 同属 `monitor` 分组，随监控链路自动启动，复用 `.env` 中已有的 `MYSQL_ROOT_PASSWORD`、`REDIS_PASSWORD`（**无需新增 `.env` 变量**），且**不发布宿主机端口**，仅容器网络内供 Prometheus 抓取：
+
+| Exporter | 抓取目标 | 采集指标 |
+|----------|----------|----------|
+| mysql-exporter | mysql:3306 | 连接数、QPS、慢查询、InnoDB 缓冲池命中率 |
+| redis-exporter | redis:6379 | 客户端连接、内存使用、缓存命中率、命令执行速率、Key 驱逐速率 |
+| elasticsearch-exporter | elasticsearch:9200 | 集群状态（green/yellow/red）、节点 JVM 堆使用率、搜索/索引速率 |
+
+> Elasticsearch 指标需同时启用 `search` 分组（即 `COMPOSE_PROFILES=search,monitor`）才有数据；未启用 search 时，Prometheus Targets 页中该目标显示 **DOWN**、仪表盘 ES 面板无数据，均属预期。
+
 ### 预置仪表盘面板一览
 
 「Java 博客系统监控」仪表盘包含以下面板：
 
-- 当前 QPS
-- p95 延迟(ms)
-- 5xx 错误率(%)
-- 活跃线程数
-- CPU 使用率(%)
-- 堆内存使用(MB)
-- QPS 趋势（按 URI）
-- JVM 堆内存
-- GC 暂停速率
-- HikariCP 连接池
+- **应用层**：当前 QPS、p95 延迟(ms)、5xx 错误率(%)、活跃线程数、CPU 使用率(%)、堆内存使用(MB)、QPS 趋势（按 URI）、JVM 堆内存、GC 暂停速率、HikariCP 连接池
+- **MySQL 数据库**：连接数、QPS、慢查询、InnoDB 缓冲池命中率
+- **Redis 缓存**：客户端连接、内存使用、缓存命中率、命令执行速率、Key 驱逐速率
+- **Elasticsearch 检索**：集群状态、节点 JVM 堆使用率、搜索/索引速率
+
+仪表盘随 Grafana provisioning 自动加载（含新增的基础设施面板），无需手工导入。
 
 ### 安全说明
 
-Actuator 仅暴露 `health`、`info`、`prometheus` 三个端点；`env`、`beans` 等敏感端点未暴露，避免配置与运行时信息泄露。
+Actuator 仅暴露 `health`、`info`、`prometheus` 三个端点；`env`、`beans` 等敏感端点未暴露，避免配置与运行时信息泄露。三个基础设施 exporter 均不发布宿主机端口，指标仅容器网络内可达。
 
 > 完整部署与排障步骤（验证命令、Targets DOWN 排查、Grafana 密码重置等）见 [部署操作手册.md](部署操作手册.md) 第 10 节。
 

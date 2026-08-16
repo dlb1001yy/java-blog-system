@@ -1,5 +1,5 @@
 # Prometheus 抓取配置
-# 仅抓取后端应用指标（MySQL/Redis 等基础设施监控可后续按需扩展 exporter）
+# 抓取后端应用与基础设施（MySQL/Redis/Elasticsearch）exporter 指标
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
@@ -9,3 +9,15 @@ scrape_configs:
     metrics_path: /api/actuator/prometheus   # 后端 context-path 为 /api
     static_configs:
       - targets: ['blog-backend:8080']        # compose 网络内服务名互访
+
+  - job_name: mysql-exporter                  # MySQL 基础设施指标（mysqld-exporter）
+    static_configs:
+      - targets: ['mysql-exporter:9104']
+
+  - job_name: redis-exporter                  # Redis 基础设施指标（redis_exporter）
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  - job_name: elasticsearch-exporter          # Elasticsearch 指标（需同时启用 search profile，否则目标 DOWN 属预期）
+    static_configs:
+      - targets: ['elasticsearch-exporter:9114']

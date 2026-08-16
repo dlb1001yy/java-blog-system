@@ -201,6 +201,54 @@ services:
       - blog-net
     profiles: ["monitor"]
 
+  # ========== MySQL 指标导出（可选，与 Prometheus 同组启用；仅容器网络内可达，不发布宿主端口） ==========
+  mysql-exporter:
+    image: prom/mysqld-exporter:v0.15.1
+    container_name: blog-mysql-exporter
+    restart: unless-stopped
+    command:
+      - '--mysqld.address=mysql:3306'
+      - '--mysqld.username=root'
+    environment:
+      MYSQLD_EXPORTER_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - blog-net
+    profiles: ["monitor"]
+
+  # ========== Redis 指标导出（可选，与 Prometheus 同组启用；仅容器网络内可达，不发布宿主端口） ==========
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.58.0
+    container_name: blog-redis-exporter
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: redis://redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-123456}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - blog-net
+    profiles: ["monitor"]
+
+  # ========== Elasticsearch 指标导出（可选，与 Prometheus 同组启用；需同时启用 search profile 才有数据；
+  #           仅容器网络内可达，不发布宿主端口） ==========
+  elasticsearch-exporter:
+    image: quay.io/prometheuscommunity/elasticsearch-exporter:v1.8.0
+    container_name: blog-es-exporter
+    restart: unless-stopped
+    command:
+      - '--es.uri=http://elasticsearch:9200'
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+        required: false
+    networks:
+      - blog-net
+    profiles: ["monitor"]
+
 # ========== 数据卷 ==========
 volumes:
   mysql_data:
