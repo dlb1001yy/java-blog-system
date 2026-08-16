@@ -61,7 +61,7 @@
     <!-- 3. ERROR 独立滚动文件（同步输出，不异步，保证错误不丢） -->
     <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_ERROR_FILE}</file>
-        <filter class="ch.qos.logback.core.filter.ThresholdFilter">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
