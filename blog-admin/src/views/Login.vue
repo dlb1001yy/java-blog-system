@@ -278,7 +278,7 @@ const handleLogin = async () => {
   width: 100%;
   max-width: 400px;
   padding: var(--space-8);
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--bg-card);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: var(--radius-xl);

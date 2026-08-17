@@ -111,11 +111,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, nextTick, watch } from 'vue'
 import * as echarts from 'echarts'
-import { 
-  Document, View, ChatDotRound, Star, Message, Calendar 
+import {
+  Document, View, ChatDotRound, Star, Message, Calendar
 } from '@element-plus/icons-vue'
+import { useAppStore } from '@/stores/app'
 import dashboardApi from '@/api/dashboard'
 
 const stats = reactive({})
@@ -127,37 +128,51 @@ let trendChart = null
 let typeChart = null
 let categoryChart = null
 
+const appStore = useAppStore()
+
+// 缓存图表数据，主题切换时直接用缓存重建 option，无需重新请求接口
+const trendData = ref([])
+const typeData = ref({})
+const categoryData = ref([])
+
+// 从 CSS 变量读取主题感知颜色（html 上的 dark 类切换后变量值随之变化）
+const getThemeColors = () => {
+  const styles = getComputedStyle(document.documentElement)
+  return {
+    axisLine: styles.getPropertyValue('--border-color').trim() || '#E7E5E4',
+    label: styles.getPropertyValue('--text-secondary').trim() || '#A8A29E',
+    splitLine: (styles.getPropertyValue('--border-color').trim() || '#E7E5E4') + '55'
+  }
+}
+
 const fetchStats = async () => {
   const res = await dashboardApi.getStats()
   Object.assign(stats, res.data)
 }
 
-const fetchTrend = async () => {
-  const res = await dashboardApi.getArticleTrend()
-  
-  await nextTick()
-  trendChart = echarts.init(trendChartRef.value)
-  
-  trendChart.setOption({
+// 构建趋势图配置：轴线/网格线/文字颜色跟随主题，品牌绿渐变保持不变
+const buildTrendOption = (data) => {
+  const colors = getThemeColors()
+  return {
     tooltip: { trigger: 'axis' },
     grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
     xAxis: {
       type: 'category',
-      data: res.data.map(item => item.date),
-      axisLine: { lineStyle: { color: '#E7E5E4' } },
-      axisLabel: { color: '#A8A29E' }
+      data: data.map(item => item.date),
+      axisLine: { lineStyle: { color: colors.axisLine } },
+      axisLabel: { color: colors.label }
     },
     yAxis: {
       type: 'value',
       axisLine: { show: false },
-      axisLabel: { color: '#A8A29E' },
-      splitLine: { lineStyle: { color: '#F5F5F4' } }
+      axisLabel: { color: colors.label },
+      splitLine: { lineStyle: { color: colors.splitLine } }
     },
     series: [{
       name: '发布文章',
       type: 'line',
       smooth: true,
-      data: res.data.map(item => item.count),
+      data: data.map(item => item.count),
       itemStyle: { color: '#059669' },
       areaStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
@@ -166,18 +181,24 @@ const fetchTrend = async () => {
         ])
       }
     }]
-  })
+  }
 }
 
-const fetchTypeStats = async () => {
-  const res = await dashboardApi.getTypeStats()
-  
+const fetchTrend = async () => {
+  const res = await dashboardApi.getArticleTrend()
+  trendData.value = res.data || []
+
   await nextTick()
-  typeChart = echarts.init(typeChartRef.value)
-  
-  typeChart.setOption({
+  if (!trendChart) trendChart = echarts.init(trendChartRef.value)
+  trendChart.setOption(buildTrendOption(trendData.value))
+}
+
+// 构建类型分布饼图配置：图例文字颜色跟随主题，饼图系列色保持不变
+const buildTypeOption = (data) => {
+  const colors = getThemeColors()
+  return {
     tooltip: { trigger: 'item' },
-    legend: { bottom: 0 },
+    legend: { bottom: 0, textStyle: { color: colors.label } },
     series: [{
       type: 'pie',
       radius: ['40%', '70%'],
@@ -185,32 +206,43 @@ const fetchTypeStats = async () => {
       label: { show: false },
       emphasis: { label: { show: true, fontSize: 18, fontWeight: 'bold' } },
       data: [
-        { value: res.data.original, name: '原创', itemStyle: { color: '#059669' } },
-        { value: res.data.reproduced, name: '转载', itemStyle: { color: '#F59E0B' } },
-        { value: res.data.translated, name: '翻译', itemStyle: { color: '#10B981' } }
+        { value: data.original, name: '原创', itemStyle: { color: '#059669' } },
+        { value: data.reproduced, name: '转载', itemStyle: { color: '#F59E0B' } },
+        { value: data.translated, name: '翻译', itemStyle: { color: '#10B981' } }
       ]
     }]
-  })
+  }
 }
 
-const fetchCategoryStats = async () => {
-  const res = await dashboardApi.getCategoryStats()
-  
+const fetchTypeStats = async () => {
+  const res = await dashboardApi.getTypeStats()
+  typeData.value = res.data || {}
+
   await nextTick()
-  categoryChart = echarts.init(categoryChartRef.value)
-  
-  categoryChart.setOption({
+  if (!typeChart) typeChart = echarts.init(typeChartRef.value)
+  typeChart.setOption(buildTypeOption(typeData.value))
+}
+
+// 构建分类柱状图配置：轴标签/网格线颜色跟随主题，绿色渐变保持不变
+const buildCategoryOption = (data) => {
+  const colors = getThemeColors()
+  return {
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
     xAxis: {
       type: 'category',
-      data: res.data.map(item => item.name),
-      axisLabel: { color: '#A8A29E', rotate: 30 }
+      data: data.map(item => item.name),
+      axisLine: { lineStyle: { color: colors.axisLine } },
+      axisLabel: { color: colors.label, rotate: 30 }
     },
-    yAxis: { type: 'value', axisLabel: { color: '#A8A29E' } },
+    yAxis: {
+      type: 'value',
+      axisLabel: { color: colors.label },
+      splitLine: { lineStyle: { color: colors.splitLine } }
+    },
     series: [{
       type: 'bar',
-      data: res.data.map(item => item.count),
+      data: data.map(item => item.count),
       itemStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
           { offset: 0, color: '#059669' },
@@ -220,7 +252,16 @@ const fetchCategoryStats = async () => {
       },
       barWidth: '50%'
     }]
-  })
+  }
+}
+
+const fetchCategoryStats = async () => {
+  const res = await dashboardApi.getCategoryStats()
+  categoryData.value = res.data || []
+
+  await nextTick()
+  if (!categoryChart) categoryChart = echarts.init(categoryChartRef.value)
+  categoryChart.setOption(buildCategoryOption(categoryData.value))
 }
 
 const handleResize = () => {
@@ -228,6 +269,16 @@ const handleResize = () => {
   typeChart?.resize()
   categoryChart?.resize()
 }
+
+// 主题切换后用缓存数据 + 新颜色重建 option，并触发各图表 resize
+watch(() => appStore.theme, () => {
+  nextTick(() => {
+    if (trendChart) trendChart.setOption(buildTrendOption(trendData.value))
+    if (typeChart) typeChart.setOption(buildTypeOption(typeData.value))
+    if (categoryChart) categoryChart.setOption(buildCategoryOption(categoryData.value))
+    handleResize()
+  })
+})
 
 onMounted(() => {
   fetchStats()

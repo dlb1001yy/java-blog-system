@@ -5,9 +5,32 @@ export const useAppStore = defineStore('app', () => {
   const sidebarCollapsed = ref(false)
   const tagsView = ref([])
   const cachedViews = ref([])
+  const theme = ref('light')
 
   const toggleSidebar = () => {
     sidebarCollapsed.value = !sidebarCollapsed.value
+  }
+
+  const applyTheme = (t, persist = true) => {
+    theme.value = t
+    document.documentElement.classList.toggle('dark', t === 'dark')
+    if (persist) {
+      localStorage.setItem('blog-admin-theme', t)
+    }
+  }
+
+  const initTheme = () => {
+    const saved = localStorage.getItem('blog-admin-theme')
+    if (saved === 'light' || saved === 'dark') {
+      applyTheme(saved)
+    } else {
+      // 首次访问跟随系统偏好；不持久化，用户手动选择前每次启动都跟随系统变化
+      applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light', false)
+    }
+  }
+
+  const toggleTheme = () => {
+    applyTheme(theme.value === 'dark' ? 'light' : 'dark')
   }
 
   const addTagView = (route) => {
@@ -40,7 +63,10 @@ export const useAppStore = defineStore('app', () => {
     sidebarCollapsed,
     tagsView,
     cachedViews,
+    theme,
     toggleSidebar,
+    initTheme,
+    toggleTheme,
     addTagView,
     removeTagView,
     removeOtherTagViews,

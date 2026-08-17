@@ -27,6 +27,17 @@
         </el-icon>
       </el-tooltip>
 
+      <el-tooltip content="切换暗色模式" placement="bottom" v-if="appStore.theme === 'light'">
+        <el-icon class="header-icon" @click="appStore.toggleTheme">
+          <Moon />
+        </el-icon>
+      </el-tooltip>
+      <el-tooltip content="切换亮色模式" placement="bottom" v-else>
+        <el-icon class="header-icon" @click="appStore.toggleTheme">
+          <Sunny />
+        </el-icon>
+      </el-tooltip>
+
       <el-dropdown @command="handleCommand">
         <span class="user-info">
           <el-avatar :size="32" :src="userStore.userInfo.avatar">
@@ -62,7 +73,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import {
   Fold, Expand, ArrowDown, Refresh, FullScreen,
-  User, Setting, SwitchButton
+  User, Setting, SwitchButton, Moon, Sunny
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useAppStore } from '@/stores/app'

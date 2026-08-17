@@ -82,7 +82,7 @@ const appStore = useAppStore()
 }
 
 .header {
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--bg-card);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: var(--shadow-sm);
