@@ -233,8 +233,6 @@ onMounted(() => {
 }
 
 .article-content {
-  max-width: var(--reading-width);
-  margin-inline: auto;
   font-size: var(--font-size-body);
   line-height: var(--line-height-body);
   letter-spacing: 0.02em;
