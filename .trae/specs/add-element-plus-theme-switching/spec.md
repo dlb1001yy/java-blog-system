@@ -58,7 +58,7 @@ blog-admin 目前只有亮色主题。Element Plus 内部已全面基于 CSS 变
 ## What Changes
 - 修改 `blog-admin/src/main.js`：引入 `element-plus/theme-chalk/dark/css-vars.css`
 - 修改 `blog-admin/src/assets/styles/tokens.css`：新增 `html.dark` 令牌块（含 `--el-*` 对齐覆盖）
-- 修改 `blog-admin/src/stores/app.js`：新增 `theme` 状态、`toggleTheme()`、`initTheme()`（localStorage + prefers-color-scheme 兜底）
+- 修改 `blog-admin/src/stores/app.js`：新增 `theme` 状态、`applyTheme(t, persist)`（统一应用入口，含持久化开关）、`toggleTheme()`、`initTheme()`（localStorage 优先 + prefers-color-scheme 兜底，首次访问不持久化以保持跟随系统）
 - 修改 `blog-admin/src/App.vue`：挂载时调用 `initTheme()` 应用初始主题
 - 修改 `blog-admin/src/layout/Header.vue`：新增主题切换按钮（Sunny/Moon 图标，带 tooltip）
 - 修改 `blog-admin/src/views/Dashboard.vue`：ECharts 主题适配（watch theme，动态读取令牌色并更新图表 option）
