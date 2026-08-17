@@ -15,6 +15,22 @@
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
+
+  /* ---- 与 blog-admin 对齐的语义化令牌（旧变量名为别名，保持兼容） ---- */
+  --color-primary: var(--primary-color);
+  --color-success: var(--success-color);
+  --color-warning: var(--warning-color);
+  --color-danger: var(--danger-color);
+  --color-info: var(--info-color);
+  --bg-page: var(--bg-color);
+  --bg-card: var(--card-bg);
+  --text-strong: var(--text-primary);
+  /* 阴影令牌 */
+  --shadow-hover: 0 12px 24px -10px rgba(0, 0, 0, 0.08);
+  /* 毛玻璃导航背景 */
+  --header-bg: rgba(255, 255, 255, 0.75);
+  /* Element Plus 主色对齐 */
+  --el-color-primary: var(--primary-color);
 }
 
 * {
@@ -42,7 +58,7 @@ a:hover { color: #66b1ff; }
 .container {
   width: 1400px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 var(--container-padding);
 }
 
 .layout {
@@ -105,5 +121,32 @@ a:hover { color: #66b1ff; }
 
   .sidebar {
     width: 100%;
+  }
+}
+
+/* ---------------- 骨架屏 shimmer 动画 ---------------- */
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* ---------------- 路由 fade-slide 过渡 ---------------- */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* 减少动态效果时降级为纯淡入 */
+@media (prefers-reduced-motion: reduce) {
+  .fade-slide-enter-from,
+  .fade-slide-leave-to {
+    transform: none;
   }
 }

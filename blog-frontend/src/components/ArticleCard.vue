@@ -92,12 +92,12 @@ const goDetail = () => {
 <style scoped>
 .article-card {
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .article-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
 }
 
 .article-layout {
@@ -107,7 +107,7 @@ const goDetail = () => {
 
 .article-cover {
   width: 200px;
-  height: 130px;
+  aspect-ratio: 20 / 13;
   flex-shrink: 0;
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -208,7 +208,7 @@ const goDetail = () => {
 @media (max-width: 768px) {
   .article-cover {
     width: 100%;
-    height: 160px;
+    aspect-ratio: 16 / 9;
   }
   
   .article-layout {

@@ -1,6 +1,9 @@
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 
+const wrapCodeBlock = (preHtml) =>
+  `<div class="code-block"><div class="code-block-header"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span><button class="copy-btn" type="button">复制</button></div>${preHtml}</div>`
+
 const md = new MarkdownIt({
   html: true,
   linkify: true,
@@ -8,10 +11,10 @@ const md = new MarkdownIt({
   highlight(str, lang) {
     if (lang && hljs.getLanguage(lang)) {
       try {
-        return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang }).value}</code></pre>`
+        return wrapCodeBlock(`<pre class="hljs"><code>${hljs.highlight(str, { language: lang }).value}</code></pre>`)
       } catch (_) {}
     }
-    return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`
+    return wrapCodeBlock(`<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`)
   }
 })
 

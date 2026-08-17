@@ -100,10 +100,9 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Calendar, View, ChatDotRound, Star } from '@element-plus/icons-vue'
-import MarkdownIt from 'markdown-it'
-import hljs from 'highlight.js'
 import articleApi from '@/api/article'
 import CommentSection from '@/components/CommentSection.vue'
+import md from '@/utils/markdown'
 
 const route = useRoute()
 const router = useRouter()
@@ -111,42 +110,6 @@ const router = useRouter()
 const article = ref(null)
 const toc = ref([])
 const prevNext = ref({ prev: null, next: null })
-
-const md = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true,
-  highlight(str, lang) {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang }).value}</code></pre>`
-      } catch (_) {}
-    }
-    return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`
-  }
-})
-
-// 外链新窗口打开（锚点链接除外）
-const defaultLinkOpen = md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
-  return self.renderToken(tokens, idx, options)
-}
-md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
-  const href = tokens[idx].attrGet('href') || ''
-  if (/^https?:\/\//i.test(href)) {
-    tokens[idx].attrSet('target', '_blank')
-    tokens[idx].attrSet('rel', 'noopener noreferrer')
-  }
-  return defaultLinkOpen(tokens, idx, options, env, self)
-}
-// 图片：防盗链 + 懒加载（与 meta 双保险）
-const defaultImage = md.renderer.rules.image || function (tokens, idx, options, env, self) {
-  return self.renderToken(tokens, idx, options)
-}
-md.renderer.rules.image = function (tokens, idx, options, env, self) {
-  tokens[idx].attrSet('referrerpolicy', 'no-referrer')
-  tokens[idx].attrSet('loading', 'lazy')
-  return defaultImage(tokens, idx, options, env, self)
-}
 
 const typeMap = {
   0: { label: '原创', type: 'primary' },
@@ -191,6 +154,30 @@ const extractToc = () => {
     })
   })
   toc.value = items
+  bindCopyBtn(content)
+}
+
+// 代码块复制按钮（事件委托）
+const bindCopyBtn = (contentEl) => {
+  if (contentEl.__copyBound) return
+  contentEl.__copyBound = true
+  contentEl.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.copy-btn')
+    if (!btn) return
+    const code = btn.closest('.code-block')?.querySelector('code')?.innerText || ''
+    try {
+      await navigator.clipboard.writeText(code)
+      btn.textContent = '已复制'
+      btn.classList.add('copied')
+      setTimeout(() => {
+        btn.textContent = '复制'
+        btn.classList.remove('copied')
+      }, 1500)
+    } catch (_) {
+      btn.textContent = '复制失败'
+      setTimeout(() => { btn.textContent = '复制' }, 1500)
+    }
+  })
 }
 
 const handleLike = async () => {
@@ -246,8 +233,12 @@ onMounted(() => {
 }
 
 .article-content {
-  font-size: 16px;
-  line-height: 1.8;
+  max-width: var(--reading-width);
+  margin-inline: auto;
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  letter-spacing: 0.02em;
+  font-feature-settings: "kern" 1, "liga" 1;
   color: var(--text-regular);
 }
 
@@ -256,6 +247,18 @@ onMounted(() => {
 .article-content :deep(h3) {
   margin: 24px 0 16px;
   font-weight: 600;
+}
+
+.article-content :deep(h1) {
+  font-size: var(--font-size-h1);
+}
+
+.article-content :deep(h2) {
+  font-size: var(--font-size-h2);
+}
+
+.article-content :deep(h3) {
+  font-size: var(--font-size-h3);
 }
 
 .article-content :deep(p) {
@@ -407,5 +410,61 @@ onMounted(() => {
   .article-title {
     font-size: 22px;
   }
+}
+</style>
+
+<style>
+/* 代码块 Mac 风格顶栏 */
+.code-block {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin: 16px 0;
+}
+
+.code-block-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #2d2d2d;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.code-block .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.dot-red { background: #ff5f57; }
+.dot-yellow { background: #febc2e; }
+.dot-green { background: #28c840; }
+
+.code-block .copy-btn {
+  margin-left: auto;
+  padding: 2px 10px;
+  font-size: 12px;
+  color: #aab2bf;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.code-block .copy-btn:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.code-block .copy-btn.copied {
+  color: #28c840;
+  border-color: #28c840;
+}
+
+.code-block pre.hljs {
+  margin: 0;
+  border-radius: 0;
 }
 </style>

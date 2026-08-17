@@ -4,4 +4,15 @@
   --footer-height: 60px;
   --sidebar-width: 300px;
   --max-width: 1200px;
+
+  /* ---- 字号阶梯（Major Third 1.25 比例，H1 流式） ---- */
+  --font-size-h1: clamp(1.5rem, 4vw + 0.5rem, 2.25rem);
+  --font-size-h2: 1.5rem;
+  --font-size-h3: 1.25rem;
+  --font-size-body: 16px;
+  --line-height-body: 1.75;
+  /* ---- 流式间距 ---- */
+  --container-padding: clamp(16px, 5vw, 24px);
+  /* ---- 阅读行宽（正文可读性） ---- */
+  --reading-width: 68ch;
 }

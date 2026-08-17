@@ -39,12 +39,17 @@
             </el-tabs>
           </div>
 
-          <!-- 文章列表 -->
-          <ArticleCard 
-            v-for="article in articleList" 
-            :key="article.id" 
-            :article="article" 
-          />
+          <template v-if="loading">
+            <SkeletonCard v-for="n in 3" :key="n" />
+          </template>
+          <template v-else>
+            <!-- 文章列表 -->
+            <ArticleCard
+              v-for="article in articleList"
+              :key="article.id"
+              :article="article"
+            />
+          </template>
 
           <!-- 分页 -->
           <div class="pagination" v-if="total > 0">
@@ -58,7 +63,7 @@
           </div>
 
           <!-- 空状态 -->
-          <el-empty v-if="articleList.length === 0" description="暂无文章" />
+          <el-empty v-if="!loading && articleList.length === 0" description="暂无文章" />
         </div>
 
         <!-- 侧边栏 -->
@@ -72,10 +77,12 @@
 import { ref, reactive, onMounted } from 'vue'
 import articleApi from '@/api/article'
 import ArticleCard from '@/components/ArticleCard.vue'
+import SkeletonCard from '@/components/SkeletonCard.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 
 const activeTab = ref('all')
 const articleList = ref([])
+const loading = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
@@ -102,9 +109,14 @@ const fetchArticles = async () => {
     params.type = type
   }
   
-  const res = await articleApi.getArticles(params)
-  articleList.value = res.data.records
-  total.value = res.data.total
+  loading.value = true
+  try {
+    const res = await articleApi.getArticles(params)
+    articleList.value = res.data.records
+    total.value = res.data.total
+  } finally {
+    loading.value = false
+  }
 }
 
 const handleTabChange = () => {
