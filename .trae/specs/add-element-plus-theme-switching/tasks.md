@@ -4,7 +4,7 @@
   - [x] SubTask 1.1: 修改 `blog-admin/src/main.js`，在 `element-plus/dist/index.css` 之后引入 `element-plus/theme-chalk/dark/css-vars.css`
   - [x] SubTask 1.2: 修改 `blog-admin/src/assets/styles/tokens.css`，按 spec 映射表新增 `html.dark` 块：覆盖 `--bg-*`/`--text-*`/`--border-color`/阴影令牌，并对齐覆盖 `--el-bg-color`/`--el-text-color-*`/`--el-border-color*`/`--el-fill-color-blank`/`--el-color-primary-light-3~9`/`--el-color-primary-dark-2`/`--el-mask-color`
 - [x] Task 2: 实现主题状态管理与持久化
-  - [x] SubTask 2.1: 修改 `blog-admin/src/stores/app.js`，新增 `theme` ref（'light' | 'dark'）、`toggleTheme()`（切换 `document.documentElement.classList` 的 `dark` 类并写 `localStorage('blog-admin-theme')`）、`initTheme()`（优先 localStorage，无记录时读取 `window.matchMedia('(prefers-color-scheme: dark)')`）
+  - [x] SubTask 2.1: 修改 `blog-admin/src/stores/app.js`，新增 `theme` ref（'light' | 'dark'）、`applyTheme(t, persist)`（统一应用入口：更新状态 + 切换 `document.documentElement` 的 `dark` 类，`persist=true` 时写 `localStorage('blog-admin-theme')`）、`toggleTheme()`（调用 `applyTheme` 反向主题，持久化）、`initTheme()`（优先 localStorage 并复用 `applyTheme`；无记录时读取 `window.matchMedia('(prefers-color-scheme: dark)')` 且不持久化，保持跟随系统）
   - [x] SubTask 2.2: 修改 `blog-admin/src/App.vue`，在 `onMounted` 中调用 `appStore.initTheme()`
 - [x] Task 3: Header 增加主题切换按钮
   - [x] SubTask 3.1: 修改 `blog-admin/src/layout/Header.vue`，在"全屏"图标旁新增主题按钮：亮色显示 `Moon`（tooltip"切换暗色模式"），暗色显示 `Sunny`（tooltip"切换亮色模式"），点击调用 `appStore.toggleTheme()`，复用现有 `header-icon` 样式

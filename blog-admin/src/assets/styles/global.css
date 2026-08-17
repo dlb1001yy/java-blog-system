@@ -81,3 +81,20 @@ a {
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
 }
+
+/* ---------------- View Transitions 主题切换扩散动画 ---------------- */
+/* 关闭默认淡入淡出动画，让自定义 clip-path 扩散动画接管 */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* 旧快照在下层，新快照在上层从点击处向外扩散 */
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}

@@ -29,8 +29,49 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
-  const toggleTheme = () => {
-    applyTheme(theme.value === 'dark' ? 'light' : 'dark')
+  // 切换主题：支持 View Transitions 时以点击坐标为圆心做圆形扩散动画
+  const toggleTheme = (event) => {
+    const target = theme.value === 'dark' ? 'light' : 'dark'
+
+    // 渐进增强：不支持 View Transitions 或用户开启"减少动态效果"时直接切换
+    const supported = typeof document.startViewTransition === 'function' &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (!supported) {
+      applyTheme(target)
+      return
+    }
+
+    // 圆心取点击坐标，无事件对象时兜底为视口中心
+    const x = event?.clientX ?? window.innerWidth / 2
+    const y = event?.clientY ?? window.innerHeight / 2
+
+    // 点击位置到屏幕四个角的最远距离，保证扩散圆覆盖全屏
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    )
+
+    // 用 View Transitions 包裹主题切换，浏览器对切换前后页面拍照生成快照
+    const transition = document.startViewTransition(() => {
+      applyTheme(target)
+    })
+
+    // 快照就绪后，对新快照伪元素执行 clip-path 圆形扩散 Keyframe 动画
+    transition.ready.then(() => {
+      document.documentElement.animate(
+        {
+          clipPath: [
+            `circle(0px at ${x}px ${y}px)`,
+            `circle(${endRadius}px at ${x}px ${y}px)`
+          ]
+        },
+        {
+          duration: 500,
+          easing: 'ease-in-out',
+          pseudoElement: '::view-transition-new(root)'
+        }
+      )
+    }).catch(() => {})
   }
 
   const addTagView = (route) => {
