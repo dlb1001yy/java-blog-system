@@ -50,6 +50,14 @@ public class RedisUtils {
     }
 
     /**
+     * 不存在时才写入（返回 true 表示写入成功，常用于防刷/去重标记）
+     */
+    public boolean setIfAbsent(String key, Object value, long timeoutSeconds) {
+        return Boolean.TRUE.equals(redisTemplate.opsForValue()
+                .setIfAbsent(key, value, timeoutSeconds, TimeUnit.SECONDS));
+    }
+
+    /**
      * 递增操作 (用于文章浏览量统计等)
      */
     public long increment(String key) {

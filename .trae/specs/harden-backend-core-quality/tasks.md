@@ -1,0 +1,31 @@
+# Tasks
+- [x] Task 1: XSS 清洗接入
+  - [x] 1.1 在评论/留言/文章内容保存入口（Controller 或 Service）调用 `JsoupXssUtil.clean()`
+  - [x] 1.2 验证：Grep 确认 JsoupXssUtil 被调用；含 script 的内容入库前被清洗
+- [x] Task 2: 评论/留言 DTO 化与参数校验
+  - [x] 2.1 新建 `CommentCreateDTO`、`MessageCreateDTO`（仅暴露 content/articleId/nickname/email 等白名单字段，带 `@NotBlank/@Size` 约束）
+  - [x] 2.2 pom.xml 引入 `spring-boot-starter-validation`，Controller 改用 `@Valid @RequestBody DTO`
+  - [x] 2.3 `GlobalExceptionHandler` 补 `MethodArgumentNotValidException` 处理，返回 400 与字段提示
+  - [x] 2.4 验证：携带 status/userId 的请求体不再影响入库状态
+- [x] Task 3: 文章保存事务化
+  - [x] 3.1 将「保存文章+保存标签关联」下沉到 `ArticleService` 新方法并加 `@Transactional`
+  - [x] 3.2 `AdminArticleController` save/update 改调新方法
+  - [x] 3.3 验证：标签写入失败时文章记录回滚
+- [x] Task 4: 浏览量/点赞原子更新与回写任务
+  - [x] 4.1 view/like 计数改为 Mapper `UPDATE ... SET x = x + 1` 原子自增
+  - [x] 4.2 Redis 仅做去重/防刷标记；新增 `@Scheduled` 定时任务批量回写累计增量
+  - [x] 4.3 验证：并发场景计数不丢失；Redis 增量最终落库
+- [x] Task 5: 文件上传加固
+  - [x] 5.1 `FileUtils` 增加大小上限与真实类型校验（Content-Type + magic bytes 白名单）
+  - [x] 5.2 图片文件重编码（ImageIO 读出再写）消除恶意载荷
+  - [x] 5.3 验证：伪装扩展名的非白名单文件被拒绝并返回明确错误
+- [x] Task 6: 公开写接口限流
+  - [x] 6.1 为 `/portal/comments`（POST）、`/portal/messages`（POST）、`/portal/articles/{id}/like` 添加 `@RateLimit`（IP 维度，复用现有注解）
+  - [x] 6.2 验证：超阈值请求返回 429
+- [x] Task 7: 回归验证
+  - [x] 7.1 运行现有 `mvn test` 全部通过
+  - [x] 7.2 手工/接口验证评论、留言、文章保存、上传、点赞流程正常
+
+# Task Dependencies
+- Task 1-6 相互独立，可并行
+- Task 7 依赖 Task 1-6 全部完成

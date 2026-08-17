@@ -64,26 +64,20 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Override
     public void incrementViewCount(Long id) {
-        // 使用Redis缓存浏览量，定时同步到数据库
-        String key = "article:view:" + id;
-//        redisTemplate.opsForValue().increment(key);
-        // 替换后 (使用上一问生成的 RedisUtils)
-        redisUtils.increment(key);
-        // 简化方案：直接更新数据库
-        Article article = this.getById(id);
-        if (article != null) {
-            article.setViewCount(article.getViewCount() + 1);
-            this.updateById(article);
+        // Redis 仅做防刷去重：同一浏览器 1 小时内访问同一文章不重复计数
+        String dedupKey = "article:view:dedup:" + id;
+        if (!redisUtils.setIfAbsent(dedupKey, 1, 3600)) {
+            return;
         }
+        // DB 原子自增，避免并发读-改-写丢失更新。
+        // 取舍说明：若此处写 DB 失败，仅丢失一次计数，可接受（简化方案，不做 Redis delta 补偿回写）
+        baseMapper.addViewCount(id, 1);
     }
 
     @Override
     public void incrementLikeCount(Long id) {
-        Article article = this.getById(id);
-        if (article != null) {
-            article.setLikeCount(article.getLikeCount() + 1);
-            this.updateById(article);
-        }
+        // DB 原子自增，避免并发丢更新
+        baseMapper.addLikeCount(id, 1);
     }
 
     @Override
@@ -105,6 +99,25 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 .eq(ArticleTag::getArticleId, articleId));
         // 再添加新关联
         saveArticleTags(articleId, tagIds);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long saveArticleWithTags(Article article, List<Long> tagIds) {
+        this.save(article);
+        if (tagIds != null && !tagIds.isEmpty()) {
+            saveArticleTags(article.getId(), tagIds);
+        }
+        return article.getId();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateArticleWithTags(Article article, List<Long> tagIds) {
+        this.updateById(article);
+        if (tagIds != null) {
+            updateArticleTags(article.getId(), tagIds);
+        }
     }
 
     @Override

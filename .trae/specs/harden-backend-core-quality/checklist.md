@@ -1,0 +1,12 @@
+# Checklist
+- [x] 评论/留言/文章内容入库前经过 JsoupXssUtil 清洗，script 标签被移除
+- [x] 评论/留言接口使用 DTO + @Valid，恶意 status/userId 字段被忽略
+- [x] GlobalExceptionHandler 正确处理校验异常并返回 400
+- [x] 文章保存与标签关联在同一事务，失败整体回滚
+- [x] view/like 计数使用数据库原子自增，并发不丢失更新
+- [x] 存在 @Scheduled 任务将 Redis 计数增量回写数据库
+- [x] 文件上传有大小上限与真实类型白名单校验，伪装文件被拒绝
+- [x] 图片上传经重编码，恶意载荷被消除
+- [x] 评论/留言/点赞接口有 IP 维度 @RateLimit，超限返回 429
+- [x] 现有 mvn test 全部通过
+- [x] 未破坏已有接口的对外行为（响应格式、路径不变）

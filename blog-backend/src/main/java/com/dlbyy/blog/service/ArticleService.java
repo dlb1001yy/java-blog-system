@@ -15,8 +15,19 @@ public interface ArticleService extends IService<Article> {
     void incrementLikeCount(Long id);
     
     void saveArticleTags(Long articleId, List<Long> tagIds);
-    
+
     void updateArticleTags(Long articleId, List<Long> tagIds);
+
+    /**
+     * 事务化保存文章及其标签关联（新增）
+     * @return 文章ID
+     */
+    Long saveArticleWithTags(Article article, List<Long> tagIds);
+
+    /**
+     * 事务化更新文章及其标签关联
+     */
+    void updateArticleWithTags(Article article, List<Long> tagIds);
     
     List<Map<String, Object>> getArchives();
 }

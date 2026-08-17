@@ -2,6 +2,7 @@ package com.dlbyy.blog.controller.portal;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dlbyy.blog.annotation.RateLimit;
 import com.dlbyy.blog.common.Result;
 import com.dlbyy.blog.entity.Article;
 import com.dlbyy.blog.es.ArticleDocument;
@@ -123,6 +124,7 @@ public class PortalArticleController {
 
     @PostMapping("/{id}/like")
     @Operation(summary = "点赞文章")
+    @RateLimit(key = "portal-article-like", time = 60, count = 30)
     public Result<?> like(@PathVariable Long id) {
         articleService.incrementLikeCount(id);
         return Result.success();

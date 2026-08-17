@@ -11,6 +11,7 @@ import com.dlbyy.blog.event.ArticlePublishedEvent;
 import com.dlbyy.blog.service.ArticleService;
 import com.dlbyy.blog.service.MarkdownImportService;
 import com.dlbyy.blog.service.TagService;
+import com.dlbyy.blog.utils.JsoupXssUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -76,8 +77,10 @@ public class AdminArticleController {
         Article article = new Article();
         article.setUserId(1L); // TODO: 从当前登录用户获取
         article.setCategoryId(dto.getCategoryId());
-        article.setTitle(dto.getTitle());
-        article.setSummary(dto.getSummary());
+        // XSS 清洗：纯文本字段移除所有 HTML 标签；content 为 Markdown，白名单 cleanHtml 会破坏代码块等语法，
+        // 前端渲染时已有转义，故不在此处清洗
+        article.setTitle(JsoupXssUtil.cleanText(dto.getTitle()));
+        article.setSummary(JsoupXssUtil.cleanText(dto.getSummary()));
         article.setContent(dto.getContent());
         article.setCoverImage(dto.getCoverImage());
         article.setType(dto.getType());
@@ -91,14 +94,9 @@ public class AdminArticleController {
         article.setCreateTime(LocalDateTime.now());
         article.setUpdateTime(LocalDateTime.now());
 
-        articleService.save(article);
+        articleService.saveArticleWithTags(article, dto.getTagIds());
 
-        // 保存标签关联
-        if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
-            articleService.saveArticleTags(article.getId(), dto.getTagIds());
-        }
-
-        // 发布文章创建事件，异步同步至 Elasticsearch
+        // 发布文章创建事件，异步同步至 Elasticsearch（事务已在 Service 内提交）
         eventPublisher.publishEvent(new ArticlePublishedEvent(this, article.getId(), ArticlePublishedEvent.EventType.CREATED));
 
         return Result.success("创建成功", article.getId());
@@ -114,8 +112,9 @@ public class AdminArticleController {
         }
 
         article.setCategoryId(dto.getCategoryId());
-        article.setTitle(dto.getTitle());
-        article.setSummary(dto.getSummary());
+        // XSS 清洗：纯文本字段移除所有 HTML 标签；content 为 Markdown，同 create 说明不清洗
+        article.setTitle(JsoupXssUtil.cleanText(dto.getTitle()));
+        article.setSummary(JsoupXssUtil.cleanText(dto.getSummary()));
         article.setContent(dto.getContent());
         article.setCoverImage(dto.getCoverImage());
         article.setType(dto.getType());
@@ -125,14 +124,9 @@ public class AdminArticleController {
         article.setIsPublish(dto.getIsPublish());
         article.setUpdateTime(LocalDateTime.now());
 
-        articleService.updateById(article);
+        articleService.updateArticleWithTags(article, dto.getTagIds());
 
-        // 更新标签关联
-        if (dto.getTagIds() != null) {
-            articleService.updateArticleTags(article.getId(), dto.getTagIds());
-        }
-
-        // 发布文章更新事件，异步同步至 Elasticsearch
+        // 发布文章更新事件，异步同步至 Elasticsearch（事务已在 Service 内提交）
         eventPublisher.publishEvent(new ArticlePublishedEvent(this, article.getId(), ArticlePublishedEvent.EventType.UPDATED));
 
         return Result.success("更新成功", null);
