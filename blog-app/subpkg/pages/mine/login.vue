@@ -1,7 +1,11 @@
 <template>
   <!-- 登录页：多层径向渐变 mesh 背景 + 玻璃拟态卡片 -->
-  <view class="login-container">
-    <view class="login-card">
+  <view :class="['login-container', isDark ? 'theme-dark' : '']">
+    <!-- 顶部自定义导航栏：卡片底色，与登录卡片风格呼应 -->
+    <NavBar title="登录" />
+    <!-- 卡片区域：占满剩余空间并居中 -->
+    <view class="login-main">
+      <view class="login-card">
       <!-- 头部：标题 + 副标题 -->
       <view class="header">
         <text class="title">欢迎回来</text>
@@ -78,6 +82,7 @@
           <text class="tip-text">默认账号: admin / admin123</text>
         </view>
       </view>
+      </view>
     </view>
   </view>
 </template>
@@ -87,7 +92,9 @@ import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { TOKEN_KEY, REFRESH_TOKEN_KEY } from '@/common/config.js'
 import api, { getCaptcha } from '@/common/api.js'
+import { isDark } from '@/common/theme.js'
 import Icon from '@/components/Icon.vue'
+import NavBar from '@/components/NavBar.vue'
 
 const form = ref({
   username: 'admin',
@@ -139,7 +146,8 @@ const handleLogin = async () => {
       if (pages.length > 1) {
         uni.navigateBack()
       } else {
-        uni.switchTab({ url: '/pages/index/index' })
+        // 无原生 tabBar，首页用 reLaunch 打开（与自定义 TabBar 切换方式一致）
+        uni.reLaunch({ url: '/pages/index/index' })
       }
     }, 1000)
 
@@ -155,13 +163,11 @@ const handleLogin = async () => {
 </script>
 
 <style lang="scss" scoped>
-// 登录页容器：多层径向渐变 mesh 背景，底色深靛蓝让 mesh 更突出
+// 登录页容器：多层径向渐变 mesh 背景，底色深靛蓝让 mesh 更突出；顶部导航 + 下方内容区
 .login-container {
   min-height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  flex-direction: column;
   background-color: #1E1B4B;
   background-image:
     radial-gradient(at 0% 0%, $color-primary 0%, transparent 50%),
@@ -169,14 +175,23 @@ const handleLogin = async () => {
     radial-gradient(at 50% 100%, $color-accent 0%, transparent 50%);
 }
 
-// 玻璃拟态登录卡片
+// 卡片区域：占满导航栏以外的剩余空间并居中
+.login-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+// 玻璃拟态登录卡片：背景用主题卡片色（高不透明度），确保暗色下可读
 .login-card {
   width: 100%;
   max-width: 360px;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--app-bg-card, #FFFFFF);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--app-border, #E2E8F0);
   border-radius: 24px;
   padding: 40px 28px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
@@ -192,14 +207,14 @@ const handleLogin = async () => {
   display: block;
   font-size: 26px;
   font-weight: 700;
-  color: $color-text;
+  color: var(--app-text, #0F172A);
 }
 
 .subtitle {
   display: block;
   margin-top: 6px;
   font-size: 13px;
-  color: $color-text-secondary;
+  color: var(--app-text-secondary, #64748B);
 }
 
 // 表单
@@ -213,7 +228,7 @@ const handleLogin = async () => {
 .input-item {
   display: flex;
   align-items: center;
-  background: $color-bg;
+  background: var(--app-bg, #F1F5F9);
   border-radius: $radius-lg;
   padding: 0 14px;
   height: 48px;
@@ -222,7 +237,7 @@ const handleLogin = async () => {
 
   // 聚焦时高亮边框 + 柔光
   &:focus-within {
-    background: #fff;
+    background: var(--app-bg-card, #FFFFFF);
     border-color: $color-primary;
     box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
   }
@@ -243,12 +258,12 @@ const handleLogin = async () => {
 .input {
   flex: 1;
   font-size: 15px;
-  color: $color-text;
+  color: var(--app-text, #0F172A);
   height: 100%;
 }
 
 .placeholder {
-  color: $color-text-tertiary;
+  color: var(--app-text-tertiary, #94A3B8);
 }
 
 // 图形验证码图片
@@ -290,6 +305,6 @@ const handleLogin = async () => {
 
 .tip-text {
   font-size: 12px;
-  color: $color-text-secondary;
+  color: var(--app-text-secondary, #64748B);
 }
 </style>

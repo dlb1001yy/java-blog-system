@@ -43,9 +43,9 @@ defineProps({
 })
 
 const list = [
-  { path: '/pages/index/index',  text: '首页', icon: 'home' },
-  { path: '/pages/resume/index', text: '简历', icon: 'resume' },
-  { path: '/pages/mine/index',   text: '我的', icon: 'mine' }
+  { path: '/pages/index/index',        text: '首页', icon: 'home' },
+  { path: '/subpkg/pages/resume/index', text: '简历', icon: 'resume' },
+  { path: '/subpkg/pages/mine/index',   text: '我的', icon: 'mine' }
 ]
 
 const onTap = (item) => {
@@ -65,8 +65,8 @@ const onTap = (item) => {
   display: flex;
   height: 56px;
   padding-bottom: env(safe-area-inset-bottom);
-  background: $color-bg-card;
-  border-top: 1px solid $color-border;
+  background: var(--app-bg-card, #FFFFFF);
+  border-top: 1px solid var(--app-border, #E2E8F0);
   box-shadow: 0 -1px 8px rgba(15, 23, 42, 0.04);
 }
 
@@ -79,7 +79,7 @@ const onTap = (item) => {
   justify-content: center;
   gap: 3px;
   /* 非激活态颜色 */
-  color: $color-text-tertiary;
+  color: var(--app-text-tertiary, #94A3B8);
   transition: color 0.2s;
 
   .icon {

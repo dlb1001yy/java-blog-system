@@ -43,13 +43,13 @@ const onTap = (value) => {
   padding: 0 $spacing-lg;
 }
 
-/* 单个 chip：胶囊形 */
+/* 单个 chip：胶囊形，非激活浅底用主题变量（暗色下可读） */
 .chip {
   padding: 6px 14px;
   border-radius: $radius-full;
   font-size: 13px;
-  background: $color-bg;
-  color: $color-text-secondary;
+  background: var(--app-bg, #F1F5F9);
+  color: var(--app-text-secondary, #64748B);
   transition: all 0.2s;
   white-space: nowrap;
 }
@@ -57,6 +57,6 @@ const onTap = (value) => {
 /* 激活态：主色背景 + 白字 */
 .chip.active {
   background: $color-primary;
-  color: $color-bg-card;
+  color: #fff;
 }
 </style>

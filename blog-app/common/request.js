@@ -48,7 +48,7 @@ function clearAuthAndRedirect() {
   uni.removeStorageSync(TOKEN_KEY)
   uni.removeStorageSync(REFRESH_TOKEN_KEY)
   uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' })
-  setTimeout(() => uni.reLaunch({ url: '/pages/mine/login' }), 1500)
+  setTimeout(() => uni.reLaunch({ url: '/subpkg/pages/mine/login' }), 1500)
 }
 
 const request = async (options) => {

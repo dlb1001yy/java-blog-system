@@ -51,12 +51,12 @@ const onClear = () => {
 </script>
 
 <style lang="scss" scoped>
-/* 容器：胶囊形灰底 */
+/* 容器：胶囊形灰底（父页面可用 :deep 覆盖为白底卡片） */
 .search-bar {
   display: flex;
   flex-direction: row;
   align-items: center;
-  background: $color-bg;
+  background: var(--app-bg, #F1F5F9);
   border-radius: $radius-full;
   padding: 0 14px;
   height: 40px;
@@ -75,13 +75,13 @@ const onClear = () => {
 .search-input {
   flex: 1;
   font-size: 14px;
-  color: $color-text;
+  color: var(--app-text, #0F172A);
   height: 100%;
 }
 
 /* placeholder 颜色（input 通过 placeholder-class 指定） */
 .placeholder {
-  color: $color-text-tertiary;
+  color: var(--app-text-tertiary, #94A3B8);
 }
 
 /* 清除按钮 */
@@ -89,8 +89,8 @@ const onClear = () => {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  /* #CBD5E1：slate-300，theme.js 未定义，此处硬编码 */
-  background: #CBD5E1;
+  /* 边框灰：跟随主题变量，暗色下仍与白叉对比清晰 */
+  background: var(--app-border, #CBD5E1);
   color: #fff;
   text-align: center;
   line-height: 20px;

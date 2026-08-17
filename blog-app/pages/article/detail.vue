@@ -1,5 +1,5 @@
 <template>
-  <view class="detail-page">
+  <view :class="['detail-page', isDark ? 'theme-dark' : '']">
     <!-- 加载中：详情页骨架 -->
     <Skeleton v-if="!article" type="detail" :count="1" />
 
@@ -18,13 +18,48 @@
           </view>
           <text :class="['type-badge', `type-${article.type}`]">{{ typeMap[article.type] }}</text>
         </view>
+
+        <!-- 操作条：稍后阅读 + 分享海报 -->
+        <view class="action-bar">
+          <view :class="['action-btn', isSaved ? 'active' : '']" @click="onToggleReadLater">
+            <!-- 内联 bookmark SVG 图标 16x16 -->
+            <svg class="action-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
+            <text class="action-text">{{ isSaved ? '已收藏' : '稍后阅读' }}</text>
+          </view>
+          <!-- 第二个操作按钮：分享海报 -->
+          <view class="action-btn" @click="showShare = true">
+            <!-- 内联 share SVG 图标 16x16 -->
+            <svg class="action-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+            <text class="action-text">分享海报</text>
+          </view>
+        </view>
       </view>
 
-      <!-- 内容区 -->
+      <!-- 内容区：文本段走 rich-text，图片段抽出用 image 渲染（支持点击预览与加载渐显） -->
       <view class="card content-card">
-        <view class="markdown-body">
-          <rich-text :nodes="htmlContent"></rich-text>
-        </view>
+        <template v-for="(seg, i) in contentSegments" :key="i">
+          <view v-if="seg.type === 'html'" class="markdown-body">
+            <rich-text :nodes="seg.html"></rich-text>
+          </view>
+          <image
+            v-else
+            class="md-img"
+            :class="{ loaded: imgLoaded[i] }"
+            :src="optimizeImageUrl(resolveFileUrl(seg.src), 750)"
+            mode="widthFix"
+            lazy-load
+            @load="imgLoaded[i] = true"
+            @click="previewImage(i)"
+          />
+        </template>
       </view>
 
       <!-- 评论区 -->
@@ -98,17 +133,32 @@
         <text class="like-count">{{ article.likeCount }}</text>
       </view>
     </template>
+
+    <!-- 分享海报弹层（文章存在时才挂载） -->
+    <SharePoster v-if="article" :article="article" v-model:show="showShare" />
   </view>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { ref, computed, watch } from 'vue'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import api from '@/common/api.js'
 import { resolveFileUrl } from '@/common/config.js'
-import { parseMarkdown } from '@/utils/markdown.js'
+import { optimizeImageUrl } from '@/common/imageUrl.js'
+import { isDark, applyNavBarTheme } from '@/common/theme.js'
+import { parseMarkdown, splitHtmlImages } from '@/utils/markdown.js'
+import {
+  initNetworkWatch,
+  offlineMode,
+  cacheArticleDetail,
+  getCachedArticleDetail,
+  toggleReadLater,
+  readLaterIds,
+  isReadLater
+} from '@/common/offline.js'
 import Icon from '@/components/Icon.vue'
 import Skeleton from '@/components/Skeleton.vue'
+import SharePoster from '@/components/SharePoster.vue'
 
 // 文章类型映射
 const typeMap = { 0: '原创', 1: '转载', 2: '翻译' }
@@ -118,24 +168,94 @@ const comments = ref([])
 const relatedArticles = ref([])
 const form = ref({ nickname: '', content: '' })
 const likeAnimating = ref(false)
+// 分享海报弹层显隐
+const showShare = ref(false)
 
-// 将 Markdown 转为 HTML
-const htmlContent = computed(() => {
-  return parseMarkdown(article.value?.content || '')
+// 正文分段：markdown 转 html 后按图片切分，图片段单独用 image 组件渲染
+const contentSegments = computed(() => {
+  return splitHtmlImages(parseMarkdown(article.value?.content || ''))
 })
 
-// 页面加载：并行拉取详情、评论、相关文章
+// 正文图片预览地址列表（绝对地址）
+const contentImages = computed(() => {
+  return contentSegments.value
+    .filter((s) => s.type === 'img')
+    .map((s) => resolveFileUrl(s.src))
+})
+
+// 图片加载完成标记（key 为分段下标），触发 .loaded 渐显；文章切换时重置
+const imgLoaded = ref({})
+watch(() => article.value?.id, () => { imgLoaded.value = {} })
+
+// 预览正文图片：i 为分段下标，先换算为该图片在预览列表中的序号
+const previewImage = (i) => {
+  const imgIndex = contentSegments.value
+    .slice(0, i)
+    .filter((s) => s.type === 'img')
+    .length
+  uni.previewImage({
+    urls: contentImages.value,
+    current: contentImages.value[imgIndex]
+  })
+}
+
+// 是否已加入稍后阅读（isReadLater 读取响应式 id 集合，切换后按钮自动高亮）
+const isSaved = computed(() => isReadLater(article.value && article.value.id))
+
+// 切换稍后阅读（toggleReadLater 内部同步刷新 readLaterIds，按钮状态随之更新）
+const onToggleReadLater = () => {
+  if (!article.value) return
+  toggleReadLater(article.value)
+}
+
+// 页面显示时同步原生导航栏配色；主题切换时实时刷新
+onShow(() => applyNavBarTheme())
+watch(isDark, () => applyNavBarTheme())
+
+// 页面加载：并行拉取详情、评论、相关文章；离线/网络失败时降级到详情缓存
 onLoad(async (options) => {
   const id = options.id
-  // 并行拉取文章详情、评论、相关文章
-  const [res, cRes, rRes] = await Promise.all([
-    api.getArticleDetail(id),
-    api.getComments(id),
-    api.getRelatedArticles(id)
-  ])
-  article.value = res.data
-  comments.value = cRes.data || []
-  relatedArticles.value = (rRes.data || []).filter(Boolean)
+  // 初始化网络监听（幂等，独立进入本页也能感知离线）
+  initNetworkWatch()
+
+  // 离线模式：读详情缓存降级，评论与相关文章置空
+  if (offlineMode.value) {
+    const cached = getCachedArticleDetail(id)
+    if (cached) {
+      article.value = cached
+      comments.value = []
+      relatedArticles.value = []
+      uni.showToast({ title: '已进入离线阅读模式', icon: 'none' })
+    } else {
+      uni.showToast({ title: '暂无离线内容', icon: 'none' })
+    }
+    return
+  }
+
+  // 在线：并行拉取文章详情、评论、相关文章
+  try {
+    const [res, cRes, rRes] = await Promise.all([
+      api.getArticleDetail(id),
+      api.getComments(id),
+      api.getRelatedArticles(id)
+    ])
+    article.value = res.data
+    comments.value = cRes.data || []
+    relatedArticles.value = (rRes.data || []).filter(Boolean)
+    // 成功后写入详情离线缓存
+    cacheArticleDetail(res.data)
+  } catch (e) {
+    // 网络类失败：尝试详情缓存降级
+    const cached = getCachedArticleDetail(id)
+    if (cached) {
+      article.value = cached
+      comments.value = []
+      relatedArticles.value = []
+      uni.showToast({ title: '已进入离线阅读模式', icon: 'none' })
+    } else {
+      uni.showToast({ title: '加载失败', icon: 'none' })
+    }
+  }
 })
 
 // 相对时间：刚刚 / X 分钟前 / X 小时前 / X 天前 / YYYY-MM-DD
@@ -206,7 +326,7 @@ const goRelated = (id) => {
 /* 页面容器：灰底，底部留白避开浮动按钮 */
 .detail-page {
   min-height: 100vh;
-  background: $color-bg;
+  background: var(--app-bg, #F1F5F9);
   padding: $spacing-md;
   padding-bottom: calc(140px + env(safe-area-inset-bottom));
   box-sizing: border-box;
@@ -214,7 +334,7 @@ const goRelated = (id) => {
 
 /* 通用卡片 */
 .card {
-  background: $color-bg-card;
+  background: var(--app-bg-card, #FFFFFF);
   border-radius: $radius-lg;
   box-shadow: $shadow-card;
 }
@@ -227,7 +347,7 @@ const goRelated = (id) => {
   display: block;
   font-size: 22px;
   font-weight: 700;
-  color: $color-text;
+  color: var(--app-text, #0F172A);
   line-height: 1.4;
   margin-bottom: 12px;
 }
@@ -236,7 +356,7 @@ const goRelated = (id) => {
   align-items: center;
   gap: 16px;
   font-size: 12px;
-  color: $color-text-tertiary;
+  color: var(--app-text-tertiary, #94A3B8);
 }
 .meta-item {
   display: flex;
@@ -245,7 +365,7 @@ const goRelated = (id) => {
 }
 .meta-text {
   font-size: 12px;
-  color: $color-text-tertiary;
+  color: var(--app-text-tertiary, #94A3B8);
 }
 /* 类型徽章：胶囊形 */
 .type-badge {
@@ -259,6 +379,41 @@ const goRelated = (id) => {
 .type-1 { background: $color-warning; }
 .type-2 { background: $color-success; }
 
+/* ===== 操作条（meta 行下）：稍后阅读 + 预留按钮位 ===== */
+.action-bar {
+  display: flex;
+  gap: $spacing-md;
+  margin-top: $spacing-lg;
+}
+/* 胶囊按钮：透明底 + 1px 边框，按下缩放反馈 */
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  height: 32px;
+  border-radius: $radius-full;
+  border: 1px solid var(--app-border, #E2E8F0);
+  background: transparent;
+  color: var(--app-text-secondary, #64748B);
+  transition: transform 0.15s ease;
+}
+.action-btn:active {
+  transform: scale(0.95);
+}
+/* 已加入稍后阅读：主色边框 + 主色文字高亮 */
+.action-btn.active {
+  border-color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #4F46E5);
+}
+.action-icon {
+  flex-shrink: 0;
+}
+.action-text {
+  font-size: 13px;
+  line-height: 1;
+}
+
 /* ===== 内容区 ===== */
 .content-card {
   margin-top: $spacing-md;
@@ -268,7 +423,7 @@ const goRelated = (id) => {
 .markdown-body {
   font-size: 15px;
   line-height: 1.8;
-  color: $color-text;
+  color: var(--app-text, #0F172A);
 }
 .markdown-body :deep(p) {
   margin: 0 0 16px 0;
@@ -277,7 +432,7 @@ const goRelated = (id) => {
 .markdown-body :deep(h2),
 .markdown-body :deep(h3) {
   font-weight: 700;
-  color: $color-text;
+  color: var(--app-text, #0F172A);
   margin: 20px 0 12px;
   line-height: 1.4;
 }
@@ -285,11 +440,11 @@ const goRelated = (id) => {
 .markdown-body :deep(h2) {
   font-size: 18px;
   padding-bottom: 8px;
-  border-bottom: 1px solid $color-border;
+  border-bottom: 1px solid var(--app-border, #E2E8F0);
 }
 .markdown-body :deep(h3) { font-size: 16px; }
 .markdown-body :deep(pre) {
-  background: $color-bg;
+  background: var(--app-bg, #F1F5F9);
   padding: 12px;
   border-radius: $radius-md;
   font-family: 'Menlo', 'Consolas', monospace;
@@ -305,7 +460,7 @@ const goRelated = (id) => {
   padding: 0;
 }
 .markdown-body :deep(:not(pre) > code) {
-  background: $color-bg;
+  background: var(--app-bg, #F1F5F9);
   padding: 2px 6px;
   border-radius: $radius-sm;
   font-size: 13px;
@@ -313,7 +468,7 @@ const goRelated = (id) => {
 .markdown-body :deep(blockquote) {
   border-left: 4px solid $color-primary;
   padding-left: 12px;
-  color: $color-text-secondary;
+  color: var(--app-text-secondary, #64748B);
   margin: 0 0 16px 0;
   line-height: 1.6;
 }
@@ -321,6 +476,19 @@ const goRelated = (id) => {
   max-width: 100%;
   border-radius: $radius-md;
   margin: 8px 0;
+}
+/* 正文图片段（image 组件渲染）：占位底 + 加载完成后渐显（同封面图交互） */
+.md-img {
+  display: block;
+  width: 100%;
+  border-radius: $radius-md;
+  margin: 8px 0;
+  background: var(--app-bg, #F1F5F9);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.md-img.loaded {
+  opacity: 1;
 }
 .markdown-body :deep(ul),
 .markdown-body :deep(ol) {
@@ -344,7 +512,7 @@ const goRelated = (id) => {
   display: block;
   font-size: 16px;
   font-weight: 600;
-  color: $color-text;
+  color: var(--app-text, #0F172A);
   margin-bottom: $spacing-lg;
 }
 .comment-form {
@@ -355,22 +523,22 @@ const goRelated = (id) => {
 }
 .form-textarea {
   width: 100%;
-  background: $color-bg;
+  background: var(--app-bg, #F1F5F9);
   border-radius: $radius-md;
   padding: 12px;
   min-height: 80px;
   font-size: 14px;
-  color: $color-text;
+  color: var(--app-text, #0F172A);
   box-sizing: border-box;
 }
 .form-input {
   width: 100%;
-  background: $color-bg;
+  background: var(--app-bg, #F1F5F9);
   border-radius: $radius-md;
   padding: 0 12px;
   height: 40px;
   font-size: 14px;
-  color: $color-text;
+  color: var(--app-text, #0F172A);
   box-sizing: border-box;
 }
 .form-submit {
@@ -394,7 +562,7 @@ const goRelated = (id) => {
 }
 .comment-item {
   padding: $spacing-md 0;
-  border-bottom: 1px solid $color-divider;
+  border-bottom: 1px solid var(--app-divider, #F1F5F9);
 }
 .comment-item.last {
   border-bottom: none;
@@ -421,17 +589,17 @@ const goRelated = (id) => {
   flex: 1;
   font-size: 14px;
   font-weight: 600;
-  color: $color-text;
+  color: var(--app-text, #0F172A);
 }
 .comment-time {
   font-size: 12px;
-  color: $color-text-tertiary;
+  color: var(--app-text-tertiary, #94A3B8);
 }
 .comment-content {
   display: block;
   margin-top: $spacing-sm;
   font-size: 14px;
-  color: #334155;
+  color: var(--app-text-secondary, #334155);
   line-height: 1.6;
   word-break: break-word;
 }
@@ -441,7 +609,7 @@ const goRelated = (id) => {
 }
 .empty-text {
   font-size: 13px;
-  color: $color-text-tertiary;
+  color: var(--app-text-tertiary, #94A3B8);
 }
 
 /* ===== 相关文章区 ===== */
@@ -458,12 +626,18 @@ const goRelated = (id) => {
   align-items: center;
   gap: $spacing-md;
   padding: $spacing-sm 0;
+  /* 触控反馈：按下轻微缩放 */
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.related-item:active {
+  transform: scale(0.98);
+  opacity: 0.9;
 }
 .related-title {
   flex: 1;
   min-width: 0;
   font-size: 14px;
-  color: $color-text;
+  color: var(--app-text, #0F172A);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -477,7 +651,7 @@ const goRelated = (id) => {
   height: 60px;
   border-radius: $radius-md;
   flex-shrink: 0;
-  background: $color-bg;
+  background: var(--app-bg, #F1F5F9);
 }
 
 /* ===== 浮动点赞按钮 ===== */

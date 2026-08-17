@@ -1,5 +1,5 @@
 <template>
-  <view class="resume-page" v-if="resume">
+  <view :class="['resume-page', isDark ? 'theme-dark' : '']" v-if="resume">
     <!-- Hero 卡片：渐变背景 + 头像 + 姓名 + 联系方式 -->
     <view class="hero-card">
       <view class="avatar">
@@ -164,17 +164,17 @@
       <text class="section-content">{{ resume.interests }}</text>
     </view>
 
-    <TabBar current="/pages/resume/index" />
+    <TabBar current="/subpkg/pages/resume/index" />
   </view>
-  <view v-else class="empty-state"><text>暂无简历信息</text></view>
+  <view v-else :class="['empty-state', isDark ? 'theme-dark' : '']"><text>暂无简历信息</text></view>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { onLoad } from '@dcloudio/uni-app' // UniApp 的生命周期从这里引入
+import { ref, computed, watch } from 'vue'
+import { onLoad, onShow } from '@dcloudio/uni-app' // UniApp 的生命周期从这里引入
 import api from '@/common/api.js'
 import { BASE_URL } from '@/common/config.js'
-import { colors } from '@/common/theme.js'
+import { colors, isDark, applyNavBarTheme } from '@/common/theme.js'
 import TabBar from '@/components/TabBar.vue'
 import Icon from '@/components/Icon.vue'
 
@@ -244,6 +244,10 @@ const getSkillColor = (level) => {
   return 'skill-tag--accent'
 }
 
+// 页面显示时同步原生导航栏配色；主题切换时实时刷新
+onShow(() => applyNavBarTheme())
+watch(isDark, () => applyNavBarTheme())
+
 // onLoad 直接使用，无需导入
 onLoad(async () => {
   try {
@@ -257,7 +261,7 @@ onLoad(async () => {
 
 <style lang="scss" scoped>
 .resume-page {
-  background: $color-bg;
+  background: var(--app-bg, #F1F5F9);
   min-height: 100vh;
   padding-bottom: calc(56px + env(safe-area-inset-bottom) + 12px);
 }
@@ -330,7 +334,7 @@ onLoad(async () => {
 
 /* === 通用卡片 === */
 .section {
-  background: $color-bg-card;
+  background: var(--app-bg-card, #FFFFFF);
   margin: 12px 16px;
   border-radius: $radius-xl;
   padding: 20px 16px;
@@ -342,7 +346,7 @@ onLoad(async () => {
     gap: 8px;
     font-size: 16px;
     font-weight: 600;
-    color: $color-text;
+    color: var(--app-text, #0F172A);
     margin-bottom: 16px;
     padding-bottom: 12px;
     border-bottom: 2px solid $color-primary;
@@ -350,7 +354,7 @@ onLoad(async () => {
 
   .section-content {
     font-size: 14px;
-    color: #475569;
+    color: var(--app-text-secondary, #475569);
     line-height: 1.8;
   }
 }
@@ -366,18 +370,19 @@ onLoad(async () => {
     border-radius: $radius-full;
     font-size: 13px;
 
+    /* 浅色底改为低透明度主色，亮暗模式下均可读 */
     &.skill-tag--primary {
-      background: #EEF2FF;
+      background: rgba(79, 70, 229, 0.12);
       color: $color-primary;
     }
 
     &.skill-tag--secondary {
-      background: #ECFEFF;
+      background: rgba(6, 182, 212, 0.12);
       color: $color-secondary;
     }
 
     &.skill-tag--accent {
-      background: #F3E8FF;
+      background: rgba(139, 92, 246, 0.12);
       color: $color-accent;
     }
   }
@@ -386,7 +391,7 @@ onLoad(async () => {
 /* === 工作经历 / 教育背景（卡片化时间线） === */
 .timeline {
   .timeline-item {
-    background: #F8FAFC;
+    background: var(--app-bg, #F8FAFC);
     border-radius: $radius-lg;
     padding: 16px;
     margin-bottom: 12px;
@@ -400,7 +405,7 @@ onLoad(async () => {
       display: block;
       font-size: 15px;
       font-weight: 600;
-      color: $color-text;
+      color: var(--app-text, #0F172A);
     }
 
     .timeline-date {
@@ -409,7 +414,7 @@ onLoad(async () => {
       gap: 4px;
       margin-top: 4px;
       font-size: 12px;
-      color: $color-text-tertiary;
+      color: var(--app-text-tertiary, #94A3B8);
     }
 
     .timeline-sub {
@@ -424,7 +429,7 @@ onLoad(async () => {
       display: block;
       margin-top: 8px;
       font-size: 13px;
-      color: #475569;
+      color: var(--app-text-secondary, #475569);
       line-height: 1.6;
     }
   }
@@ -433,8 +438,8 @@ onLoad(async () => {
 /* === 项目经验卡片 === */
 .projects-list {
   .project-item {
-    background: $color-bg-card;
-    border: 1px solid $color-border;
+    background: var(--app-bg-card, #FFFFFF);
+    border: 1px solid var(--app-border, #E2E8F0);
     border-radius: $radius-lg;
     padding: 16px;
     margin-bottom: 12px;
@@ -453,12 +458,12 @@ onLoad(async () => {
         flex: 1;
         font-size: 15px;
         font-weight: 600;
-        color: $color-text;
+        color: var(--app-text, #0F172A);
       }
 
       .project-date {
         font-size: 12px;
-        color: $color-text-tertiary;
+        color: var(--app-text-tertiary, #94A3B8);
         flex-shrink: 0;
       }
     }
@@ -475,7 +480,7 @@ onLoad(async () => {
       display: block;
       margin-top: 8px;
       font-size: 13px;
-      color: #475569;
+      color: var(--app-text-secondary, #475569);
       line-height: 1.6;
     }
 
@@ -486,7 +491,8 @@ onLoad(async () => {
       margin-top: 12px;
 
       .tag {
-        background: #EEF2FF;
+        /* 低透明度主色底，亮暗模式下均可读 */
+        background: rgba(79, 70, 229, 0.12);
         color: $color-primary;
         padding: 3px 10px;
         border-radius: $radius-full;
@@ -503,7 +509,7 @@ onLoad(async () => {
   align-items: center;
   justify-content: center;
   padding: 80px 20px;
-  color: $color-text-tertiary;
+  color: var(--app-text-tertiary, #94A3B8);
   font-size: 14px;
 }
 
@@ -517,20 +523,20 @@ onLoad(async () => {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    background: #F8FAFC;
+    background: var(--app-bg, #F8FAFC);
     border-radius: $radius-md;
     padding: 8px 12px;
     min-width: 80px;
 
     .info-label {
       font-size: 11px;
-      color: $color-text-tertiary;
+      color: var(--app-text-tertiary, #94A3B8);
     }
 
     .info-value {
       font-size: 13px;
       font-weight: 500;
-      color: $color-text;
+      color: var(--app-text, #0F172A);
     }
   }
 }

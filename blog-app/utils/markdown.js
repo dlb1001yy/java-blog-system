@@ -163,4 +163,45 @@ export const parseMarkdown = (markdownText) => {
   }
 }
 
-export default { parseMarkdown }
+// 解码常见 HTML 实体（&amp; 放最后解码，避免二次解码）
+const decodeEntities = (str) => {
+  if (!str) return str
+  return String(str)
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+}
+
+/**
+ * 将 HTML 切分为「文本段 + 图片段」交替数组，用于正文图片单独渲染
+ *（image 组件渲染，支持点击预览与加载渐显）。
+ * - 正则匹配 <img ...src="..."...> 标签，容忍单双引号与任意属性顺序
+ * - 相邻纯文本段 trim 后为空则剔除；src 中的 HTML 实体解码回原字符
+ * - 无图片时返回单段 html（与直接渲染原 html 等价）
+ * @param {string} html
+ * @returns {Array<{type:'html', html:string} | {type:'img', src:string}>}
+ */
+export const splitHtmlImages = (html) => {
+  if (!html) return [{ type: 'html', html: '' }]
+  const segments = []
+  // src 前必须有空白符，避免误匹配 data-src 等属性；属性值容忍单双引号
+  const imgRe = /<img\b[^>]*?\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)')[^>]*>/gi
+  let last = 0
+  let m
+  while ((m = imgRe.exec(html)) !== null) {
+    const before = html.slice(last, m.index)
+    if (before.trim()) segments.push({ type: 'html', html: before })
+    segments.push({ type: 'img', src: decodeEntities(m[1] !== undefined ? m[1] : m[2]) })
+    last = m.index + m[0].length
+  }
+  const rest = html.slice(last)
+  if (rest.trim()) segments.push({ type: 'html', html: rest })
+  // 无任何有效段（如纯空白 html）时兜底返回单段原文
+  if (!segments.length) segments.push({ type: 'html', html })
+  return segments
+}
+
+export default { parseMarkdown, splitHtmlImages }

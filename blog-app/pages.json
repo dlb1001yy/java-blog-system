@@ -1,47 +1,62 @@
 {
+  "themeLocation": "theme.json",
   "pages": [
     {
       "path": "pages/index/index",
       "style": {
         "navigationBarTitleText": "首页",
-        "enablePullDownRefresh": true,
-        "backgroundColor": "#f5f7fa"
+        "backgroundColor": "@bgColor"
       }
     },
     {
       "path": "pages/article/detail",
       "style": {
         "navigationBarTitleText": "文章详情",
-        "backgroundColor": "#ffffff"
-      }
-    },
-    {
-      "path": "pages/resume/index",
-      "style": {
-        "navigationBarTitleText": "个人简历",
-        "backgroundColor": "#f5f7fa"
-      }
-    },
-    {
-      "path": "pages/mine/index",
-      "style": {
-        "navigationBarTitleText": "我的",
-        "backgroundColor": "#f5f7fa"
-      }
-    },
-    {
-      "path": "pages/mine/login",
-      "style": {
-        "navigationBarTitleText": "登录",
-        "navigationStyle": "custom"
+        "backgroundColor": "@bgColor"
       }
     }
   ],
+  "subPackages": [
+    {
+      "root": "subpkg",
+      "pages": [
+        {
+          "path": "pages/readlater/index",
+          "style": {
+            "navigationBarTitleText": "稍后阅读",
+            "backgroundColor": "@bgColor"
+          }
+        },
+        {
+          "path": "pages/mine/index",
+          "style": {
+            "navigationBarTitleText": "我的",
+            "backgroundColor": "@bgColor"
+          }
+        },
+        {
+          "path": "pages/mine/login",
+          "style": {
+            "navigationBarTitleText": "登录",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "pages/resume/index",
+          "style": {
+            "navigationBarTitleText": "个人简历",
+            "backgroundColor": "@bgColor"
+          }
+        }
+      ]
+    }
+  ],
   "globalStyle": {
-    "navigationBarTextStyle": "white",
+    "navigationBarTextStyle": "@navTxtStyle",
     "navigationBarTitleText": "Java码农笔记",
-    "navigationBarBackgroundColor": "#409eff",
-    "backgroundColor": "#f5f7fa"
+    "navigationBarBackgroundColor": "@navBgColor",
+    "backgroundColor": "@bgColor",
+    "backgroundTextStyle": "@bgTxtStyle"
   },
   "easycom": {
     "autoscan": true,

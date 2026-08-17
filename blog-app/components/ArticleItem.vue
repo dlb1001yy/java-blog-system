@@ -1,12 +1,15 @@
 <template>
   <view class="article-item" @click="goDetail">
-    <!-- 封面图（若有） -->
+    <!-- 封面图（若有）：lazy-load 懒加载，加载完成后加 loaded 类渐显 -->
     <image
       v-if="coverUrl && !coverError"
-      :src="coverUrl"
+      :src="coverSrc"
       class="cover"
+      :class="{ loaded: coverLoaded }"
       mode="aspectFill"
+      lazy-load
       @error="coverError = true"
+      @load="onCoverLoad"
     />
     <!-- 内容区 -->
     <view :class="['content', (coverUrl && !coverError) ? '' : 'full']">
@@ -44,16 +47,29 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { resolveFileUrl } from '@/common/config.js'
+import { optimizeImageUrl } from '@/common/imageUrl.js'
 
 const props = defineProps({ article: Object })
 const emit = defineEmits(['click'])
 
-// 封面图加载失败标记：article 切换时重置，失败后回退纯文本布局
+// 封面图加载失败标记：失败后回退纯文本布局
+// 封面图加载完成标记：成功后加 loaded 类触发渐显
 const coverError = ref(false)
-watch(() => props.article?.id, () => { coverError.value = false })
+const coverLoaded = ref(false)
+// article 切换时重置加载状态，等待新封面重新加载
+watch(() => props.article?.id, () => {
+  coverError.value = false
+  coverLoaded.value = false
+})
+
+// 封面图加载完成回调：置 true 触发 .loaded 渐显
+const onCoverLoad = () => { coverLoaded.value = true }
 
 // 封面 URL：相对路径拼接服务器 origin，完整 URL 原样返回
 const coverUrl = computed(() => resolveFileUrl(props.article?.coverImage))
+
+// 封面 src：命中 CDN 白名单时追加 OSS 处理参数（200px 宽 + webp）
+const coverSrc = computed(() => optimizeImageUrl(coverUrl.value, 200))
 
 // 文章类型映射
 const typeMap = { 0: '原创', 1: '转载', 2: '翻译' }
@@ -76,18 +92,33 @@ const goDetail = () => {
   gap: $spacing-md;
   padding: $spacing-lg;
   margin-bottom: $spacing-md;
-  background: $color-bg-card;
+  background: var(--app-bg-card, #FFFFFF);
   border-radius: $radius-lg;
   box-shadow: $shadow-card;
+  /* 触控反馈：按下轻微缩放 */
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
-/* 左侧封面图：100x80 圆角 8px */
+/* 按下态：缩放 + 半透明反馈 */
+.article-item:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* 左侧封面图：100x80 圆角 8px，默认透明，加载完成后渐显（软 LQIP 占位渐显） */
 .cover {
   width: 100px;
   height: 80px;
   border-radius: $radius-md;
   flex-shrink: 0;
-  background: $color-bg;
+  background: var(--app-bg, #F1F5F9);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* 封面加载完成后渐显，露出图片 */
+.cover.loaded {
+  opacity: 1;
 }
 
 /* 内容区：纵向布局 */
@@ -124,14 +155,14 @@ const goDetail = () => {
 /* 日期 */
 .date {
   font-size: 12px;
-  color: $color-text-tertiary;
+  color: var(--app-text-tertiary, #94A3B8);
 }
 
 /* 标题：最多 2 行省略 */
 .title {
   font-size: 15px;
   font-weight: 600;
-  color: $color-text;
+  color: var(--app-text, #0F172A);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -145,7 +176,7 @@ const goDetail = () => {
 .summary {
   margin-top: 6px;
   font-size: 13px;
-  color: $color-text-secondary;
+  color: var(--app-text-secondary, #64748B);
   line-height: 1.5;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -161,7 +192,7 @@ const goDetail = () => {
   gap: $spacing-md;
   margin-top: $spacing-sm;
   font-size: 11px;
-  color: $color-text-tertiary;
+  color: var(--app-text-tertiary, #94A3B8);
 }
 
 .stat {
@@ -177,6 +208,6 @@ const goDetail = () => {
 
 .stat-text {
   font-size: 11px;
-  color: $color-text-tertiary;
+  color: var(--app-text-tertiary, #94A3B8);
 }
 </style>

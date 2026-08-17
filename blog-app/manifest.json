@@ -7,6 +7,7 @@
     "transformPx" : false,
     "app-plus" : {
         "usingComponents" : true,
+        "darkmode" : true,
         "nvueStyleCompiler" : "uni-app",
         "compilerVersion" : 3,
         "splashscreen" : {
@@ -44,6 +45,8 @@
     "quickapp" : {},
     "mp-weixin" : {
         "appid" : "",
+        "darkmode" : true,
+        "themeLocation" : "theme.json",
         "setting" : {
             "urlCheck" : false
         },

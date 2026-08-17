@@ -42,9 +42,9 @@ defineProps({
   100% { background-position: 468px 0; }
 }
 
-/* 骨架块基础样式：灰底 + 渐变扫光 */
+/* 骨架块基础样式：灰底 + 渐变扫光（颜色跟随主题变量） */
 .skeleton-block {
-  background: linear-gradient(90deg, $color-border 25%, $color-bg 50%, $color-border 75%);
+  background: linear-gradient(90deg, var(--app-border, #E2E8F0) 25%, var(--app-bg, #F1F5F9) 50%, var(--app-border, #E2E8F0) 75%);
   background-size: 936px 100%;
   animation: shimmer 1.5s infinite linear;
   border-radius: $radius-md;
@@ -56,7 +56,7 @@ defineProps({
   gap: $spacing-md;
   padding: $spacing-lg;
   margin-bottom: $spacing-md;
-  background: $color-bg-card;
+  background: var(--app-bg-card, #FFFFFF);
   border-radius: $radius-lg;
   box-shadow: $shadow-card;
 }

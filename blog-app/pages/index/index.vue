@@ -1,7 +1,25 @@
 <template>
-  <view class="container">
-    <!-- 顶部 Hero 区 -->
-    <view class="hero" :style="{ background: colors.gradientHero }">
+  <!-- scroll-view 自定义下拉刷新 + 触底加载；TabBar 为 fixed 定位不受滚动容器影响 -->
+  <scroll-view
+    :class="['container', isDark ? 'theme-dark' : '']"
+    scroll-y
+    :refresher-enabled="true"
+    refresher-default-style="none"
+    :refresher-triggered="refreshing"
+    @refresherrefresh="onRefresh"
+    @scrolltolower="onLoadMore"
+  >
+    <!-- 自定义下拉刷新：三个品牌色圆点脉冲动画（Vue3 需用 #refresher 具名插槽语法） -->
+    <template #refresher>
+      <view class="refresher">
+        <view class="refresher-dot"></view>
+        <view class="refresher-dot"></view>
+        <view class="refresher-dot"></view>
+      </view>
+    </template>
+
+    <!-- 顶部 Hero 区：渐变按主题切换 -->
+    <view class="hero" :style="{ background: isDark ? darkColors.gradientHero : colors.gradientHero }">
       <view class="hero-content">
         <text class="site-title">Java码农笔记</text>
         <text class="site-subtitle">分享技术，记录成长</text>
@@ -54,26 +72,30 @@
           </svg>
           <text class="empty-text">暂无文章</text>
         </view>
-        <!-- 加载更多 / 没有更多 -->
-        <view v-if="list.length > 0 && loading" class="status">加载中...</view>
+        <!-- 加载更多（三点跳动动画）/ 没有更多 -->
+        <view v-if="list.length > 0 && loading" class="status">
+          <LoadingDots :size="6" />
+        </view>
         <view v-if="list.length > 0 && !loading && !hasMore" class="status">没有更多了</view>
       </template>
     </view>
 
     <!-- 底部 TabBar -->
     <TabBar current="/pages/index/index" />
-  </view>
+  </scroll-view>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { onLoad, onReachBottom, onPullDownRefresh } from '@dcloudio/uni-app'
+import { ref, computed, watch } from 'vue'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import api from '@/common/api.js'
-import { colors } from '@/common/theme.js'
+import { colors, darkColors, isDark, applyNavBarTheme } from '@/common/theme.js'
+import { initNetworkWatch, offlineMode, cacheArticleList, getCachedArticleList } from '@/common/offline.js'
 import ArticleItem from '@/components/ArticleItem.vue'
 import SearchBar from '@/components/SearchBar.vue'
 import CategoryChips from '@/components/CategoryChips.vue'
 import Skeleton from '@/components/Skeleton.vue'
+import LoadingDots from '@/components/LoadingDots.vue'
 import TabBar from '@/components/TabBar.vue'
 
 // 类型 chips：固定列表（全部/原创/转载/翻译）
@@ -89,6 +111,8 @@ const list = ref([])
 const page = ref(1)
 const loading = ref(false)
 const hasMore = ref(true)
+// 自定义下拉刷新进行中（绑定 refresher-triggered）
+const refreshing = ref(false)
 
 // 站点统计与分类
 const stats = ref(null)
@@ -134,6 +158,16 @@ const formatViewCount = (n) => {
 
 // 拉取文章列表 / 搜索结果
 const fetchData = async () => {
+  // 离线模式：不发请求，第一页读缓存降级（无缓存则展示空态）
+  if (offlineMode.value) {
+    if (page.value === 1) {
+      const cached = getCachedArticleList()
+      list.value = cached || []
+      hasMore.value = false
+      uni.showToast({ title: '已进入离线阅读模式', icon: 'none' })
+    }
+    return
+  }
   if (!hasMore.value) return
   const seq = ++fetchSeq
   loading.value = true
@@ -157,6 +191,8 @@ const fetchData = async () => {
     const records = (res.data && res.data.records) || []
     if (page.value === 1) {
       list.value = records
+      // 成功拿到第一页数据后写入离线缓存
+      cacheArticleList(records)
     } else {
       list.value = list.value.concat(records)
     }
@@ -166,6 +202,16 @@ const fetchData = async () => {
     }
   } catch (e) {
     if (seq === fetchSeq) {
+      // 网络类失败：尝试离线缓存降级
+      if (page.value === 1) {
+        const cached = getCachedArticleList()
+        if (cached && cached.length) {
+          list.value = cached
+          hasMore.value = false
+          uni.showToast({ title: '已进入离线阅读模式', icon: 'none' })
+          return
+        }
+      }
       uni.showToast({ title: '加载失败', icon: 'none' })
     }
   } finally {
@@ -253,35 +299,69 @@ const goDetail = (id) => {
   uni.navigateTo({ url: `/pages/article/detail?id=${id}` })
 }
 
-// 页面加载：并行拉取统计、分类、文章
+// 页面显示时同步原生导航栏配色；主题切换时实时刷新
+onShow(() => applyNavBarTheme())
+watch(isDark, () => applyNavBarTheme())
+
+// 页面加载：初始化网络监听，并行拉取统计、分类、文章
 onLoad(() => {
+  initNetworkWatch()
   loadStats()
   loadCategories()
   fetchData()
 })
 
-// 触底加载更多
-onReachBottom(() => {
+// scroll-view 触底加载更多
+const onLoadMore = () => {
   if (loading.value || !hasMore.value) return
   page.value++
   fetchData()
-})
+}
 
-// 下拉刷新
-onPullDownRefresh(async () => {
+// 自定义下拉刷新：重置分页后重新拉取第一页，完成后收起刷新动画
+const onRefresh = async () => {
+  refreshing.value = true
   page.value = 1
   hasMore.value = true
+  list.value = []
   await fetchData()
-  uni.stopPullDownRefresh()
-})
+  refreshing.value = false
+}
 </script>
 
 <style lang="scss" scoped>
-/* 页面容器：灰底 + 底部留白避开 TabBar */
+/* 页面容器（scroll-view）：固定 100vh 高度形成滚动区，底部留白避开 TabBar */
 .container {
-  min-height: 100vh;
-  background: $color-bg;
+  height: 100vh;
+  background: var(--app-bg, #F1F5F9);
   padding-bottom: calc(56px + env(safe-area-inset-bottom) + 12px);
+  box-sizing: border-box;
+}
+
+/* ===== 自定义下拉刷新区：三个品牌色圆点脉冲 ===== */
+.refresher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  height: 100rpx; /* ≈ 50px 刷新区域 */
+}
+
+.refresher-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  background: var(--app-primary, #4F46E5);
+  animation: refresher-pulse 1.2s ease-in-out infinite;
+}
+
+/* 三个圆点依次波动 */
+.refresher-dot:nth-child(2) { animation-delay: 0.2s; }
+.refresher-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes refresher-pulse {
+  0%, 100% { transform: scale(0.6); opacity: 0.4; }
+  50% { transform: scale(1.2); opacity: 1; }
 }
 
 /* ===== Hero 区 ===== */
@@ -333,7 +413,7 @@ onPullDownRefresh(async () => {
 }
 /* 让 SearchBar 呈白底浮动卡片效果，避免与页面灰底融为一体 */
 .search-wrap :deep(.search-bar) {
-  background: $color-bg-card;
+  background: var(--app-bg-card, #FFFFFF);
   box-shadow: $shadow-floating;
 }
 
@@ -344,7 +424,7 @@ onPullDownRefresh(async () => {
 
 .search-info-text {
   font-size: 13px;
-  color: $color-text-secondary;
+  color: var(--app-text-secondary, #64748B);
 }
 
 /* ===== 分类 chips（两行，gap 8px） ===== */
@@ -366,7 +446,7 @@ onPullDownRefresh(async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: $color-text-tertiary;
+  color: var(--app-text-tertiary, #94A3B8);
 }
 
 .empty-icon {
@@ -376,14 +456,14 @@ onPullDownRefresh(async () => {
 
 .empty-text {
   font-size: 14px;
-  color: $color-text-tertiary;
+  color: var(--app-text-tertiary, #94A3B8);
 }
 
 /* 加载更多 / 没有更多 */
 .status {
   text-align: center;
   padding: 12px;
-  color: $color-text-tertiary;
+  color: var(--app-text-tertiary, #94A3B8);
   font-size: 12px;
 }
 </style>
