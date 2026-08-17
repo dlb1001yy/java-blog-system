@@ -399,7 +399,7 @@ http://localhost:8080/api/doc.html
 |--------|------|------|
 | admin | admin123 | 管理员 |
 
-> 密码使用 BCrypt 加密存储，如需重置可参考 `src/test/java/com/dlbyy/blog/PasswordGenerator.java` 生成新密码。
+> 密码使用 BCrypt 加密存储，如需重置可用任意支持 BCrypt（strength=12）的工具生成新密码哈希。
 
 ## 构建打包
 

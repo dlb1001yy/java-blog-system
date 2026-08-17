@@ -15,7 +15,6 @@
 | markdown-it | 13.0.2 | Markdown 渲染 |
 | highlight.js | 11.8.0 | 代码高亮 |
 | github-markdown-css | 5.2.0 | Markdown 样式 |
-| Sass | 1.69.5 | CSS 预处理器 |
 | axios | 1.6.2 | HTTP 请求 |
 
 ## 环境要求
@@ -161,7 +160,6 @@ blog-frontend/
 |------|------|
 | assets/styles/variables.css | CSS 自定义属性（颜色、间距等设计令牌） |
 | assets/styles/global.css | 全局样式（重置、布局、工具类） |
-| style.css | 基础样式入口 |
 
 ## 构建打包
 

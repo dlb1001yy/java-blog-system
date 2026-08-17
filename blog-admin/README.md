@@ -14,9 +14,7 @@
 | @element-plus/icons-vue | 2.1.0 | 图标 |
 | ECharts | 5.4.3 | 仪表盘图表 |
 | markdown-it | 13.0.2 | 文章预览 |
-| highlight.js | 11.8.0 | 代码高亮 |
 | github-markdown-css | 5.2.0 | Markdown 样式 |
-| Sass | 1.69.5 | CSS 预处理器 |
 | axios | 1.6.2 | HTTP 请求 |
 
 ## 环境要求
@@ -83,9 +81,8 @@ blog-admin/
 │   │   ├── Login.vue                  # 登录
 │   │   └── Redirect.vue               # 路由重定向
 │   ├── components/                   # 公共组件
-│   │   ├── Editor.vue                 # Markdown 编辑器
-│   │   ├── Upload.vue                 # 文件上传
-│   │   └── SvgIcon.vue                # SVG 图标
+│   │   ├── PageContainer.vue          # 页面容器（标题+内容）
+│   │   └── Upload.vue                 # 文件上传
 │   ├── api/                          # 接口请求
 │   │   ├── request.js                 # axios 封装
 │   │   ├── auth.js                    # 登录/登出
@@ -100,9 +97,9 @@ blog-admin/
 │   ├── stores/                       # Pinia 状态
 │   │   ├── user.js                    # 用户状态（token、userInfo）
 │   │   └── app.js                     # 应用状态（侧边栏折叠）
-│   ├── assets/
-│   │   └── styles/global.css         # 全局样式
-│   └── style.css                     # 全局基础样式
+│   └── assets/
+│       ├── styles/tokens.css         # 设计变量
+│       └── styles/global.css         # 全局样式
 ├── public/
 │   ├── favicon.svg
 │   └── icons.svg

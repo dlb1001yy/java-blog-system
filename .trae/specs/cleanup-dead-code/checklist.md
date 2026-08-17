@@ -1,0 +1,11 @@
+- [x] blog-admin 中 HelloWorld.vue、Editor.vue、SvgIcon.vue 已删除且全项目无残留 import 引用
+- [x] blog-admin 的 vite.svg、vue.svg、hero.png、style.css 已删除且构建不报错
+- [x] blog-admin package.json 已移除 sass、highlight.js，npm run build 成功（exit 0）
+- [x] blog-frontend 的 api/auth.js、vite.svg、vue.svg、hero.png、style.css 已删除
+- [x] blog-frontend package.json 已移除 sass，npm run build 成功（exit 0）
+- [x] blog-app 根目录 config.js 与 components/Loading.vue 已删除且无引用残留
+- [x] blog-backend 的 PasswordGenerator.java 已删除且 mvn compile / test-compile 通过（exit 0）
+- [x] blog-backend/.trae/documents/、_merge_docs.py 已删除（.codebuddy/plans/ 按用户决策保留）
+- [x] 各 README 中不再描述已删除的文件（blog-admin、blog-frontend、blog-backend README 均已同步修正）
+- [x] docker-compose.yml 引用的全部路径（blog-backend/sql、elasticsearch/、monitoring/ 等）完好未动
+- [x] 必须保留清单中的文件（JwtUtils、FileUtils、Redirect.vue、uni.promisify.adaptor.js、scripts/、sql/ 等）全部未改动
