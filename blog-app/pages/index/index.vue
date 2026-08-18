@@ -10,16 +10,17 @@
       :refresher-triggered="refreshing"
       @refresherrefresh="onRefresh"
       @scrolltolower="onLoadMore"
-    <!-- 自定义下拉刷新动画：App 编译器不支持 refresher 具名插槽，仅非 App 平台启用；App 回退系统原生样式 -->
-    <!-- #ifndef APP-PLUS -->
-    <template #refresher>
-      <view class="refresher">
-        <view class="refresher-dot"></view>
-        <view class="refresher-dot"></view>
-        <view class="refresher-dot"></view>
-      </view>
-    </template>
-    <!-- #endif -->
+    >
+      <!-- 品牌脉冲刷新动画：App 编译器不支持 refresher 具名插槽，仅非 App 平台编译；App 回退系统原生样式 -->
+      <!-- #ifndef APP-PLUS -->
+      <template #refresher>
+        <view class="refresher">
+          <view class="refresher-dot"></view>
+          <view class="refresher-dot"></view>
+          <view class="refresher-dot"></view>
+        </view>
+      </template>
+      <!-- #endif -->
 
     <!-- 顶部 Hero 区：渐变按主题切换 -->
     <view class="hero" :style="{ background: isDark ? darkColors.gradientHero : colors.gradientHero }">
