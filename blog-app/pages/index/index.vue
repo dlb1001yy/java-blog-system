@@ -1,15 +1,17 @@
 <template>
-  <!-- scroll-view 自定义下拉刷新 + 触底加载；TabBar 为 fixed 定位不受滚动容器影响 -->
-  <scroll-view
-    :class="['container', isDark ? 'theme-dark' : '']"
-    scroll-y
-    :refresher-enabled="true"
-    refresher-default-style="none"
-    :refresher-triggered="refreshing"
-    @refresherrefresh="onRefresh"
-    @scrolltolower="onLoadMore"
-  >
-    <!-- 自定义下拉刷新：三个品牌色圆点脉冲动画（Vue3 需用 #refresher 具名插槽语法） -->
+  <!-- 外层 view 作为页面根节点，主题类挂此处向内级联 CSS 变量 -->
+  <view :class="['page-root', isDark ? 'theme-dark' : '']">
+    <!-- scroll-view 自定义下拉刷新 + 触底加载 -->
+    <scroll-view
+      class="container"
+      scroll-y
+      :refresher-enabled="true"
+      :refresher-default-style="refresherStyle"
+      :refresher-triggered="refreshing"
+      @refresherrefresh="onRefresh"
+      @scrolltolower="onLoadMore"
+    <!-- 自定义下拉刷新动画：App 编译器不支持 refresher 具名插槽，仅非 App 平台启用；App 回退系统原生样式 -->
+    <!-- #ifndef APP-PLUS -->
     <template #refresher>
       <view class="refresher">
         <view class="refresher-dot"></view>
@@ -17,6 +19,7 @@
         <view class="refresher-dot"></view>
       </view>
     </template>
+    <!-- #endif -->
 
     <!-- 顶部 Hero 区：渐变按主题切换 -->
     <view class="hero" :style="{ background: isDark ? darkColors.gradientHero : colors.gradientHero }">
@@ -80,9 +83,11 @@
       </template>
     </view>
 
-    <!-- 底部 TabBar -->
+    </scroll-view>
+
+    <!-- 底部 TabBar：fixed 定位，置于滚动容器外 -->
     <TabBar current="/pages/index/index" />
-  </scroll-view>
+  </view>
 </template>
 
 <script setup>
@@ -113,6 +118,15 @@ const loading = ref(false)
 const hasMore = ref(true)
 // 自定义下拉刷新进行中（绑定 refresher-triggered）
 const refreshing = ref(false)
+
+// 刷新样式：非 App 平台配合自定义插槽动画（none 隐藏系统样式）；
+// App 平台编译器不支持 refresher 具名插槽，回退系统原生刷新样式
+// #ifdef APP-PLUS
+const refresherStyle = 'black'
+// #endif
+// #ifndef APP-PLUS
+const refresherStyle = 'none'
+// #endif
 
 // 站点统计与分类
 const stats = ref(null)
@@ -330,12 +344,17 @@ const onRefresh = async () => {
 </script>
 
 <style lang="scss" scoped>
-/* 页面容器（scroll-view）：固定 100vh 高度形成滚动区，底部留白避开 TabBar */
-.container {
+/* 页面根节点：占满整屏，主题类挂在此处向 scroll-view 及内容级联 CSS 变量 */
+.page-root {
   height: 100vh;
   background: var(--app-bg, #F1F5F9);
-  padding-bottom: calc(56px + env(safe-area-inset-bottom) + 12px);
+}
+
+/* 滚动容器：占满根节点高度形成滚动区，底部留白避开 TabBar */
+.container {
+  height: 100%;
   box-sizing: border-box;
+  padding-bottom: calc(56px + env(safe-area-inset-bottom) + 12px);
 }
 
 /* ===== 自定义下拉刷新区：三个品牌色圆点脉冲 ===== */

@@ -44,7 +44,7 @@
     },
     "quickapp" : {},
     "mp-weixin" : {
-        "appid" : "",
+        "appid" : null,
         "darkmode" : true,
         "themeLocation" : "theme.json",
         "setting" : {
