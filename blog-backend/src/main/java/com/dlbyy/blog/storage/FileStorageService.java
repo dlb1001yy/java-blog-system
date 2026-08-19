@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
  * {@code storage.type} 动态装配具体实现：
  * <ul>
  *     <li>{@code local} — {@link com.dlbyy.blog.storage.impl.LocalFileStorageServiceImpl}</li>
- *     <li>{@code oss}   — {@link com.dlbyy.blog.storage.impl.AliyunOssStorageServiceImpl}</li>
+ *     <li>{@code minio} — {@link com.dlbyy.blog.storage.impl.MinioStorageServiceImpl}</li>
  * </ul>
  */
 public interface FileStorageService {

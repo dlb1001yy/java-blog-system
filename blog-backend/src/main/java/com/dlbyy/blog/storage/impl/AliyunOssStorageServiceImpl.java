@@ -1,7 +1,6 @@
 package com.dlbyy.blog.storage.impl;
 
 import com.aliyun.oss.OSS;
-import com.aliyun.oss.OSSClientBuilder;
 import com.dlbyy.blog.common.exception.BusinessException;
 import com.dlbyy.blog.storage.FileStorageService;
 import com.dlbyy.blog.storage.FileUploadResult;
@@ -17,6 +16,8 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * 阿里云 OSS 文件存储实现
+ * <p>
+ * 通过 {@code storage.type=oss} 启用，与 MinIO/本地存储通过配置切换。
  */
 @Slf4j
 @RequiredArgsConstructor

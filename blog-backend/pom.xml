@@ -21,6 +21,7 @@
 		<jjwt.version>0.11.5</jjwt.version>
 		<hutool.version>5.8.22</hutool.version>
 		<aliyun-oss.version>3.17.4</aliyun-oss.version>
+		<minio.version>8.5.10</minio.version>
 		<jsoup.version>1.17.2</jsoup.version>
 	</properties>
 
@@ -114,7 +115,14 @@
 			<version>4.3.0</version>
 		</dependency>
 
-		<!-- Aliyun OSS SDK -->
+		<!-- MinIO SDK -->
+		<dependency>
+			<groupId>io.minio</groupId>
+			<artifactId>minio</artifactId>
+			<version>${minio.version}</version>
+		</dependency>
+
+		<!-- Aliyun OSS SDK（storage.type=oss 时启用，与 MinIO 通过配置切换） -->
 		<dependency>
 			<groupId>com.aliyun.oss</groupId>
 			<artifactId>aliyun-sdk-oss</artifactId>

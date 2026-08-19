@@ -8,6 +8,7 @@
 # 后端 API：http://<服务器IP>:8080/api
 # 接口文档：http://<服务器IP>:8080/api/doc.html
 # 监控（可选）：http://<服务器IP>:3000 （Grafana，启用方式见 README「监控体系」）
+# MinIO 控制台：http://<服务器IP>:9001
 
 services:
   # ========== MySQL 数据库 ==========
@@ -60,6 +61,31 @@ services:
       retries: 5
       start_period: 10s
 
+  # ========== MinIO 对象存储 ==========
+  minio:
+    # 固定为最后一个自带完整 Web 控制台的版本（2025-05-24 起社区版移除控制台，9001 无界面）
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: blog-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+      TZ: Asia/Shanghai
+    ports:
+      - "9000:9000"   # S3 API（后端上传 & 浏览器访问）
+      - "9001:9001"   # 管理控制台
+    volumes:
+      - minio_data:/data
+    networks:
+      - blog-net
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
   # ========== Elasticsearch 全文检索（可选，通过 .env 中 COMPOSE_PROFILES 控制） ==========
   elasticsearch:
     profiles: ["search"]
@@ -105,10 +131,18 @@ services:
       SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
       JWT_SECRET: ${JWT_SECRET:-ThisIsASecureSecretKeyForJwtTokenGenerationAndValidationMakeItLongEnough123}
       API_SIGNING_SECRET: ${API_SIGNING_SECRET:-BlogApiSigningSecret2024!}
+      STORAGE_TYPE: ${STORAGE_TYPE:-local}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://minio:9000}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-blog}
+      MINIO_URL_PREFIX: ${MINIO_URL_PREFIX:-http://localhost:9000/blog/}
     depends_on:
       mysql:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     ports:
       - "8080:8080"
@@ -266,6 +300,8 @@ volumes:
     name: blog_backend_logs
   es_data:
     name: blog_es_data
+  minio_data:
+    name: blog_minio_data
   prometheus_data:
     name: blog_prometheus_data
   grafana_data:

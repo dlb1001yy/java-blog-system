@@ -28,9 +28,9 @@ public class FileUploadResult implements Serializable {
     /** 文件大小（字节） */
     private long size;
 
-    /** 存储类型：local / oss */
+    /** 存储类型：local / minio */
     private String storageType;
 
-    /** 存储路径（相对路径或 OSS object key） */
+    /** 存储路径（相对路径或 MinIO object key） */
     private String path;
 }

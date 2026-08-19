@@ -1,0 +1,15 @@
+- [x] pom.xml 已引入 minio SDK，`mvn compile` 通过
+- [x] `StorageProperties` 含 MinioConfig，`storage.minio.*` 可绑定
+- [x] `storage.type=minio` 时装配 MinioStorageServiceImpl；默认 local 行为不变
+- [x] Bucket 不存在时自动创建并设置匿名只读策略（幂等，重复启动不报错）
+- [x] 上传成功返回 `url-prefix + objectKey`，objectKey 为 `yyyy/MM/dd/时间戳_随机数.后缀`
+- [x] MinIO 不可达/凭据错误时抛 BusinessException，服务可正常启动（客户端懒创建，上传时才连接）
+- [x] docker-compose.yml 含 minio 服务（9000/9001、数据卷、healthcheck、blog-net），backend depends_on minio healthy
+- [x] backend 容器注入 STORAGE_TYPE 与 MINIO_* 环境变量
+- [x] application.yaml / application-docker.yaml 含 minio 配置占位，敏感项走环境变量
+- [x] .env.example 含 MinIO 变量模板与说明
+- [x] MinioStorageServiceImplTest 通过，`mvn test` 全部通过（61/61）
+- [x] `WebMvcConfig` 的 `/uploads/**` 静态资源映射未被改动，docker-compose 的 `uploads_data` 卷挂载保留
+- [x] `storage.type=local`（默认）时后端正常启动，不创建任何 MinIO Bean，本地上传行为与接入前完全一致
+- [x] minio 模式下前端仍能正常展示历史本地上传文件（/uploads/** URL）
+- [x] minio↔local 双向切换仅改 STORAGE_TYPE 重启即生效，互不影响；已上传 MinIO 的文件在切回 local 后仍可访问
