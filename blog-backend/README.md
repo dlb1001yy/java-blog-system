@@ -424,3 +424,6 @@ java -jar blog-backend-1.0.0.jar \
 | `REDIS_PASSWORD` | Redis 密码 | `123456` |
 | `JWT_SECRET` | JWT 签名密钥（至少 64 字符） | 内置开发密钥 |
 | `API_SIGNING_SECRET` | 请求签名密钥 | `BlogApiSigningSecret2024!` |
+| `STORAGE_TYPE` | 文件存储策略：`local`（默认）\| `minio`\| `oss` | `local` |
+| `MINIO_ENDPOINT` 等 | MinIO 五项配置（endpoint/access-key/secret-key/bucket-name/url-prefix，`STORAGE_TYPE=minio` 时生效） | 见 `application.yaml` |
+| `OSS_ENDPOINT` 等 | 阿里云 OSS 五项配置（`STORAGE_TYPE=oss` 时需显式配置，无默认值） | （空） |

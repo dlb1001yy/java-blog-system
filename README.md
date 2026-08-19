@@ -319,7 +319,9 @@ npm run dev
 | jwt.secret | JWT_SECRET | 内置开发默认值 | JWT 密钥（≥64 字符，生产必改） |
 | jwt.expiration | — | 86400000 | Token 有效期 24h |
 | security.signing.secret | API_SIGNING_SECRET | 内置开发默认值 | API 签名密钥（生产必改） |
-| storage.oss.* | OSS_ENDPOINT 等 | 占位符 | OSS 密钥（启用 oss 存储时配置） |
+| storage.type | STORAGE_TYPE | local | 文件存储策略：local（本地磁盘，默认）\| minio（MinIO 对象存储）\| oss（阿里云 OSS） |
+| storage.minio.* | MINIO_ENDPOINT 等 | 见 application.yaml | MinIO 五项配置（STORAGE_TYPE=minio 时生效） |
+| storage.oss.* | OSS_ENDPOINT 等 | （空） | 阿里云 OSS 五项配置（STORAGE_TYPE=oss 时需显式配置） |
 | file.upload-path | — | — | 文件上传目录 |
 
 ### 前端配置（vite.config.js）
