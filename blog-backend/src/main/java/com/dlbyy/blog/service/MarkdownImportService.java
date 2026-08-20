@@ -1,8 +1,8 @@
 package com.dlbyy.blog.service;
 
 import com.dlbyy.blog.common.exception.BusinessException;
+import com.dlbyy.blog.storage.FileStorageService;
 import com.dlbyy.blog.utils.CoverImageGenerator;
-import com.dlbyy.blog.utils.FileUtils;
 import cn.hutool.http.HttpUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ public class MarkdownImportService {
     private static final Pattern IMAGE_PATTERN = Pattern.compile("!\\[.*?\\]\\(([^)]+)\\)");
     private static final int SUMMARY_MAX_LENGTH = 200;
 
-    private final FileUtils fileUtils;
+    private final FileStorageService fileStorageService;
     private final CoverImageGenerator coverImageGenerator;
 
     /**
@@ -145,7 +145,8 @@ public class MarkdownImportService {
             try {
                 byte[] bytes = HttpUtil.downloadBytes(imageUrl);
                 String suffix = extractSuffixFromUrl(imageUrl);
-                return fileUtils.saveBytes(bytes, suffix);
+                // 转存走存储策略（storage.type 切换 local/minio/oss）
+                return fileStorageService.saveBytes(bytes, suffix, null, null).getUrl();
             } catch (Exception e) {
                 log.warn("下载外链图片失败: {}, 改为生成封面图", imageUrl, e);
                 return coverImageGenerator.generate(title);

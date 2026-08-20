@@ -175,4 +175,44 @@ class MinioStorageServiceImplTest {
         // 失败路径不应返回结果相关交互之外的异常类型
         assertThat(ex).isNotInstanceOf(IOException.class);
     }
+
+    // ==================== 6. saveBytes：懒建桶 + contentType 透传 ====================
+
+    @Test
+    @DisplayName("saveBytes：懒建桶（检查/创建/策略各一次）+ putObject 参数正确 + 结果字段正确")
+    void saveBytes_shouldUploadWithLazyBucketAndCorrectContentType() throws Exception {
+        FileUploadResult result = storageService.saveBytes(
+                new byte[]{9, 9, 9}, "png", "image/png", "cover.png");
+
+        assertThat(result).isNotNull();
+        assertThat(result.getStorageType()).isEqualTo("minio");
+        assertThat(result.getOriginalFilename()).isEqualTo("cover.png");
+        assertThat(result.getSize()).isEqualTo(3L);
+        // object key：日期目录/yyyy/MM/dd/时间戳_随机数.png
+        assertThat(result.getPath()).matches("^\\d{4}/\\d{2}/\\d{2}/\\d+_\\d+\\.png$");
+        assertThat(result.getUrl()).isEqualTo(URL_PREFIX + result.getPath());
+
+        // 懒初始化：bucket 检查 → 创建 → 策略 各一次
+        verify(minioClient, times(1)).bucketExists(any());
+        verify(minioClient, times(1)).makeBucket(any());
+        verify(minioClient, times(1)).setBucketPolicy(any());
+        // putObject：显式 contentType 透传
+        ArgumentCaptor<PutObjectArgs> putCaptor = ArgumentCaptor.forClass(PutObjectArgs.class);
+        verify(minioClient).putObject(putCaptor.capture());
+        assertThat(putCaptor.getValue().bucket()).isEqualTo(BUCKET);
+        assertThat(putCaptor.getValue().object()).isEqualTo(result.getPath());
+        assertThat(putCaptor.getValue().contentType()).isEqualTo("image/png");
+    }
+
+    // ==================== 7. saveBytes：contentType 按后缀推断 ====================
+
+    @Test
+    @DisplayName("saveBytes：contentType 为 null 时按后缀推断（png → image/png）")
+    void saveBytes_nullContentType_shouldInferFromSuffix() throws Exception {
+        storageService.saveBytes(new byte[]{1}, "png", null, null);
+
+        ArgumentCaptor<PutObjectArgs> putCaptor = ArgumentCaptor.forClass(PutObjectArgs.class);
+        verify(minioClient).putObject(putCaptor.capture());
+        assertThat(putCaptor.getValue().contentType()).isEqualTo("image/png");
+    }
 }

@@ -23,4 +23,16 @@ public interface FileStorageService {
      * @throws com.dlbyy.blog.common.exception.BusinessException 文件为空或上传失败时抛出
      */
     FileUploadResult upload(MultipartFile file, String path);
+
+    /**
+     * 保存字节数组（封面图生成、外链图片转存等无 MultipartFile 场景）
+     *
+     * @param data            文件内容
+     * @param suffix          小写扩展名（如 "png"），不含点
+     * @param contentType     MIME 类型，可为 null（实现按 suffix 推断）
+     * @param originalFilename 原始文件名，可为 null
+     * @return 保存结果
+     * @throws com.dlbyy.blog.common.exception.BusinessException 内容为空或保存失败时抛出
+     */
+    FileUploadResult saveBytes(byte[] data, String suffix, String contentType, String originalFilename);
 }

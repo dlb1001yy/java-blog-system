@@ -105,7 +105,8 @@ storage:
   type: ${STORAGE_TYPE:local}  # local | minio | oss
   local:
     upload-path: D:\\my-project\\java-blog-system\\blog-backend\\uploads\\
-    url-prefix: /uploads/
+    # 带 /api 前缀：前端代理（vite/nginx）仅转发 /api，与 WebMvcConfig 静态映射（context-path 下）对齐
+    url-prefix: /api/uploads/
     allowed-types: jpg,jpeg,png,gif,webp,md,markdown
     max-size: 10485760  # 10MB
   minio:

@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -66,6 +67,58 @@ public class LocalFileStorageServiceImpl implements FileStorageService {
                 .storageType("local")
                 .path(relativePath)
                 .build();
+    }
+
+    @Override
+    public FileUploadResult saveBytes(byte[] data, String suffix, String contentType, String originalFilename) {
+        if (data == null || data.length == 0) {
+            throw new BusinessException("保存内容不能为空");
+        }
+        String safeSuffix = (suffix == null || suffix.isBlank()) ? "" : suffix.toLowerCase();
+        String relativePath = buildRelativePath(safeSuffix, null);
+        File destFile = new File(new File(config.getUploadPath(), dirOf(relativePath)).getAbsoluteFile(),
+                nameOf(relativePath));
+        File destDir = destFile.getParentFile();
+        if (!destDir.exists() && !destDir.mkdirs()) {
+            throw new BusinessException("创建存储目录失败: " + destDir.getAbsolutePath());
+        }
+        try {
+            Files.write(destFile.toPath(), data);
+            log.info("本地字节数据保存成功: {}", destFile.getAbsolutePath());
+        } catch (IOException e) {
+            log.error("本地字节数据保存失败", e);
+            throw new BusinessException("文件保存失败，请稍后再试");
+        }
+        String url = config.getUrlPrefix() + relativePath;
+        return FileUploadResult.builder()
+                .url(url)
+                .originalFilename(originalFilename)
+                .filename(nameOf(relativePath))
+                .size(data.length)
+                .storageType("local")
+                .path(relativePath)
+                .build();
+    }
+
+    /** 生成 相对路径（日期子目录 + 唯一文件名），path 非空时优先作为子目录 */
+    private String buildRelativePath(String suffix, String path) {
+        String dateSubDir = LocalDate.now().format(DATE_DIR);
+        String subDir = (path != null && !path.isBlank()) ? path : dateSubDir;
+        String storedFilename = System.currentTimeMillis() + "_"
+                + (int) (Math.random() * 10000) + "." + suffix;
+        return subDir + "/" + storedFilename;
+    }
+
+    /** 从相对路径取目录部分（不含文件名） */
+    private String dirOf(String relativePath) {
+        int idx = relativePath.lastIndexOf('/');
+        return idx >= 0 ? relativePath.substring(0, idx) : "";
+    }
+
+    /** 从相对路径取文件名部分 */
+    private String nameOf(String relativePath) {
+        int idx = relativePath.lastIndexOf('/');
+        return idx >= 0 ? relativePath.substring(idx + 1) : relativePath;
     }
 
     private void validate(MultipartFile file) {

@@ -58,13 +58,16 @@ public class StorageAutoConfiguration {
     }
 
     /**
-     * MinIO 存储策略
+     * MinIO 存储策略（创建时预建桶：不存在则创建并设置匿名只读策略，
+     * MinIO 不可达时仅告警不阻断启动，上传时会兜底重试）
      */
     @Bean
     @ConditionalOnProperty(name = "storage.type", havingValue = "minio")
     public FileStorageService minioFileStorageService(StorageProperties properties, MinioClient minioClient) {
         log.info("启用 MinIO 文件存储策略，bucket: {}", properties.getMinio().getBucketName());
-        return new MinioStorageServiceImpl(properties.getMinio(), minioClient);
+        MinioStorageServiceImpl service = new MinioStorageServiceImpl(properties.getMinio(), minioClient);
+        service.ensureBucketReady();
+        return service;
     }
 
     /**

@@ -2,6 +2,8 @@ package com.dlbyy.blog.utils;
 
 
 import com.dlbyy.blog.common.exception.BusinessException;
+import com.dlbyy.blog.storage.FileStorageService;
+import com.dlbyy.blog.storage.FileUploadResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -11,27 +13,32 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * 上传校验工具：负责类型/大小/真实格式校验与图片重编码，
+ * 落盘统一委托 {@link FileStorageService}（随 storage.type 切换 local/minio/oss）
+ */
 @Slf4j
 @Component
 public class FileUtils {
 
-    @Value("${file.upload-path}")
-    private String uploadPath;
+    private final FileStorageService fileStorageService;
 
     @Value("${file.allowed-types}")
     private String allowedTypes;
 
     @Value("${file.max-size:5242880}")
     private long maxSize;
+
+    public FileUtils(FileStorageService fileStorageService) {
+        this.fileStorageService = fileStorageService;
+    }
 
     /** 图片扩展名（可被 ImageIO 重编码消除恶意载荷） */
     private static final Set<String> IMAGE_SUFFIXES = Set.of("jpg", "jpeg", "png", "gif");
@@ -97,15 +104,10 @@ public class FileUtils {
             }
         }
 
-        File destFile = ensureDestFile(suffix);
-        try {
-            Files.write(destFile.toPath(), data);
-            log.info("文件上传成功: {}", destFile.getAbsolutePath());
-            return "/api/uploads/" + destFile.getName();
-        } catch (IOException e) {
-            log.error("文件上传失败", e);
-            throw new BusinessException("文件上传失败，请稍后再试");
-        }
+        // 4. 落盘：委托存储策略（storage.type 切换 local/minio/oss）
+        FileUploadResult result = fileStorageService.saveBytes(data, suffix, file.getContentType(), originalFilename);
+        log.info("文件上传成功: storageType={}, path={}", result.getStorageType(), result.getPath());
+        return result.getUrl();
     }
 
     /**
@@ -157,34 +159,6 @@ public class FileUtils {
         } catch (IOException e) {
             log.error("图片重编码失败", e);
             throw new BusinessException("图片处理失败，请稍后再试");
-        }
-    }
-
-    /**
-     * 生成 时间戳_随机数.suffix 文件名，确保 uploadPath 目录存在，返回目标 File（不创建文件）
-     */
-    private File ensureDestFile(String suffix) {
-        String fileName = System.currentTimeMillis() + "_" + (int)(Math.random() * 10000) + "." + suffix;
-        // 【关键修复】：将相对路径转换为绝对路径，避免被 Tomcat 解析到临时目录
-        File destDir = new File(uploadPath).getAbsoluteFile();
-        if (!destDir.exists()) {
-            destDir.mkdirs();
-        }
-        return new File(destDir, fileName);
-    }
-
-    /**
-     * 将字节数组保存到 uploadPath 目录，返回 /api/uploads/xxx.suffix 访问路径
-     */
-    public String saveBytes(byte[] data, String suffix) {
-        File destFile = ensureDestFile(suffix);
-        try {
-            Files.write(destFile.toPath(), data);
-            log.info("字节数据保存成功: {}", destFile.getAbsolutePath());
-            return "/api/uploads/" + destFile.getName();
-        } catch (IOException e) {
-            log.error("字节数据保存失败", e);
-            throw new BusinessException("文件保存失败，请稍后再试");
         }
     }
 

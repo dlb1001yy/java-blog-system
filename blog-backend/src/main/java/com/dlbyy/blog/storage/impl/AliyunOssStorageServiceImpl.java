@@ -1,6 +1,7 @@
 package com.dlbyy.blog.storage.impl;
 
 import com.aliyun.oss.OSS;
+import com.aliyun.oss.model.ObjectMetadata;
 import com.dlbyy.blog.common.exception.BusinessException;
 import com.dlbyy.blog.storage.FileStorageService;
 import com.dlbyy.blog.storage.FileUploadResult;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
@@ -61,6 +63,39 @@ public class AliyunOssStorageServiceImpl implements FileStorageService {
                 .originalFilename(originalFilename)
                 .filename(objectKey)
                 .size(file.getSize())
+                .storageType("oss")
+                .path(objectKey)
+                .build();
+    }
+
+    @Override
+    public FileUploadResult saveBytes(byte[] data, String suffix, String contentType, String originalFilename) {
+        if (data == null || data.length == 0) {
+            throw new BusinessException("保存内容不能为空");
+        }
+        String safeSuffix = (suffix == null || suffix.isBlank()) ? "" : suffix.toLowerCase();
+        String dateSubDir = LocalDate.now().format(DATE_DIR);
+        String objectKey = dateSubDir + "/" + System.currentTimeMillis() + "_"
+                + (int) (Math.random() * 10000) + "." + safeSuffix;
+
+        try {
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentLength(data.length);
+            metadata.setContentType(contentType != null ? contentType : "application/octet-stream");
+            ossClient.putObject(config.getBucketName(), objectKey,
+                    new ByteArrayInputStream(data), metadata);
+            log.info("OSS 字节数据保存成功: bucket={}, key={}", config.getBucketName(), objectKey);
+        } catch (Exception e) {
+            log.error("OSS 字节数据保存失败", e);
+            throw new BusinessException("OSS 上传失败: " + e.getMessage());
+        }
+
+        String url = config.getUrlPrefix() + objectKey;
+        return FileUploadResult.builder()
+                .url(url)
+                .originalFilename(originalFilename)
+                .filename(objectKey)
+                .size(data.length)
                 .storageType("oss")
                 .path(objectKey)
                 .build();

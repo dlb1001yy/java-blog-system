@@ -1,6 +1,7 @@
 package com.dlbyy.blog.utils;
 
 import com.dlbyy.blog.common.exception.BusinessException;
+import com.dlbyy.blog.storage.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -28,7 +29,7 @@ public class CoverImageGenerator {
     private static final int PADDING_X = 80;
     private static final String DEFAULT_TITLE = "Java 码农笔记";
 
-    private final FileUtils fileUtils;
+    private final FileStorageService fileStorageService;
 
     /**
      * 根据标题生成封面图并保存，返回访问 URL
@@ -80,7 +81,8 @@ public class CoverImageGenerator {
                 log.error("封面图编码失败", e);
                 throw new BusinessException("封面图生成失败");
             }
-            return fileUtils.saveBytes(baos.toByteArray(), "png");
+            // 落盘走存储策略（storage.type 切换 local/minio/oss）
+            return fileStorageService.saveBytes(baos.toByteArray(), "png", "image/png", null).getUrl();
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {

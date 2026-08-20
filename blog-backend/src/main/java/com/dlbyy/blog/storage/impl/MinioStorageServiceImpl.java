@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -74,6 +75,66 @@ public class MinioStorageServiceImpl implements FileStorageService {
                 .storageType("minio")
                 .path(objectKey)
                 .build();
+    }
+
+    @Override
+    public FileUploadResult saveBytes(byte[] data, String suffix, String contentType, String originalFilename) {
+        if (data == null || data.length == 0) {
+            throw new BusinessException("保存内容不能为空");
+        }
+        String safeSuffix = (suffix == null || suffix.isBlank()) ? "" : suffix.toLowerCase();
+        String dateSubDir = LocalDate.now().format(DATE_DIR);
+        String objectKey = dateSubDir + "/" + System.currentTimeMillis() + "_"
+                + (int) (Math.random() * 10000) + "." + safeSuffix;
+
+        try {
+            ensureBucketExists();
+            minioClient.putObject(PutObjectArgs.builder()
+                    .bucket(config.getBucketName())
+                    .object(objectKey)
+                    .stream(new ByteArrayInputStream(data), data.length, -1)
+                    .contentType(contentType != null ? contentType : resolveContentType(safeSuffix))
+                    .build());
+            log.info("MinIO 字节数据保存成功: bucket={}, key={}", config.getBucketName(), objectKey);
+        } catch (Exception e) {
+            log.error("MinIO 字节数据保存失败", e);
+            throw new BusinessException("文件保存失败，请稍后再试: " + e.getMessage());
+        }
+
+        String url = config.getUrlPrefix() + objectKey;
+        return FileUploadResult.builder()
+                .url(url)
+                .originalFilename(originalFilename)
+                .filename(objectKey)
+                .size(data.length)
+                .storageType("minio")
+                .path(objectKey)
+                .build();
+    }
+
+    /**
+     * 启动时预建桶入口：失败仅告警不阻断应用启动（上传时仍会兜底重试）
+     */
+    public void ensureBucketReady() {
+        try {
+            ensureBucketExists();
+        } catch (Exception e) {
+            log.warn("MinIO 启动预建桶失败（上传时将重试）: {}", e.getMessage());
+        }
+    }
+
+    /** 按扩展名推断 Content-Type（contentType 未显式指定时使用） */
+    private String resolveContentType(String suffix) {
+        switch (suffix) {
+            case "jpg":
+            case "jpeg": return "image/jpeg";
+            case "png": return "image/png";
+            case "gif": return "image/gif";
+            case "webp": return "image/webp";
+            case "md":
+            case "markdown": return "text/markdown";
+            default: return "application/octet-stream";
+        }
     }
 
     /**
