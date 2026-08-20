@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dlbyy.blog.mapper.MusicPlaylistMapper">
+
+    <!-- 门户歌单列表：含歌曲数 -->
+    <select id="selectListWithSongCount" resultType="com.dlbyy.blog.entity.MusicPlaylist">
+        SELECT
+            p.*,
+            (SELECT COUNT(*) FROM music_playlist_song s
+              WHERE s.playlist_id = p.id) AS song_count
+        FROM music_playlist p
+        WHERE p.is_deleted = 0
+        <if test="status != null">
+            AND p.status = #{status}
+        </if>
+        ORDER BY p.create_time DESC
+    </select>
+</mapper>

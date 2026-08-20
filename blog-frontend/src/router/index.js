@@ -37,6 +37,11 @@ const routes = [
     component: () => import('@/views/Archives.vue')
   },
   {
+    path: '/music',
+    name: 'Music',
+    component: () => import('@/views/Music.vue')
+  },
+  {
     path: '/resume',
     name: 'Resume',
     component: () => import('@/views/Resume.vue')
@@ -47,9 +52,32 @@ const routes = [
     component: () => import('@/views/About.vue')
   },
   {
+    path: '/interview',
+    name: 'Interview',
+    meta: { title: '面试刷题' },
+    component: () => import('@/views/Interview.vue')
+  },
+  {
     path: '/messages',
     name: 'Messages',
     component: () => import('@/views/MessageBoard.vue')
+  },
+  {
+    path: '/exam',
+    name: 'Exam',
+    component: () => import('@/views/Exam.vue')
+  },
+  {
+    path: '/scores',
+    name: 'Scores',
+    meta: { title: '成绩查询' },
+    component: () => import('@/views/Scores.vue')
+  },
+  {
+    path: '/exam/:paperId',
+    name: 'ExamTaking',
+    component: () => import('@/views/ExamTaking.vue'),
+    meta: { hideLayout: true }
   }
 ]
 

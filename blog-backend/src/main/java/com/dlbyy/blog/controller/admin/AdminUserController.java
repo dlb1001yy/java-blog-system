@@ -2,7 +2,6 @@ package com.dlbyy.blog.controller.admin;
 
 import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.Result;
-import com.dlbyy.blog.common.exception.BusinessException;
 import com.dlbyy.blog.entity.User;
 import com.dlbyy.blog.service.UserService;
 import com.dlbyy.blog.utils.PasswordStrengthValidator;
@@ -71,6 +70,8 @@ public class AdminUserController {
         userService.updateById(user);
         return Result.success("密码修改成功");
     }
+
+    // 用户列表/统计/重置密码/启停用等管理功能由 AdminUserManageController（/admin/users）统一提供
 
     @Data
     public static class CreateUserRequest {

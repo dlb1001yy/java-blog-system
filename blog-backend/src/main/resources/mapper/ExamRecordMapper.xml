@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dlbyy.blog.mapper.ExamRecordMapper">
+
+    <!-- 待批改/全部答卷分页：联表查询考生姓名、试卷名、待批主观题数 -->
+    <select id="selectPendingPage" resultType="com.dlbyy.blog.entity.ExamRecord">
+        SELECT
+            r.*,
+            u.nickname  AS user_name,
+            p.title     AS paper_title,
+            (SELECT COUNT(*) FROM exam_marking m
+              WHERE m.record_id = r.id AND m.is_deleted = 0 AND m.status = 0) AS subjective_count
+        FROM exam_record r
+        LEFT JOIN sys_user u ON u.id = r.user_id
+        LEFT JOIN exam_paper p ON p.id = r.paper_id
+        WHERE r.is_deleted = 0
+        <if test="keyword != null and keyword != ''">
+            AND (u.nickname LIKE CONCAT('%', #{keyword}, '%')
+                 OR u.username LIKE CONCAT('%', #{keyword}, '%')
+                 OR p.title LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="status != null">
+            AND r.status = #{status}
+        </if>
+        ORDER BY r.submit_time DESC, r.id DESC
+    </select>
+</mapper>

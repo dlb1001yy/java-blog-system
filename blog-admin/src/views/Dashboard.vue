@@ -86,17 +86,22 @@
             <div class="todo-item" @click="$router.push('/comment')">
               <el-icon><ChatDotRound /></el-icon>
               <span class="todo-text">待审核评论</span>
-              <el-badge :value="stats.pendingCommentCount || 0" :max="99" />
+              <el-badge :value="todo.pendingCommentCount || 0" :max="99" />
             </div>
             <div class="todo-item" @click="$router.push('/message')">
               <el-icon><Message /></el-icon>
               <span class="todo-text">待审核留言</span>
-              <el-badge :value="stats.pendingMessageCount || 0" :max="99" />
+              <el-badge :value="todo.pendingMessageCount || 0" :max="99" />
             </div>
             <div class="todo-item" @click="$router.push('/article')">
               <el-icon><Document /></el-icon>
               <span class="todo-text">草稿箱</span>
               <el-badge :value="stats.articleCount - stats.publishedCount" :max="99" />
+            </div>
+            <div class="todo-item" @click="$router.push('/marking')">
+              <el-icon><EditPen /></el-icon>
+              <span class="todo-text">待阅卷</span>
+              <el-badge :value="todo.pendingMarkingCount || 0" :max="99" />
             </div>
             <div class="todo-item">
               <el-icon><Calendar /></el-icon>
@@ -107,14 +112,67 @@
         </div>
       </el-col>
     </el-row>
+
+    <!-- 最近活动 & 系统状态 -->
+    <el-row :gutter="20" class="chart-row">
+      <el-col :xs="24" :lg="14">
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">最近活动</span>
+          </div>
+          <el-timeline v-if="activities.length">
+            <el-timeline-item
+              v-for="item in activities"
+              :key="item.id"
+              :timestamp="item.createTime"
+              :type="item.status === 1 ? 'primary' : 'danger'"
+            >
+              <span class="activity-user">{{ item.username }}</span>
+              <span class="activity-text">{{ item.operation }}</span>
+              <span class="activity-uri">{{ item.method }} {{ item.uri }}</span>
+            </el-timeline-item>
+          </el-timeline>
+          <el-empty v-else description="暂无操作记录" :image-size="60" />
+        </div>
+      </el-col>
+      <el-col :xs="24" :lg="10">
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">系统状态</span>
+          </div>
+          <div class="status-list">
+            <div class="status-item">
+              <span class="status-dot" :class="statusDotClass(systemStatus.redis?.status)"></span>
+              <span class="status-name">Redis</span>
+              <span class="status-value">{{ statusText(systemStatus.redis?.status) }}</span>
+            </div>
+            <div class="status-item">
+              <span class="status-dot" :class="statusDotClass(systemStatus.database?.status)"></span>
+              <span class="status-name">数据库</span>
+              <span class="status-value">{{ statusText(systemStatus.database?.status) }}</span>
+            </div>
+            <div class="status-item">
+              <span class="status-dot" :class="statusDotClass(systemStatus.disk?.status)"></span>
+              <span class="status-name">磁盘</span>
+              <span class="status-value">{{ diskText }}</span>
+            </div>
+            <div class="status-item">
+              <span class="status-dot" :class="jvmDotClass"></span>
+              <span class="status-name">JVM 内存</span>
+              <span class="status-value">{{ jvmText }}</span>
+            </div>
+          </div>
+        </div>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick, watch } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
 import * as echarts from 'echarts'
 import {
-  Document, View, ChatDotRound, Star, Message, Calendar
+  Document, View, ChatDotRound, Star, Message, Calendar, EditPen
 } from '@element-plus/icons-vue'
 import { useAppStore } from '@/stores/app'
 import dashboardApi from '@/api/dashboard'
@@ -148,6 +206,69 @@ const getThemeColors = () => {
 const fetchStats = async () => {
   const res = await dashboardApi.getStats()
   Object.assign(stats, res.data)
+}
+
+// 待办事项（含待阅卷数）
+const todo = reactive({})
+
+const fetchTodo = async () => {
+  const res = await dashboardApi.getTodo()
+  Object.assign(todo, res.data || {})
+}
+
+// 最近操作日志（前 8 条）
+const activities = ref([])
+
+const fetchActivities = async () => {
+  const res = await dashboardApi.getActivities({ current: 1, size: 8 })
+  activities.value = res.data?.records || []
+}
+
+// 系统状态
+const systemStatus = reactive({})
+
+const formatSize = (bytes) => {
+  if (bytes == null) return '--'
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  let value = bytes
+  let unit = 0
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024
+    unit++
+  }
+  return `${value.toFixed(unit >= 2 ? 1 : 0)} ${units[unit]}`
+}
+
+const statusDotClass = (status) => status === 'up' ? 'is-up' : 'is-down'
+
+const statusText = (status) => status === 'up' ? '正常' : '异常'
+
+const diskText = computed(() => {
+  const disk = systemStatus.disk
+  if (!disk?.status) return '--'
+  if (disk.status !== 'up') return '异常'
+  const used = disk.totalSpace - disk.usableSpace
+  const percent = disk.totalSpace ? Math.round((used / disk.totalSpace) * 100) : 0
+  return `已用 ${formatSize(used)} / ${formatSize(disk.totalSpace)}（${percent}%）`
+})
+
+const jvmText = computed(() => {
+  const jvm = systemStatus.jvm
+  if (!jvm?.maxMemory) return '--'
+  const used = jvm.totalMemory - jvm.freeMemory
+  return `已用 ${formatSize(used)} / 最大 ${formatSize(jvm.maxMemory)}`
+})
+
+const jvmDotClass = computed(() => {
+  const jvm = systemStatus.jvm
+  if (!jvm?.maxMemory) return 'is-down'
+  const used = jvm.totalMemory - jvm.freeMemory
+  return used / jvm.maxMemory > 0.9 ? 'is-down' : 'is-up'
+})
+
+const fetchSystemStatus = async () => {
+  const res = await dashboardApi.getSystemStatus()
+  Object.assign(systemStatus, res.data || {})
 }
 
 // 构建趋势图配置：轴线/网格线/文字颜色跟随主题，品牌绿渐变保持不变
@@ -282,6 +403,9 @@ watch(() => appStore.theme, () => {
 
 onMounted(() => {
   fetchStats()
+  fetchTodo()
+  fetchActivities()
+  fetchSystemStatus()
   fetchTrend()
   fetchTypeStats()
   fetchCategoryStats()
@@ -440,5 +564,67 @@ onMounted(() => {
   font-size: var(--font-base);
   color: var(--text-regular);
   font-weight: 500;
+}
+
+.activity-user {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-right: var(--space-2);
+}
+
+.activity-text {
+  color: var(--text-regular);
+  margin-right: var(--space-2);
+}
+
+.activity-uri {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+
+.status-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.is-up {
+  background: #10B981;
+  box-shadow: 0 0 4px rgba(16, 185, 129, 0.6);
+}
+
+.status-dot.is-down {
+  background: #EF4444;
+  box-shadow: 0 0 4px rgba(239, 68, 68, 0.6);
+}
+
+.status-name {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 72px;
+}
+
+.status-value {
+  flex: 1;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  text-align: right;
 }
 </style>

@@ -19,5 +19,20 @@ export default {
   // 获取文章类型统计
   getTypeStats() {
     return request.get('/admin/dashboard/type-stats')
+  },
+
+  // 获取待办事项数量
+  getTodo() {
+    return request.get('/admin/dashboard/todo')
+  },
+
+  // 获取最近操作日志
+  getActivities(params) {
+    return request.get('/admin/dashboard/activities', { params })
+  },
+
+  // 获取系统运行状态
+  getSystemStatus() {
+    return request.get('/admin/dashboard/system-status')
   }
 }

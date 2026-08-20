@@ -12,6 +12,10 @@
         <router-link to="/category" class="nav-item">分类</router-link>
         <router-link to="/tags" class="nav-item">标签</router-link>
         <router-link to="/archives" class="nav-item">归档</router-link>
+        <router-link to="/interview" class="nav-item">刷题</router-link>
+        <router-link to="/exam" class="nav-item">考试</router-link>
+        <router-link to="/scores" class="nav-item">成绩</router-link>
+        <router-link to="/music" class="nav-item">音乐</router-link>
         <router-link to="/resume" class="nav-item">简历</router-link>
         <router-link to="/messages" class="nav-item">留言</router-link>
         <router-link to="/about" class="nav-item">关于</router-link>

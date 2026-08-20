@@ -12,6 +12,9 @@ import org.apache.ibatis.annotations.Update;
 @Mapper
 public interface SchemaMapper {
 
+    @Select("SELECT 1")
+    int ping();
+
     @Select("SELECT COUNT(*) FROM information_schema.columns " +
             "WHERE table_schema = DATABASE() AND table_name = 'sys_user' AND column_name = 'fail_count'")
     int countFailCountColumn();

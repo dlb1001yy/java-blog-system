@@ -159,10 +159,10 @@
       <p class="summary-text">{{ resume.interests }}</p>
     </div>
 
-    <!-- 下载按钮 -->
+    <!-- 打印/导出按钮 -->
     <div class="download-section">
-      <el-button type="primary" size="large" :icon="Download" @click="downloadResume">
-        下载PDF简历
+      <el-button type="primary" size="large" :icon="Printer" @click="downloadResume">
+        打印 / 导出 PDF
       </el-button>
     </div>
     </div>
@@ -174,7 +174,7 @@
 import { ref, computed, onMounted } from 'vue'
 import {
   Phone, Message, Location, User, Cpu, Briefcase,
-  Folder, Reading, Download, EditPen, Medal, Star
+  Folder, Reading, Download, EditPen, Medal, Star, Printer
 } from '@element-plus/icons-vue'
 import articleApi from '@/api/article'
 
@@ -490,5 +490,39 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   font-size: 13px;
+}
+</style>
+
+<style>
+/* 打印样式（非 scoped，需隐藏布局级组件） */
+@media print {
+  .app-header,
+  .app-footer,
+  .player-bar,
+  .back-to-top,
+  .download-section {
+    display: none !important;
+  }
+
+  body,
+  #app .main-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+  }
+
+  .resume-page .container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .resume-page .card {
+    box-shadow: none !important;
+    border: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }
 </style>

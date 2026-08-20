@@ -80,6 +80,42 @@ const routes = [
         meta: { title: '友情链接', icon: 'Link' }
       },
       {
+        path: 'interview-questions',
+        name: 'InterviewQuestionList',
+        component: () => import('@/views/InterviewQuestionList.vue'),
+        meta: { title: '面试题管理', icon: 'Notebook' }
+      },
+      {
+        path: 'music',
+        name: 'MusicManage',
+        component: () => import('@/views/MusicManage.vue'),
+        meta: { title: '音乐管理', icon: 'Headset' }
+      },
+      {
+        path: 'exam-questions',
+        name: 'ExamQuestionList',
+        component: () => import('@/views/ExamQuestionList.vue'),
+        meta: { title: '题库管理', icon: 'Collection' }
+      },
+      {
+        path: 'exam-papers',
+        name: 'ExamPaperList',
+        component: () => import('@/views/ExamPaperList.vue'),
+        meta: { title: '试卷管理', icon: 'Tickets' }
+      },
+      {
+        path: 'marking',
+        name: 'MarkingCenter',
+        component: () => import('@/views/MarkingCenter.vue'),
+        meta: { title: '阅卷中心', icon: 'EditPen' }
+      },
+      {
+        path: 'users',
+        name: 'UserList',
+        component: () => import('@/views/UserList.vue'),
+        meta: { title: '用户管理', icon: 'UserFilled' }
+      },
+      {
         path: 'operation-log',
         name: 'OperationLogList',
         component: () => import('@/views/OperationLogList.vue'),

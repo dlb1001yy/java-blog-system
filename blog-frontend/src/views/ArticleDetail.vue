@@ -1,5 +1,7 @@
 <template>
   <div class="article-detail" v-if="article">
+    <!-- 阅读进度条 -->
+    <div class="reading-progress" :style="{ width: progress + '%' }"></div>
     <div class="container">
       <div class="layout">
         <div class="main-content">
@@ -96,7 +98,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Calendar, View, ChatDotRound, Star } from '@element-plus/icons-vue'
@@ -110,6 +112,21 @@ const router = useRouter()
 const article = ref(null)
 const toc = ref([])
 const prevNext = ref({ prev: null, next: null })
+const progress = ref(0)
+
+// 阅读进度
+const updateProgress = () => {
+  const el = document.querySelector('.article-content')
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const total = rect.height - window.innerHeight + rect.top
+  if (total <= 0) {
+    progress.value = 100
+    return
+  }
+  const scrolled = -Math.min(rect.top, 0)
+  progress.value = Math.min(100, Math.max(0, (scrolled / total) * 100))
+}
 
 const typeMap = {
   0: { label: '原创', type: 'primary' },
@@ -200,10 +217,33 @@ watch(() => route.params.id, () => {
 
 onMounted(() => {
   fetchArticle()
+  window.addEventListener('scroll', updateProgress, { passive: true })
+  window.addEventListener('resize', updateProgress)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', updateProgress)
+  window.removeEventListener('resize', updateProgress)
 })
 </script>
 
 <style scoped>
+.article-detail {
+  position: relative;
+}
+
+/* 顶部阅读进度条 */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  z-index: 2000;
+  background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+  transition: width 0.1s linear;
+}
+
 .article-header {
   margin-bottom: 24px;
 }

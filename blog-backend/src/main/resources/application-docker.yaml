@@ -20,6 +20,10 @@ spring:
     username: ${MYSQL_USERNAME:root}
     password: ${MYSQL_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 25MB  # 覆盖音乐上传 20MB 上限（其余上传业务自行限制）
+      max-request-size: 50MB
   data:
     redis:
       # 使用容器名 redis 作为主机

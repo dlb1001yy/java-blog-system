@@ -15,7 +15,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   servlet:
     multipart:
-      max-file-size: 10MB
+      max-file-size: 25MB  # 覆盖音乐上传 20MB 上限（其余上传业务自行限制）
       max-request-size: 50MB
   data:
     redis:
@@ -107,8 +107,8 @@ storage:
     upload-path: D:\\my-project\\java-blog-system\\blog-backend\\uploads\\
     # 带 /api 前缀：前端代理（vite/nginx）仅转发 /api，与 WebMvcConfig 静态映射（context-path 下）对齐
     url-prefix: /api/uploads/
-    allowed-types: jpg,jpeg,png,gif,webp,md,markdown
-    max-size: 10485760  # 10MB
+    allowed-types: jpg,jpeg,png,gif,webp,md,markdown,mp3
+    max-size: 20971520  # 20MB（音乐上传上限）
   minio:
     # MinIO 五项配置通过同名环境变量注入（STORAGE_TYPE=minio 时生效），以下为本地开发默认值
     endpoint: ${MINIO_ENDPOINT:http://localhost:9000}

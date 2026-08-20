@@ -1,14 +1,20 @@
 package com.dlbyy.blog.controller.admin;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dlbyy.blog.common.Result;
 import com.dlbyy.blog.entity.*;
+import com.dlbyy.blog.mapper.OperationLogMapper;
+import com.dlbyy.blog.mapper.SchemaMapper;
 import com.dlbyy.blog.service.*;
+import com.dlbyy.blog.utils.RedisUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -22,6 +28,10 @@ public class AdminDashboardController {
     private final CommentService commentService;
     private final MessageService messageService;
     private final CategoryService categoryService;
+    private final ExamService examService;
+    private final OperationLogMapper operationLogMapper;
+    private final SchemaMapper schemaMapper;
+    private final RedisUtils redisUtils;
 
     @GetMapping("/stats")
     public Result<?> stats() {
@@ -117,5 +127,76 @@ public class AdminDashboardController {
                 .eq(Article::getType, 2).eq(Article::getIsPublish, 1)));
         
         return Result.success(result);
+    }
+
+    @GetMapping("/todo")
+    public Result<?> todo() {
+        Map<String, Object> todo = new HashMap<>();
+        // 待审核评论数
+        todo.put("pendingCommentCount", commentService.count(
+                new LambdaQueryWrapper<Comment>().eq(Comment::getStatus, 0)));
+        // 待审核留言数
+        todo.put("pendingMessageCount", messageService.count(
+                new LambdaQueryWrapper<Message>().eq(Message::getStatus, 0)));
+        // 待阅卷数
+        todo.put("pendingMarkingCount", examService.countPendingMarking());
+        return Result.success(todo);
+    }
+
+    @GetMapping("/activities")
+    public Result<Page<OperationLog>> activities(
+            @RequestParam(defaultValue = "1") Integer current,
+            @RequestParam(defaultValue = "10") Integer size) {
+        return Result.success(operationLogMapper.selectPage(new Page<>(current, size),
+                new LambdaQueryWrapper<OperationLog>().orderByDesc(OperationLog::getCreateTime)));
+    }
+
+    @GetMapping("/system-status")
+    public Result<?> systemStatus() {
+        Map<String, Object> status = new HashMap<>();
+
+        // Redis 状态：尝试一次读写探测
+        Map<String, Object> redis = new HashMap<>();
+        try {
+            String pingKey = "dashboard:ping:" + System.currentTimeMillis();
+            redisUtils.set(pingKey, "1", 3000);
+            Object value = redisUtils.get(pingKey);
+            redisUtils.delete(pingKey);
+            redis.put("status", "1".equals(value) ? "up" : "unknown");
+        } catch (Exception e) {
+            redis.put("status", "unknown");
+        }
+        status.put("redis", redis);
+
+        // 数据库状态：SELECT 1 探测
+        Map<String, Object> database = new HashMap<>();
+        try {
+            database.put("status", schemaMapper.ping() == 1 ? "up" : "unknown");
+        } catch (Exception e) {
+            database.put("status", "unknown");
+        }
+        status.put("database", database);
+
+        // 磁盘状态
+        Map<String, Object> disk = new HashMap<>();
+        try {
+            File root = new File(".").getAbsoluteFile();
+            disk.put("usableSpace", root.getUsableSpace());
+            disk.put("totalSpace", root.getTotalSpace());
+            disk.put("status", "up");
+        } catch (Exception e) {
+            disk.put("status", "unknown");
+        }
+        status.put("disk", disk);
+
+        // JVM 状态
+        Map<String, Object> jvm = new HashMap<>();
+        Runtime runtime = Runtime.getRuntime();
+        jvm.put("maxMemory", runtime.maxMemory());
+        jvm.put("totalMemory", runtime.totalMemory());
+        jvm.put("freeMemory", runtime.freeMemory());
+        status.put("jvm", jvm);
+
+        return Result.success(status);
     }
 }
