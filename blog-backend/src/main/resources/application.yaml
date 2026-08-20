@@ -115,7 +115,7 @@ storage:
     access-key: ${MINIO_ACCESS_KEY:minioadmin}
     secret-key: ${MINIO_SECRET_KEY:minioadmin}
     bucket-name: ${MINIO_BUCKET_NAME:blog}
-    url-prefix: ${MINIO_URL_PREFIX:http://localhost:9000/blog/}
+    url-prefix: ${MINIO_URL_PREFIX:/uploads/}
   oss:
     # 阿里云 OSS 五项配置通过环境变量注入（STORAGE_TYPE=oss 时生效），无默认值需显式配置
     endpoint: ${OSS_ENDPOINT:}

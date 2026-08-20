@@ -136,7 +136,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
       MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-blog}
-      MINIO_URL_PREFIX: ${MINIO_URL_PREFIX:-http://localhost:9000/blog/}
+      MINIO_URL_PREFIX: ${MINIO_URL_PREFIX:-/uploads/}
     depends_on:
       mysql:
         condition: service_healthy

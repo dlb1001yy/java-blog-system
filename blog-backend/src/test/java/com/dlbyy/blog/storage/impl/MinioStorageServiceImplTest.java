@@ -115,7 +115,7 @@ class MinioStorageServiceImplTest {
     // ==================== 2. bucket 已存在 ====================
 
     @Test
-    @DisplayName("bucket 已存在：不再 makeBucket / setBucketPolicy，仅直接上传")
+    @DisplayName("bucket 已存在：不 makeBucket，但仍幂等补设匿名只读策略，仅直接上传")
     void upload_bucketExists_shouldSkipBucketCreation() throws Exception {
         when(minioClient.bucketExists(any())).thenReturn(true);
 
@@ -124,7 +124,8 @@ class MinioStorageServiceImplTest {
         assertThat(result.getStorageType()).isEqualTo("minio");
         verify(minioClient).bucketExists(any());
         verify(minioClient, never()).makeBucket(any());
-        verify(minioClient, never()).setBucketPolicy(any());
+        // 策略幂等补设：桶已存在也 set 一次（修复桶存在但策略缺失 → 匿名访问 403）
+        verify(minioClient, times(1)).setBucketPolicy(any());
         verify(minioClient).putObject(any());
     }
 

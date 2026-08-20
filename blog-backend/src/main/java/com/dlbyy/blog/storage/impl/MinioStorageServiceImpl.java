@@ -138,7 +138,8 @@ public class MinioStorageServiceImpl implements FileStorageService {
     }
 
     /**
-     * 幂等确保 bucket 存在：不存在则创建，并设置匿名只读下载策略（仅新建时设置一次）；
+     * 幂等确保 bucket 存在：不存在则创建；匿名只读下载策略无论桶是否存在都设置一次
+     * （覆盖式 set 幂等安全，修复"桶已存在但策略缺失 → 匿名访问 403"的隐患）；
      * 检查失败不标记就绪（异常直接抛出，不执行置位语句），下次上传会重新检查；
      * 双重检查锁：避免并发首次上传时多线程同时创建 bucket（makeBucket 会因已存在而抛错）
      */
@@ -154,15 +155,17 @@ public class MinioStorageServiceImpl implements FileStorageService {
             boolean exists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
             if (!exists) {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
-                String policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\","
-                        + "\"Principal\":{\"AWS\":[\"*\"]},\"Action\":[\"s3:GetObject\"],"
-                        + "\"Resource\":[\"arn:aws:s3:::" + bucketName + "/*\"]}]}";
-                minioClient.setBucketPolicy(SetBucketPolicyArgs.builder()
-                        .bucket(bucketName)
-                        .config(policy)
-                        .build());
-                log.info("MinIO bucket 不存在，已创建并设置匿名只读下载策略: {}", bucketName);
+                log.info("MinIO bucket 不存在，已创建: {}", bucketName);
             }
+            // 匿名只读下载策略：桶已存在时也补设一次，保证浏览器可直链访问
+            String policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\","
+                    + "\"Principal\":{\"AWS\":[\"*\"]},\"Action\":[\"s3:GetObject\"],"
+                    + "\"Resource\":[\"arn:aws:s3:::" + bucketName + "/*\"]}]}";
+            minioClient.setBucketPolicy(SetBucketPolicyArgs.builder()
+                    .bucket(bucketName)
+                    .config(policy)
+                    .build());
+            log.info("MinIO bucket 匿名只读下载策略已设置: {}", bucketName);
             // 全部成功后才置位：任一步骤抛异常时不会执行到此，下次上传重新检查
             bucketReady = true;
         }
