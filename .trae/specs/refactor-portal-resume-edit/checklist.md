@@ -1,0 +1,6 @@
+- [x] Upload 组件创建完成，包含占位符、预览、悬停删除、大小校验（≤10MB）
+- [x] Upload 组件通过 request 实例调用 `/v1/storage/upload`，携带 Authorization token，成功后 emit URL
+- [x] ProfileResume.vue 照片字段使用 Upload 组件替换手填链接输入框
+- [x] ProfileResume.vue 动态列表增删全部通过命名方法实现，模板无内联 splice/push
+- [x] 审核状态展示、分享链接管理、登录校验、保存逻辑（JSON 序列化）保持原有行为
+- [x] 前端构建/语法检查通过，无报错

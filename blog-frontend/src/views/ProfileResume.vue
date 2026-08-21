@@ -19,7 +19,7 @@
           <el-row :gutter="20">
             <el-col :span="8"><el-form-item label="婚姻状况"><el-select v-model="form.maritalStatus" placeholder="请选择" style="width:100%"><el-option label="未婚" :value="0"/><el-option label="已婚" :value="1"/><el-option label="离异" :value="2"/></el-select></el-form-item></el-col>
             <el-col :span="8"><el-form-item label="户籍"><el-input v-model="form.hukou" /></el-form-item></el-col>
-            <el-col :span="8"><el-form-item label="照片链接"><el-input v-model="form.avatar" placeholder="头像图片地址" /></el-form-item></el-col>
+            <el-col :span="8"><el-form-item label="照片"><Upload v-model="form.avatar" placeholder="上传照片" /></el-form-item></el-col>
           </el-row>
           <el-row :gutter="20">
             <el-col :span="8"><el-form-item label="电话"><el-input v-model="form.phone" /></el-form-item></el-col>
@@ -50,9 +50,9 @@
               <el-input v-model="skill.name" placeholder="技能名" style="width:180px"/>
               <el-select v-model="skill.level" style="width:100px"><el-option label="精通" value="精通"/><el-option label="熟练" value="熟练"/><el-option label="掌握" value="掌握"/><el-option label="了解" value="了解"/></el-select>
               <el-slider v-model="skill.percent" style="flex:1; margin:0 16px" />
-              <el-button type="danger" :icon="Delete" circle @click="skillList.splice(i, 1)" />
+              <el-button type="danger" :icon="Delete" circle @click="removeSkill(i)" />
             </div>
-            <el-button type="primary" plain :icon="Plus" @click="skillList.push({ name: '', level: '熟练', percent: 80 })">新增技能</el-button>
+            <el-button type="primary" plain :icon="Plus" @click="addSkill">新增技能</el-button>
           </div>
 
           <el-divider content-position="left">工作经历</el-divider>
@@ -67,9 +67,9 @@
                 <el-col :span="8"><el-form-item label="结束月份"><el-date-picker v-model="work.endDate" type="month" value-format="YYYY-MM" placeholder="至今可不填" style="width:100%"/></el-form-item></el-col>
               </el-row>
               <el-form-item label="工作描述"><el-input v-model="work.description" type="textarea" :rows="3" /></el-form-item>
-              <div class="block-actions"><el-button type="danger" :icon="Delete" @click="workList.splice(i, 1)">删除该经历</el-button></div>
+              <div class="block-actions"><el-button type="danger" :icon="Delete" @click="removeWork(i)">删除该经历</el-button></div>
             </div>
-            <el-button type="primary" plain :icon="Plus" @click="workList.push({ company: '', position: '', startDate: '', endDate: '', description: '' })">新增工作经历</el-button>
+            <el-button type="primary" plain :icon="Plus" @click="addWork">新增工作经历</el-button>
           </div>
 
           <el-divider content-position="left">项目经验</el-divider>
@@ -83,13 +83,13 @@
               <el-form-item label="项目描述"><el-input v-model="project.description" type="textarea" :rows="3" /></el-form-item>
               <el-form-item label="技术栈">
                 <div class="tech-tags">
-                  <el-tag v-for="(tech, ti) in project.technologies" :key="ti" closable @close="project.technologies.splice(ti, 1)" style="margin-right:6px">{{ tech }}</el-tag>
+                  <el-tag v-for="(tech, ti) in project.technologies" :key="ti" closable @close="removeTech(project, ti)" style="margin-right:6px">{{ tech }}</el-tag>
                   <el-input v-model="project.techInput" placeholder="输入技术名回车添加" style="width:200px" @keyup.enter="addTech(project)" />
                 </div>
               </el-form-item>
-              <div class="block-actions"><el-button type="danger" :icon="Delete" @click="projectList.splice(i, 1)">删除该项目</el-button></div>
+              <div class="block-actions"><el-button type="danger" :icon="Delete" @click="removeProject(i)">删除该项目</el-button></div>
             </div>
-            <el-button type="primary" plain :icon="Plus" @click="projectList.push({ name: '', role: '', date: '', description: '', technologies: [], techInput: '' })">新增项目</el-button>
+            <el-button type="primary" plain :icon="Plus" @click="addProject">新增项目</el-button>
           </div>
 
           <el-divider content-position="left">教育背景</el-divider>
@@ -105,9 +105,9 @@
                 <el-col :span="8"><el-form-item label="结束月份"><el-date-picker v-model="edu.endDate" type="month" value-format="YYYY-MM" style="width:100%"/></el-form-item></el-col>
               </el-row>
               <el-form-item label="描述"><el-input v-model="edu.description" type="textarea" :rows="2" /></el-form-item>
-              <div class="block-actions"><el-button type="danger" :icon="Delete" @click="educationList.splice(i, 1)">删除该经历</el-button></div>
+              <div class="block-actions"><el-button type="danger" :icon="Delete" @click="removeEducation(i)">删除该经历</el-button></div>
             </div>
-            <el-button type="primary" plain :icon="Plus" @click="educationList.push({ school: '', major: '', degree: '本科', startDate: '', endDate: '', description: '' })">新增教育经历</el-button>
+            <el-button type="primary" plain :icon="Plus" @click="addEducation">新增教育经历</el-button>
           </div>
 
           <el-divider content-position="left">证书荣誉</el-divider>
@@ -116,9 +116,9 @@
               <el-input v-model="cert.name" placeholder="证书名称" style="width:200px"/>
               <el-input v-model="cert.issuer" placeholder="颁发机构" style="width:180px; margin-left:8px"/>
               <el-date-picker v-model="cert.date" type="date" value-format="YYYY-MM-DD" placeholder="获得日期" style="margin-left:8px"/>
-              <el-button type="danger" :icon="Delete" circle @click="certificateList.splice(i, 1)" style="margin-left:8px"/>
+              <el-button type="danger" :icon="Delete" circle @click="removeCertificate(i)" style="margin-left:8px"/>
             </div>
-            <el-button type="primary" plain :icon="Plus" @click="certificateList.push({ name: '', issuer: '', date: '' })">新增证书</el-button>
+            <el-button type="primary" plain :icon="Plus" @click="addCertificate">新增证书</el-button>
           </div>
 
           <el-divider content-position="left">兴趣爱好</el-divider>
@@ -181,6 +181,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Plus } from '@element-plus/icons-vue'
 import resumeApi from '@/api/resume'
+import Upload from '@/components/Upload.vue'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
@@ -330,6 +331,44 @@ const addTech = (project) => {
     project.technologies.push(project.techInput.trim())
     project.techInput = ''
   }
+}
+const removeTech = (project, i) => {
+  project.technologies.splice(i, 1)
+}
+
+const addSkill = () => {
+  skillList.value.push({ name: '', level: '熟练', percent: 80 })
+}
+const removeSkill = (i) => {
+  skillList.value.splice(i, 1)
+}
+
+const addWork = () => {
+  workList.value.push({ company: '', position: '', startDate: '', endDate: '', description: '' })
+}
+const removeWork = (i) => {
+  workList.value.splice(i, 1)
+}
+
+const addProject = () => {
+  projectList.value.push({ name: '', role: '', date: '', description: '', technologies: [], techInput: '' })
+}
+const removeProject = (i) => {
+  projectList.value.splice(i, 1)
+}
+
+const addEducation = () => {
+  educationList.value.push({ school: '', major: '', degree: '本科', startDate: '', endDate: '', description: '' })
+}
+const removeEducation = (i) => {
+  educationList.value.splice(i, 1)
+}
+
+const addCertificate = () => {
+  certificateList.value.push({ name: '', issuer: '', date: '' })
+}
+const removeCertificate = (i) => {
+  certificateList.value.splice(i, 1)
 }
 
 const handleSave = async () => {
