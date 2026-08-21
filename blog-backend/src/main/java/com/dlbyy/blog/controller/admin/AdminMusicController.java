@@ -9,6 +9,7 @@ import com.dlbyy.blog.entity.MusicSong;
 import com.dlbyy.blog.service.MusicPlaylistService;
 import com.dlbyy.blog.service.MusicSongService;
 import com.dlbyy.blog.service.OnlineLyricService;
+import com.dlbyy.blog.utils.CoverImageGenerator;
 import com.dlbyy.blog.utils.Mp3LyricParser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,6 +18,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +34,7 @@ public class AdminMusicController {
     private final MusicSongService musicSongService;
     private final MusicPlaylistService musicPlaylistService;
     private final OnlineLyricService onlineLyricService;
+    private final CoverImageGenerator coverImageGenerator;
 
     // ---------------- 歌曲 ----------------
 
@@ -51,19 +54,26 @@ public class AdminMusicController {
 
     @PostMapping("/songs/parse-lyric")
     @Admin("解析歌词")
-    @Operation(summary = "解析歌词：优先 MP3 内嵌（ID3v2 USLT），无内嵌时按歌名+歌手在线匹配 LRC")
-    public Result<String> parseLyric(@RequestParam("file") MultipartFile file,
-                                     @RequestParam(required = false) String title,
-                                     @RequestParam(required = false) String artist) {
-        String embedded = Mp3LyricParser.parse(file);
-        if (embedded != null && !embedded.isBlank()) {
-            return Result.success("内嵌歌词", embedded);
+    @Operation(summary = "解析歌词（同时返回自动生成封面）：优先 MP3 内嵌（ID3v2 USLT），无内嵌时按歌名+歌手在线匹配 LRC")
+    public Result<Map<String, String>> parseLyric(@RequestParam("file") MultipartFile file,
+                                                  @RequestParam(required = false) String title,
+                                                  @RequestParam(required = false) String artist) {
+        String lyric = Mp3LyricParser.parse(file);
+        if (lyric == null || lyric.isBlank()) {
+            lyric = onlineLyricService.fetchLrc(title, artist);
         }
-        String online = onlineLyricService.fetchLrc(title, artist);
-        if (online != null) {
-            return Result.success("在线匹配", online);
+        // 同时返回自动生成的渐变封面（歌名+歌手），供前端在未手动上传封面时回填
+        String cover = null;
+        if (StringUtils.hasText(title)) {
+            try {
+                cover = coverImageGenerator.generateSquare(title.trim(), artist, 500);
+            } catch (Exception ignored) {
+            }
         }
-        return Result.success("未找到歌词", null);
+        Map<String, String> data = new HashMap<>();
+        data.put("lyric", lyric);
+        data.put("cover", cover);
+        return Result.success("解析完成", data);
     }
 
     @GetMapping("/songs")
