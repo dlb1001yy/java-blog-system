@@ -1,11 +1,8 @@
 <template>
   <div class="upload-container">
     <el-upload
-      :action="action"
-      :headers="headers"
       :show-file-list="false"
-      :on-success="handleSuccess"
-      :on-error="handleError"
+      :http-request="doUpload"
       :before-upload="beforeUpload"
       :accept="accept"
       :limit="limit"
@@ -25,10 +22,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
 import { signRequest } from '@/api/signing'
+import axios from 'axios'
 
 const props = defineProps({
   modelValue: {
@@ -59,16 +56,27 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'success', 'remove'])
 
-// el-upload 走自身 XHR，不经过 axios 拦截器，需手动附加 token 与请求签名头
-const headers = computed(() => {
+// 自定义上传：在真正发起请求的瞬间生成时间戳与签名，避免 computed 缓存导致签名过期
+const doUpload = async ({ file, onSuccess, onError }) => {
   const { timestamp, nonce, signature } = signRequest('POST', props.action)
-  return {
-    Authorization: `Bearer ${localStorage.getItem('admin_token')}`,
-    'X-Timestamp': timestamp,
-    'X-Nonce': nonce,
-    'X-Signature': signature
+  const formData = new FormData()
+  formData.append('file', file)
+  try {
+    const { data: response } = await axios.post(props.action, formData, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('admin_token')}`,
+        'X-Timestamp': timestamp,
+        'X-Nonce': nonce,
+        'X-Signature': signature
+      }
+    })
+    handleSuccess(response)
+    onSuccess(response)
+  } catch (err) {
+    handleError()
+    onError(err)
   }
-})
+}
 
 const beforeUpload = (file) => {
   const isLtMaxSize = file.size / 1024 / 1024 < props.maxSize
