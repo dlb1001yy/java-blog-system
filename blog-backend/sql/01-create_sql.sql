@@ -186,3 +186,20 @@ CREATE TABLE `sys_operation_log` (
                                      KEY `idx_username` (`username`),
                                      KEY `idx_create_time` (`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='后台操作日志表';
+-- ============================================================
+-- 简历分享与审核
+-- ============================================================
+ALTER TABLE `resume_info`
+    ADD COLUMN `status` tinyint DEFAULT 0 COMMENT '审核状态 0待审核 1通过 2拒绝',
+    ADD COLUMN `audit_remark` varchar(200) DEFAULT NULL COMMENT '审核备注';
+
+CREATE TABLE `resume_share` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `resume_id` BIGINT NOT NULL,
+    `user_id` BIGINT NOT NULL,
+    `share_token` VARCHAR(64) NOT NULL,
+    `expire_time` DATETIME NULL COMMENT 'NULL=永久',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY `uk_share_token` (`share_token`),
+    KEY `idx_share_resume` (`resume_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='简历分享链接';

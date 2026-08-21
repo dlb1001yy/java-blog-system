@@ -167,6 +167,7 @@
     </div>
     </div>
   </div>
+  <el-empty v-else-if="expired" description="链接已失效或不存在" />
   <el-empty v-else description="暂无简历信息" />
 </template>
 
@@ -178,9 +179,12 @@ import {
   Folder, Reading, Download, EditPen, Medal, Star, Printer
 } from '@element-plus/icons-vue'
 import articleApi from '@/api/article'
+import resumeApi from '@/api/resume'
 
 const route = useRoute()
 const resume = ref(null)
+const isShareMode = computed(() => !!route.params.token)
+const expired = ref(false)
 
 const skills = computed(() => {
   if (!resume.value?.skills) return []
@@ -245,6 +249,17 @@ const age = computed(() => {
 })
 
 const fetchResume = async () => {
+  // 分享 token 模式（匿名访问）
+  if (isShareMode.value) {
+    try {
+      const res = await resumeApi.getResumeByToken(route.params.token)
+      resume.value = res.data || null
+      expired.value = !resume.value
+    } catch {
+      expired.value = true
+    }
+    return
+  }
   try {
     const res = route.params.userId
       ? await articleApi.getResumeByUserId(route.params.userId)

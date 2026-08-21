@@ -6,6 +6,8 @@
         <p class="page-desc">
           编辑完成后可
           <router-link class="view-link" :to="`/resume/${userInfo?.id}`" target="_blank">查看我的简历页</router-link>
+          <el-tag :type="auditStatusTagType" style="margin-left:12px">{{ auditStatusText }}</el-tag>
+          <span v-if="auditStatus === 2 && auditRemark" class="audit-remark">拒绝原因：{{ auditRemark }}</span>
         </p>
 
         <el-form :model="form" label-width="100px">
@@ -128,6 +130,48 @@
           </div>
         </el-form>
       </div>
+
+      <!-- 分享链接 -->
+      <div class="card share-card">
+        <h2 class="share-title">分享链接</h2>
+        <div class="share-form">
+          <el-select v-model="shareDuration" style="width:160px">
+            <el-option v-for="opt in durationOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+          </el-select>
+          <el-input-number v-if="shareDuration === -1" v-model="customDays" :min="1" :max="3650" placeholder="天数" style="margin-left:12px" />
+          <span v-if="shareDuration === -1" class="custom-days-text">天</span>
+          <el-tooltip :disabled="auditStatus === 1" content="简历审核通过后可分享" placement="top">
+            <span>
+              <el-button type="primary" :disabled="auditStatus !== 1" :loading="sharing" style="margin-left:12px" @click="handleCreateShare">生成分享链接</el-button>
+            </span>
+          </el-tooltip>
+        </div>
+
+        <h3 class="share-subtitle">我的分享</h3>
+        <el-table :data="shareList" size="small" empty-text="暂无分享记录">
+          <el-table-column label="链接" min-width="320">
+            <template #default="{ row }">
+              <div class="share-link-cell">
+                <span class="share-link-text">{{ shareUrl(row.shareToken) }}</span>
+                <el-button link type="primary" size="small" @click="copyLink(row.shareToken)">复制</el-button>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="createTime" label="创建时间" width="170" />
+          <el-table-column label="过期时间" width="170">
+            <template #default="{ row }">
+              <el-tag v-if="isExpired(row)" type="danger" size="small">已过期</el-tag>
+              <span v-else-if="!row.expireTime">永久</span>
+              <span v-else>{{ row.expireTime }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="90">
+            <template #default="{ row }">
+              <el-button link type="danger" size="small" @click="handleRevoke(row)">撤销</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
     </div>
   </div>
 </template>
@@ -135,9 +179,9 @@
 <script setup>
 import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Plus } from '@element-plus/icons-vue'
-import articleApi from '@/api/article'
+import resumeApi from '@/api/resume'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
@@ -171,6 +215,91 @@ const educationList = ref([])
 const certificateList = ref([])
 const saving = ref(false)
 
+// 审核状态：0待审核 1已通过 2已拒绝
+const auditStatus = ref(null)
+const auditRemark = ref('')
+const auditStatusText = computed(() => {
+  const map = { 0: '待审核', 1: '已通过', 2: '已拒绝' }
+  return map[auditStatus.value] ?? '待审核'
+})
+const auditStatusTagType = computed(() => {
+  const map = { 0: 'warning', 1: 'success', 2: 'danger' }
+  return map[auditStatus.value] ?? 'warning'
+})
+
+// 分享相关
+const durationOptions = [
+  { label: '永久', value: 0 },
+  { label: '30分钟', value: 30 },
+  { label: '1天', value: 1440 },
+  { label: '7天', value: 10080 },
+  { label: '1个月', value: 43200 },
+  { label: '3个月', value: 129600 },
+  { label: '1年', value: 525600 },
+  { label: '自定义天数', value: -1 }
+]
+const shareDuration = ref(0)
+const customDays = ref(7)
+const shareList = ref([])
+const sharing = ref(false)
+
+const shareUrl = (token) => `${location.origin}/blog/resume/share/${token}`
+const isExpired = (row) => !!row.expireTime && new Date(row.expireTime).getTime() < Date.now()
+
+const copyLink = async (token) => {
+  try {
+    await navigator.clipboard.writeText(shareUrl(token))
+    ElMessage.success('已复制')
+  } catch {
+    ElMessage.error('复制失败，请手动复制')
+  }
+}
+
+const fetchShares = async () => {
+  try {
+    const res = await resumeApi.getMyShares()
+    shareList.value = res.data || []
+  } catch {
+    // 错误提示由请求拦截器统一处理
+  }
+}
+
+const handleCreateShare = async () => {
+  // 计算过期分钟数：-1 自定义天数；0 表示永久（null）
+  const expireMinutes = shareDuration.value === -1
+    ? customDays.value * 1440
+    : shareDuration.value === 0 ? null : shareDuration.value
+  sharing.value = true
+  try {
+    const res = await resumeApi.createShare({ expireMinutes })
+    ElMessage.success('分享链接生成成功')
+    if (res.data) {
+      shareList.value.unshift(res.data)
+    } else {
+      fetchShares()
+    }
+  } catch {
+    // 错误提示由请求拦截器统一处理
+  } finally {
+    sharing.value = false
+  }
+}
+
+const handleRevoke = async (row) => {
+  try {
+    await ElMessageBox.confirm('撤销后该分享链接将立即失效，确定撤销吗？', '提示', { type: 'warning' })
+  } catch {
+    return
+  }
+  try {
+    await resumeApi.revokeShare(row.id)
+    ElMessage.success('已撤销')
+    fetchShares()
+  } catch {
+    // 错误提示由请求拦截器统一处理
+  }
+}
+
 const parseJsonArray = (str) => {
   try {
     return str ? JSON.parse(str) : []
@@ -181,9 +310,11 @@ const parseJsonArray = (str) => {
 
 const fetchResume = async () => {
   try {
-    const res = await articleApi.getMyResume()
+    const res = await resumeApi.getMyResume()
     if (res.data) {
       Object.assign(form, res.data)
+      auditStatus.value = res.data.status ?? 0
+      auditRemark.value = res.data.auditRemark || ''
       skillList.value = parseJsonArray(res.data.skills)
       workList.value = parseJsonArray(res.data.workExperience)
       projectList.value = parseJsonArray(res.data.projects)
@@ -209,7 +340,7 @@ const handleSave = async () => {
   }
   saving.value = true
   try {
-    await articleApi.saveMyResume({
+    await resumeApi.saveMyResume({
       ...form,
       skills: JSON.stringify(skillList.value),
       workExperience: JSON.stringify(workList.value),
@@ -232,6 +363,7 @@ onMounted(() => {
     return
   }
   fetchResume()
+  fetchShares()
 })
 </script>
 
@@ -249,6 +381,54 @@ onMounted(() => {
 
 .view-link {
   color: var(--primary-color);
+}
+
+.audit-remark {
+  margin-left: 10px;
+  color: var(--el-color-danger);
+  font-size: 13px;
+}
+
+.share-card {
+  margin-top: 24px;
+}
+
+.share-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.share-form {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.custom-days-text {
+  margin-left: 6px;
+  color: var(--text-secondary);
+}
+
+.share-subtitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.share-link-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.share-link-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  font-size: 13px;
 }
 
 .dynamic-list {

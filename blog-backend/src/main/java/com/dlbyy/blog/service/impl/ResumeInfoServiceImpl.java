@@ -1,5 +1,7 @@
 package com.dlbyy.blog.service.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dlbyy.blog.entity.ResumeInfo;
 import com.dlbyy.blog.entity.User;
@@ -9,8 +11,13 @@ import com.dlbyy.blog.service.UserService;
 import com.dlbyy.blog.utils.JsoupXssUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +39,9 @@ public class ResumeInfoServiceImpl extends ServiceImpl<ResumeInfoMapper, ResumeI
         resumeInfo.setSummary(JsoupXssUtil.cleanText(resumeInfo.getSummary()));
         resumeInfo.setSelfEvaluation(JsoupXssUtil.cleanText(resumeInfo.getSelfEvaluation()));
         resumeInfo.setInterests(JsoupXssUtil.cleanText(resumeInfo.getInterests()));
+        // 不信任客户端：保存/更新后重置为待审核
+        resumeInfo.setStatus(0);
+        resumeInfo.setAuditRemark(null);
         if (existing != null) {
             resumeInfo.setId(existing.getId());
             resumeInfo.setUpdateTime(now);
@@ -47,5 +57,36 @@ public class ResumeInfoServiceImpl extends ServiceImpl<ResumeInfoMapper, ResumeI
     @Override
     public User getUserByUsername(String username) {
         return userService.getByUsername(username);
+    }
+
+    @Override
+    public IPage<ResumeInfo> pageAll(int page, int size, String keyword, Integer status) {
+        IPage<ResumeInfo> result = lambdaQuery()
+                .isNotNull(ResumeInfo::getUserId)
+                .eq(status != null, ResumeInfo::getStatus, status)
+                .like(StringUtils.hasText(keyword), ResumeInfo::getName, keyword)
+                .orderByDesc(ResumeInfo::getUpdateTime)
+                .page(new Page<>(page, size));
+        // 批量组装 userName
+        List<Long> userIds = result.getRecords().stream()
+                .map(ResumeInfo::getUserId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        if (!userIds.isEmpty()) {
+            Map<Long, String> nameMap = userService.listByIds(userIds).stream()
+                    .collect(Collectors.toMap(User::getId, User::getUsername, (a, b) -> a));
+            result.getRecords().forEach(r -> r.setUserName(nameMap.get(r.getUserId())));
+        }
+        return result;
+    }
+
+    @Override
+    public void audit(Long id, Integer status, String remark) {
+        ResumeInfo update = new ResumeInfo();
+        update.setId(id);
+        update.setStatus(status);
+        update.setAuditRemark(remark);
+        updateById(update);
     }
 }

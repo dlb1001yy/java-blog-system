@@ -74,6 +74,12 @@ const routes = [
         meta: { title: '简历管理', icon: 'User' }
       },
       {
+        path: 'resumeManage',
+        name: 'ResumeManage',
+        component: () => import('@/views/ResumeManage.vue'),
+        meta: { title: '用户简历管理', icon: 'Avatar' }
+      },
+      {
         path: 'link',
         name: 'LinkList',
         component: () => import('@/views/LinkList.vue'),

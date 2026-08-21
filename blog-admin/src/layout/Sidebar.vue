@@ -89,6 +89,7 @@ const menuGroups = computed(() => ([
       getRoute('/link'),
       getRoute('/users'),
       getRoute('/resume'),
+      getRoute('/resumeManage'),
       getRoute('/operation-log'),
       getRoute('/settings')
     ]

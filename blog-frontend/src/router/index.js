@@ -48,6 +48,12 @@ const routes = [
     component: () => import('@/views/Resume.vue')
   },
   {
+    path: '/resume/share/:token',
+    name: 'ResumeShare',
+    meta: { title: '简历' },
+    component: () => import('@/views/Resume.vue')
+  },
+  {
     path: '/resume/:userId',
     name: 'UserResume',
     meta: { requiresAuth: true },

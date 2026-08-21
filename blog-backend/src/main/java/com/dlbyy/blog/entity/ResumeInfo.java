@@ -38,6 +38,13 @@ public class ResumeInfo {
     private String projects;
     private String certificates;
     private String interests;
+    /** 审核状态 0待审核 1通过 2拒绝 */
+    private Integer status;
+    /** 审核备注 */
+    private String auditRemark;
+    /** 用户名（非表字段，管理端分页组装） */
+    @TableField(exist = false)
+    private String userName;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
     @TableField(fill = FieldFill.INSERT_UPDATE)
