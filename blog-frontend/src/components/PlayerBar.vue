@@ -4,7 +4,10 @@
       <div class="player-inner">
         <!-- 左：封面 + 信息 -->
         <div class="song-info">
-          <img :src="player.currentSong.cover" alt="cover" class="cover" @error="onCoverError" />
+          <img v-if="player.currentSong.cover" :src="player.currentSong.cover" alt="cover" class="cover" @error="onCoverError" />
+          <div v-else class="cover cover-placeholder">
+            <el-icon :size="20"><Headset /></el-icon>
+          </div>
           <div class="meta">
             <div class="title">{{ player.currentSong.title }}</div>
             <div class="artist">{{ player.currentSong.artist }}</div>
@@ -209,6 +212,14 @@ const onCoverError = (e) => {
   border-radius: var(--radius-sm);
   object-fit: cover;
   background: var(--bg-color);
+}
+
+.cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary-color), #9b59b6);
 }
 
 .meta {

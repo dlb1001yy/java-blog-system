@@ -13,8 +13,11 @@ public interface MusicSongService extends IService<MusicSong> {
 
     /**
      * 上传音频文件并保存歌曲（仅支持 mp3，大小 ≤ 20MB；duration 不解析，允许为空）
+     *
+     * @param lyric 歌词（可为空）
+     * @param cover 封面 URL（可为空；为空时自动生成渐变封面）
      */
-    MusicSong uploadAndSave(MultipartFile file, String title, String artist, String album);
+    MusicSong uploadAndSave(MultipartFile file, String title, String artist, String album, String lyric, String cover);
 
     /**
      * 管理端保存（id 为空新增，否则更新；上传后传入 fileUrl/size/format 元数据）

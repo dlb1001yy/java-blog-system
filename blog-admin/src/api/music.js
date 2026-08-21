@@ -3,17 +3,28 @@ import request from './request'
 export default {
   // ---------------- 歌曲 ----------------
 
-  // 上传音频文件（file + title/artist/album/lyric）
-  uploadSong(file, title, artist, album, lyric) {
+  // 上传音频文件（file + title/artist/album/lyric/cover）
+  uploadSong(file, title, artist, album, lyric, cover) {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('title', title)
     if (artist) formData.append('artist', artist)
     if (album) formData.append('album', album)
     if (lyric) formData.append('lyric', lyric)
+    if (cover) formData.append('cover', cover)
     return request.post('/admin/music/songs/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 120000
+    })
+  },
+
+  // 解析 MP3 内嵌歌词（ID3v2 USLT）
+  parseLyric(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return request.post('/admin/music/songs/parse-lyric', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000
     })
   },
 

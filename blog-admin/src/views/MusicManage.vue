@@ -14,7 +14,7 @@
       <el-tab-pane label="歌曲管理" name="songs">
         <div class="table-card">
           <div class="toolbar">
-            <el-button type="primary" :icon="Upload" @click="openUploadDialog">上传音乐</el-button>
+            <el-button type="primary" :icon="UploadIcon" @click="openUploadDialog">上传音乐</el-button>
             <el-input
               v-model="songKeyword"
               placeholder="搜索歌名/歌手/专辑"
@@ -218,13 +218,32 @@
           <el-input v-model="uploadForm.album" placeholder="请输入专辑" />
         </el-form-item>
         <el-form-item label="歌词">
+          <div class="lyric-toolbar">
+            <el-button
+              size="small"
+              type="primary"
+              plain
+              :disabled="!uploadForm.file"
+              :loading="parsingLyric"
+              @click="handleParseLyric"
+            >
+              解析歌词
+            </el-button>
+            <span class="lyric-tip">从 mp3 内嵌歌词解析；未解析到可手工填写</span>
+          </div>
           <el-input
             v-model="uploadForm.lyric"
             type="textarea"
             :rows="4"
             class="lyric-textarea"
-            placeholder="请输入歌词（LRC 格式，可选），如：[00:12.00]第一句歌词"
+            placeholder="点击「解析歌词」自动回填，或手工输入（LRC 格式），如：[00:12.00]第一句歌词"
           />
+        </el-form-item>
+        <el-form-item label="封面">
+          <div class="cover-field">
+            <Upload v-model="uploadForm.cover" placeholder="上传封面" />
+            <div class="cover-tip">留空上传时将根据歌名自动生成封面</div>
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -253,6 +272,9 @@
             class="lyric-textarea"
             placeholder="请输入歌词（LRC 格式）"
           />
+        </el-form-item>
+        <el-form-item label="封面">
+          <Upload v-model="songEditForm.cover" placeholder="上传封面" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -316,8 +338,9 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Search, Upload, UploadFilled, Headset, List } from '@element-plus/icons-vue'
+import { Plus, Search, Upload as UploadIcon, UploadFilled, Headset, List } from '@element-plus/icons-vue'
 import PageContainer from '@/components/PageContainer.vue'
+import Upload from '@/components/Upload.vue'
 import musicApi from '@/api/music'
 
 const activeTab = ref('songs')
@@ -382,7 +405,8 @@ const formatSize = (bytes) => {
 const uploadDialogVisible = ref(false)
 const uploading = ref(false)
 const uploadFileList = ref([])
-const uploadForm = reactive({ file: null, title: '', artist: '', album: '', lyric: '' })
+const uploadForm = reactive({ file: null, title: '', artist: '', album: '', lyric: '', cover: '' })
+const parsingLyric = ref(false)
 
 const openUploadDialog = () => {
   uploadForm.file = null
@@ -390,6 +414,7 @@ const openUploadDialog = () => {
   uploadForm.artist = ''
   uploadForm.album = ''
   uploadForm.lyric = ''
+  uploadForm.cover = ''
   uploadFileList.value = []
   uploadDialogVisible.value = true
 }
@@ -420,6 +445,22 @@ const handleFileChange = (file) => {
   }
 }
 
+const handleParseLyric = async () => {
+  if (!uploadForm.file) return
+  parsingLyric.value = true
+  try {
+    const res = await musicApi.parseLyric(uploadForm.file)
+    if (res.data) {
+      uploadForm.lyric = res.data
+      ElMessage.success('歌词解析成功')
+    } else {
+      ElMessage.warning('未解析到内嵌歌词，请手工填写')
+    }
+  } finally {
+    parsingLyric.value = false
+  }
+}
+
 const handleUpload = async () => {
   if (!uploadForm.file) {
     ElMessage.warning('请先选择音频文件')
@@ -431,7 +472,7 @@ const handleUpload = async () => {
   }
   uploading.value = true
   try {
-    await musicApi.uploadSong(uploadForm.file, uploadForm.title.trim(), uploadForm.artist.trim(), uploadForm.album.trim(), uploadForm.lyric)
+    await musicApi.uploadSong(uploadForm.file, uploadForm.title.trim(), uploadForm.artist.trim(), uploadForm.album.trim(), uploadForm.lyric, uploadForm.cover)
     ElMessage.success('上传成功')
     uploadDialogVisible.value = false
     fetchSongs()
@@ -444,7 +485,7 @@ const handleUpload = async () => {
 // 编辑歌曲
 const songEditVisible = ref(false)
 const songSaving = ref(false)
-const songEditForm = reactive({ id: null, title: '', artist: '', album: '', lyric: '' })
+const songEditForm = reactive({ id: null, title: '', artist: '', album: '', lyric: '', cover: '' })
 
 const openSongEdit = (row) => {
   songEditForm.id = row.id
@@ -452,6 +493,7 @@ const openSongEdit = (row) => {
   songEditForm.artist = row.artist || ''
   songEditForm.album = row.album || ''
   songEditForm.lyric = row.lyric || ''
+  songEditForm.cover = row.cover || ''
   songEditVisible.value = true
 }
 
@@ -466,7 +508,8 @@ const handleSongSave = async () => {
       title: songEditForm.title.trim(),
       artist: songEditForm.artist.trim(),
       album: songEditForm.album.trim(),
-      lyric: songEditForm.lyric || null
+      lyric: songEditForm.lyric || null,
+      cover: songEditForm.cover || null
     })
     ElMessage.success('保存成功')
     songEditVisible.value = false
@@ -720,6 +763,31 @@ onMounted(() => {
   font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
   font-size: 13px;
   line-height: 1.6;
+}
+
+.lyric-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.lyric-tip {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.cover-field {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.cover-tip {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding-bottom: 4px;
 }
 
 .song-check-item {

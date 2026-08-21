@@ -94,6 +94,77 @@ public class CoverImageGenerator {
     }
 
     /**
+     * 生成正方形歌曲封面（渐变背景 + 歌名 + 歌手），保存后返回 URL
+     */
+    public String generateSquare(String title, String artist, int size) {
+        if (title == null || title.isBlank()) {
+            title = "未知歌曲";
+        }
+        try {
+            BufferedImage image = new BufferedImage(size, size, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = image.createGraphics();
+            try {
+                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                // 根据歌名哈希选取渐变基色，保证不同歌曲封面观感有差异
+                int hue = Math.abs(title.hashCode()) % 360;
+                Color c1 = Color.getHSBColor(hue / 360f, 0.55f, 0.62f);
+                Color c2 = Color.getHSBColor(((hue + 70) % 360) / 360f, 0.6f, 0.42f);
+                g.setPaint(new GradientPaint(0, 0, c1, size, size, c2));
+                g.fillRect(0, 0, size, size);
+
+                int titleFontSize = Math.max(28, size / 12);
+                g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, titleFontSize));
+                g.setColor(Color.WHITE);
+                FontMetrics fm = g.getFontMetrics();
+                List<String> lines = wrapByWidth(title, fm, size - size / 10, 2);
+                int lineHeight = fm.getHeight();
+                boolean hasArtist = artist != null && !artist.isBlank();
+                int artistFontSize = Math.max(16, size / 22);
+                int blockHeight = lines.size() * lineHeight + (hasArtist ? artistFontSize + 12 : 0);
+                int startY = (size - blockHeight) / 2 + fm.getAscent();
+                for (int i = 0; i < lines.size(); i++) {
+                    String line = lines.get(i);
+                    g.drawString(line, (size - fm.stringWidth(line)) / 2, startY + i * lineHeight);
+                }
+                if (hasArtist) {
+                    g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, artistFontSize));
+                    fm = g.getFontMetrics();
+                    int ay = startY + lines.size() * lineHeight + 4;
+                    g.drawString(artist, (size - fm.stringWidth(artist)) / 2, ay);
+                }
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ImageIO.write(image, "png", baos);
+                return fileStorageService.saveBytes(baos.toByteArray(), "png", "image/png", null).getUrl();
+            } finally {
+                g.dispose();
+            }
+        } catch (Exception e) {
+            log.error("歌曲封面生成失败", e);
+            throw new BusinessException("歌曲封面生成失败");
+        }
+    }
+
+    /** 按像素宽度换行，最多 maxLines 行，超出截断加 … */
+    private List<String> wrapByWidth(String text, FontMetrics fm, int maxWidth, int maxLines) {
+        List<String> lines = new ArrayList<>();
+        int pos = 0;
+        while (pos < text.length() && lines.size() < maxLines) {
+            int end = text.length();
+            while (end > pos + 1 && fm.stringWidth(text.substring(pos, end)) > maxWidth) {
+                end--;
+            }
+            if (lines.size() == maxLines - 1 && end < text.length()) {
+                lines.add(text.substring(pos, end) + "…");
+                return lines;
+            }
+            lines.add(text.substring(pos, end));
+            pos = end;
+        }
+        return lines;
+    }
+
+    /**
      * 标题按字符数自动换行，最多 3 行，每行约 18 字符，超出截断加 …
      */
     private List<String> wrapTitle(String title, FontMetrics fm) {

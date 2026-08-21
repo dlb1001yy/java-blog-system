@@ -3,7 +3,10 @@
     <!-- Now Playing Banner -->
     <div class="card now-playing">
       <template v-if="player.currentSong">
-        <img :src="player.currentSong.cover" alt="cover" class="np-cover" />
+        <img v-if="player.currentSong.cover" :src="player.currentSong.cover" alt="cover" class="np-cover" />
+        <div v-else class="np-cover np-cover-placeholder">
+          <el-icon :size="40"><Headset /></el-icon>
+        </div>
         <div class="np-info">
           <div class="np-label">正在播放</div>
           <div class="np-title">{{ player.currentSong.title }}</div>
@@ -82,7 +85,10 @@
         <el-table-column label="歌曲">
           <template #default="{ row }">
             <div class="song-cell">
-              <img :src="row.cover" alt="" class="song-cover" />
+              <img v-if="row.cover" :src="row.cover" alt="" class="song-cover" />
+              <div v-else class="song-cover song-cover-placeholder">
+                <el-icon :size="14"><Headset /></el-icon>
+              </div>
               <span class="song-title" :class="{ active: isCurrentSong(row) }">{{ row.title }}</span>
             </div>
           </template>
@@ -123,7 +129,10 @@
       <div class="playlists">
         <div v-for="pl in playlists" :key="pl.id" class="playlist-item" @click="loadPlaylist(pl)">
           <div class="playlist-cover">
-            <img :src="pl.cover" alt="" />
+            <img v-if="pl.cover" :src="pl.cover" alt="" />
+            <div v-else class="playlist-cover playlist-cover-placeholder">
+              <el-icon :size="24"><Headset /></el-icon>
+            </div>
             <span class="playlist-count">{{ pl.songCount }} 首</span>
           </div>
           <div class="playlist-name">{{ pl.name }}</div>
@@ -302,6 +311,14 @@ onMounted(() => {
   box-shadow: var(--shadow-light);
 }
 
+.np-cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary-color), #9b59b6);
+}
+
 .np-info {
   flex: 1;
   min-width: 0;
@@ -467,6 +484,15 @@ onMounted(() => {
   background: var(--bg-color);
 }
 
+.song-cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary-color), #9b59b6);
+  flex-shrink: 0;
+}
+
 .song-title {
   font-weight: 500;
   color: var(--text-primary);
@@ -528,6 +554,14 @@ onMounted(() => {
   background: var(--bg-color);
   box-shadow: var(--shadow-light);
   transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.playlist-cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary-color), #9b59b6);
 }
 
 .playlist-item:hover .playlist-cover {

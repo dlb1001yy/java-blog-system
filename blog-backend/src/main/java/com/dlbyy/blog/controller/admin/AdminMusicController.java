@@ -8,6 +8,7 @@ import com.dlbyy.blog.entity.MusicPlaylist;
 import com.dlbyy.blog.entity.MusicSong;
 import com.dlbyy.blog.service.MusicPlaylistService;
 import com.dlbyy.blog.service.MusicSongService;
+import com.dlbyy.blog.utils.Mp3LyricParser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -34,14 +35,23 @@ public class AdminMusicController {
 
     @PostMapping("/songs/upload")
     @Admin("上传歌曲")
-    @Operation(summary = "上传音频文件并保存歌曲（file + title/artist/album）")
-    public Result<Long> upload(@RequestParam("file") MultipartFile file,
-                               @RequestParam String title,
-                               @RequestParam(required = false) String artist,
-                               @RequestParam(required = false) String album) {
+    @Operation(summary = "上传音频文件并保存歌曲（file + title/artist/album/lyric/cover）")
+    public Result<MusicSong> upload(@RequestParam("file") MultipartFile file,
+                                    @RequestParam String title,
+                                    @RequestParam(required = false) String artist,
+                                    @RequestParam(required = false) String album,
+                                    @RequestParam(required = false) String lyric,
+                                    @RequestParam(required = false) String cover) {
         // 统一走 Service 层上传（内置 mp3 格式与 20MB 大小校验），不走通用 FileUtils（其限制为图片/5MB）
-        MusicSong song = musicSongService.uploadAndSave(file, title, artist, album);
-        return Result.success("上传成功", song.getId());
+        MusicSong song = musicSongService.uploadAndSave(file, title, artist, album, lyric, cover);
+        return Result.success("上传成功", song);
+    }
+
+    @PostMapping("/songs/parse-lyric")
+    @Admin("解析歌词")
+    @Operation(summary = "解析 MP3 内嵌歌词（ID3v2 USLT），无歌词返回空")
+    public Result<String> parseLyric(@RequestParam("file") MultipartFile file) {
+        return Result.success(Mp3LyricParser.parse(file));
     }
 
     @GetMapping("/songs")

@@ -7,7 +7,9 @@ import com.dlbyy.blog.mapper.MusicSongMapper;
 import com.dlbyy.blog.service.MusicSongService;
 import com.dlbyy.blog.storage.FileStorageService;
 import com.dlbyy.blog.storage.FileUploadResult;
+import com.dlbyy.blog.utils.CoverImageGenerator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,17 +21,19 @@ import java.util.Map;
 /**
  * 歌曲服务实现
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MusicSongServiceImpl extends ServiceImpl<MusicSongMapper, MusicSong> implements MusicSongService {
 
     private final FileStorageService fileStorageService;
+    private final CoverImageGenerator coverImageGenerator;
 
     /** mp3 大小上限：20MB */
     private static final long MAX_AUDIO_SIZE = 20L * 1024 * 1024;
 
     @Override
-    public MusicSong uploadAndSave(MultipartFile file, String title, String artist, String album) {
+    public MusicSong uploadAndSave(MultipartFile file, String title, String artist, String album, String lyric, String cover) {
         if (file == null || file.isEmpty()) {
             throw new BusinessException("音频文件不能为空");
         }
@@ -61,6 +65,17 @@ public class MusicSongServiceImpl extends ServiceImpl<MusicSongMapper, MusicSong
         song.setFormat("mp3");
         song.setFileSize(file.getSize());
         song.setPlayCount(0);
+        song.setLyric(lyric);
+        // 未提供封面时自动生成渐变封面（歌名+歌手）
+        if (cover == null || cover.isBlank()) {
+            try {
+                cover = coverImageGenerator.generateSquare(title.trim(), artist, 500);
+            } catch (Exception e) {
+                log.warn("自动生成歌曲封面失败：{}", e.getMessage());
+                cover = null;
+            }
+        }
+        song.setCover(cover);
         this.save(song);
         return song;
     }
