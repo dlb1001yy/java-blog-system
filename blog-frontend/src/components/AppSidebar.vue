@@ -58,13 +58,34 @@
         </el-tag>
       </div>
     </div>
+
+    <!-- 归档 -->
+    <div class="card">
+      <h4 class="sidebar-title">
+        <el-icon><Calendar /></el-icon> 归档
+      </h4>
+      <div class="archive-years">
+        <!-- 按年份折叠，默认展开最近一年 -->
+        <div v-for="(year, index) in archiveYears" :key="year.year" class="archive-year">
+          <div class="archive-year-header" @click="year.open = !year.open">
+            <el-icon class="arrow" :class="{ expanded: year.open }"><ArrowRight /></el-icon>
+            <span class="year-text">{{ year.year }}年 ({{ year.count }}篇)</span>
+          </div>
+          <ul v-show="year.open" class="archive-months">
+            <li v-for="m in year.months" :key="m.month" @click="goArchive(m.year, m.month)">
+              {{ m.year }}年{{ String(m.month).padStart(2, '0') }}月 ({{ m.count }}篇)
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Star, Clock, Folder, PriceTag } from '@element-plus/icons-vue'
+import { Star, Clock, Folder, PriceTag, Calendar, ArrowRight } from '@element-plus/icons-vue'
 import articleApi from '@/api/article'
 
 const router = useRouter()
@@ -72,10 +93,14 @@ const hotArticles = ref([])
 const latestArticles = ref([])
 const categories = ref([])
 const tags = ref([])
+// 归档数据：按年份分组，每年含各月篇数
+const archiveYears = ref([])
 
 const goDetail = (id) => router.push(`/article/${id}`)
 const goCategory = (id) => router.push(`/category/${id}`)
 const goTag = (id) => router.push(`/tags?tagId=${id}`)
+// 跳转归档页
+const goArchive = (year, month) => router.push({ path: '/archives', query: { year, month } })
 
 onMounted(async () => {
   try {
@@ -91,6 +116,30 @@ onMounted(async () => {
     tags.value = tagRes.data || []
   } catch (error) {
     console.error('加载侧边栏数据失败', error)
+  }
+  // 单独加载归档数据，失败不影响其他模块
+  try {
+    const res = await articleApi.getArchives()
+    const groups = res.data || []
+    // 归档接口返回按月分组（month: 'YYYY-MM'），前端再按年份分组
+    const yearMap = new Map()
+    groups.forEach(g => {
+      if (!g.month) return
+      const [y, m] = g.month.split('-').map(Number)
+      if (!y || !m) return
+      if (!yearMap.has(y)) yearMap.set(y, { year: y, count: 0, months: [], open: false })
+      const yearItem = yearMap.get(y)
+      yearItem.months.push({ year: y, month: m, count: g.count || (g.articles ? g.articles.length : 0) })
+      yearItem.count += g.count || (g.articles ? g.articles.length : 0)
+    })
+    // 年份倒序、每年月份倒序，默认展开最近一年
+    archiveYears.value = [...yearMap.values()].sort((a, b) => b.year - a.year)
+    archiveYears.value.forEach((y, i) => {
+      y.months.sort((a, b) => b.month - a.month)
+      y.open = i === 0
+    })
+  } catch (error) {
+    console.error('加载归档数据失败', error)
   }
 })
 </script>
@@ -133,5 +182,41 @@ onMounted(async () => {
 }
 .tag-item {
   cursor: pointer;
+}
+/* 归档模块样式 */
+.archive-year-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-regular);
+  cursor: pointer;
+}
+.archive-year-header .arrow {
+  transition: transform 0.3s;
+  font-size: 12px;
+}
+.archive-year-header .arrow.expanded {
+  transform: rotate(90deg);
+}
+.archive-year-header:hover {
+  color: var(--primary-color);
+}
+.archive-months {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 4px 18px;
+}
+.archive-months li {
+  padding: 6px 0;
+  font-size: 13px;
+  color: var(--text-regular);
+  cursor: pointer;
+  transition: color 0.3s;
+}
+.archive-months li:hover {
+  color: var(--primary-color);
 }
 </style>

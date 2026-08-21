@@ -65,6 +65,12 @@ const routes = [
     component: () => import('@/views/About.vue')
   },
   {
+    path: '/about-site',
+    name: 'AboutSite',
+    meta: { title: '关于站点' },
+    component: () => import('@/views/AboutSite.vue')
+  },
+  {
     path: '/interview',
     name: 'Interview',
     meta: { title: '面试刷题', requiresAuth: true },

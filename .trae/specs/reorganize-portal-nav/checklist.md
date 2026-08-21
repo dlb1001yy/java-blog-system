@@ -1,0 +1,5 @@
+- [x] AppHeader 不再显示 分类/标签/归档/留言/关于 五个菜单项，含「关于站点」入口
+- [x] 文章列表页右侧栏：标签下方有归档模块，按年月分组显示文章数，点击可筛选，样式与现有卡片协调
+- [x] /about-site 页面同时承载"关于我"与"留言板"，布局合理、样式美观
+- [x] 老路由 /category /tags /archives /message-board /about 未删除、可正常访问
+- [x] blog-frontend npm run build 通过
