@@ -5,9 +5,11 @@ import com.dlbyy.blog.common.exception.BusinessException;
 import com.dlbyy.blog.entity.MusicSong;
 import com.dlbyy.blog.mapper.MusicSongMapper;
 import com.dlbyy.blog.service.MusicSongService;
+import com.dlbyy.blog.service.OnlineLyricService;
 import com.dlbyy.blog.storage.FileStorageService;
 import com.dlbyy.blog.storage.FileUploadResult;
 import com.dlbyy.blog.utils.CoverImageGenerator;
+import com.dlbyy.blog.utils.Mp3LyricParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,7 @@ public class MusicSongServiceImpl extends ServiceImpl<MusicSongMapper, MusicSong
 
     private final FileStorageService fileStorageService;
     private final CoverImageGenerator coverImageGenerator;
+    private final OnlineLyricService onlineLyricService;
 
     /** mp3 大小上限：20MB */
     private static final long MAX_AUDIO_SIZE = 20L * 1024 * 1024;
@@ -65,7 +68,14 @@ public class MusicSongServiceImpl extends ServiceImpl<MusicSongMapper, MusicSong
         song.setFormat("mp3");
         song.setFileSize(file.getSize());
         song.setPlayCount(0);
-        song.setLyric(lyric);
+        // 歌词兜底：未提供时先解析 MP3 内嵌歌词，再按歌名+歌手在线匹配 LRC
+        if (lyric == null || lyric.isBlank()) {
+            lyric = Mp3LyricParser.parse(file);
+            if (lyric == null || lyric.isBlank()) {
+                lyric = onlineLyricService.fetchLrc(title.trim(), artist);
+            }
+        }
+        song.setLyric((lyric == null || lyric.isBlank()) ? null : lyric);
         // 未提供封面时自动生成渐变封面（歌名+歌手）
         if (cover == null || cover.isBlank()) {
             try {

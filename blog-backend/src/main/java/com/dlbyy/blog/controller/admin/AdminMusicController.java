@@ -8,6 +8,7 @@ import com.dlbyy.blog.entity.MusicPlaylist;
 import com.dlbyy.blog.entity.MusicSong;
 import com.dlbyy.blog.service.MusicPlaylistService;
 import com.dlbyy.blog.service.MusicSongService;
+import com.dlbyy.blog.service.OnlineLyricService;
 import com.dlbyy.blog.utils.Mp3LyricParser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,6 +31,7 @@ public class AdminMusicController {
 
     private final MusicSongService musicSongService;
     private final MusicPlaylistService musicPlaylistService;
+    private final OnlineLyricService onlineLyricService;
 
     // ---------------- 歌曲 ----------------
 
@@ -49,9 +51,19 @@ public class AdminMusicController {
 
     @PostMapping("/songs/parse-lyric")
     @Admin("解析歌词")
-    @Operation(summary = "解析 MP3 内嵌歌词（ID3v2 USLT），无歌词返回空")
-    public Result<String> parseLyric(@RequestParam("file") MultipartFile file) {
-        return Result.success(Mp3LyricParser.parse(file));
+    @Operation(summary = "解析歌词：优先 MP3 内嵌（ID3v2 USLT），无内嵌时按歌名+歌手在线匹配 LRC")
+    public Result<String> parseLyric(@RequestParam("file") MultipartFile file,
+                                     @RequestParam(required = false) String title,
+                                     @RequestParam(required = false) String artist) {
+        String embedded = Mp3LyricParser.parse(file);
+        if (embedded != null && !embedded.isBlank()) {
+            return Result.success("内嵌歌词", embedded);
+        }
+        String online = onlineLyricService.fetchLrc(title, artist);
+        if (online != null) {
+            return Result.success("在线匹配", online);
+        }
+        return Result.success("未找到歌词", null);
     }
 
     @GetMapping("/songs")

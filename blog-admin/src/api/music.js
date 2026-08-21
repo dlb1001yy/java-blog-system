@@ -18,10 +18,12 @@ export default {
     })
   },
 
-  // 解析 MP3 内嵌歌词（ID3v2 USLT）
-  parseLyric(file) {
+  // 解析歌词：优先 MP3 内嵌（ID3v2 USLT），无内嵌时按歌名+歌手在线匹配 LRC
+  parseLyric(file, title, artist) {
     const formData = new FormData()
     formData.append('file', file)
+    if (title) formData.append('title', title)
+    if (artist) formData.append('artist', artist)
     return request.post('/admin/music/songs/parse-lyric', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 60000

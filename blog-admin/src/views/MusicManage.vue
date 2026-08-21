@@ -449,12 +449,12 @@ const handleParseLyric = async () => {
   if (!uploadForm.file) return
   parsingLyric.value = true
   try {
-    const res = await musicApi.parseLyric(uploadForm.file)
+    const res = await musicApi.parseLyric(uploadForm.file, uploadForm.title.trim(), uploadForm.artist.trim())
     if (res.data) {
       uploadForm.lyric = res.data
-      ElMessage.success('歌词解析成功')
+      ElMessage.success(`歌词解析成功（${res.message || '解析'}）`)
     } else {
-      ElMessage.warning('未解析到内嵌歌词，请手工填写')
+      ElMessage.warning('内嵌与在线均未匹配到歌词，可手工填写；不影响上传与封面自动生成')
     }
   } finally {
     parsingLyric.value = false

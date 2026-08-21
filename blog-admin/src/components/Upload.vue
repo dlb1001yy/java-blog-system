@@ -28,6 +28,7 @@
 import { computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
+import { signRequest } from '@/api/signing'
 
 const props = defineProps({
   modelValue: {
@@ -58,9 +59,16 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'success', 'remove'])
 
-const headers = computed(() => ({
-  Authorization: `Bearer ${localStorage.getItem('admin_token')}`
-}))
+// el-upload 走自身 XHR，不经过 axios 拦截器，需手动附加 token 与请求签名头
+const headers = computed(() => {
+  const { timestamp, nonce, signature } = signRequest('POST', props.action)
+  return {
+    Authorization: `Bearer ${localStorage.getItem('admin_token')}`,
+    'X-Timestamp': timestamp,
+    'X-Nonce': nonce,
+    'X-Signature': signature
+  }
+})
 
 const beforeUpload = (file) => {
   const isLtMaxSize = file.size / 1024 / 1024 < props.maxSize
