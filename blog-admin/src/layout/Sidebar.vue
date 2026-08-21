@@ -1,33 +1,53 @@
 <template>
-  <el-menu
-    :default-active="activeMenu"
-    :collapse="isCollapse"
-    background-color="transparent"
-    text-color="rgba(255,255,255,0.65)"
-    active-text-color="#FFFFFF"
-    router
-    class="sidebar-menu"
-  >
-    <template v-for="group in menuGroups" :key="group.label">
-      <div v-if="!isCollapse" class="menu-group-title">{{ group.label }}</div>
-      <template v-for="item in group.items" :key="item.path">
-        <el-menu-item :index="item.path">
-          <el-icon v-if="item.icon">
-            <component :is="item.icon" />
+  <el-scrollbar class="menu-scrollbar">
+    <el-menu
+      :default-active="activeMenu"
+      :collapse="isCollapse"
+      background-color="transparent"
+      text-color="rgba(255,255,255,0.65)"
+      active-text-color="#FFFFFF"
+      router
+      class="sidebar-menu"
+      :unique-opened="false"
+    >
+      <template v-for="group in menuGroups" :key="group.label">
+        <!-- 无子菜单的顶层项（概览） -->
+        <el-menu-item v-if="!group.items || group.items.length <= 1" :index="group.items[0].path">
+          <el-icon v-if="group.items[0].icon">
+            <component :is="group.items[0].icon" />
           </el-icon>
           <template #title>
-            <span>{{ item.title }}</span>
-            <el-badge
-              v-if="item.path === '/marking' && pendingMarkingCount > 0"
-              :value="pendingMarkingCount"
-              :max="99"
-              class="menu-badge"
-            />
+            <span>{{ group.items[0].title }}</span>
           </template>
         </el-menu-item>
+        <!-- 可折叠分组 -->
+        <el-sub-menu v-else :index="group.label">
+          <template #title>
+            <el-icon v-if="group.icon">
+              <component :is="group.icon" />
+            </el-icon>
+            <span>{{ group.label }}</span>
+          </template>
+          <template v-for="item in group.items" :key="item.path">
+            <el-menu-item :index="item.path">
+              <el-icon v-if="item.icon">
+                <component :is="item.icon" />
+              </el-icon>
+              <template #title>
+                <span>{{ item.title }}</span>
+                <el-badge
+                  v-if="item.path === '/marking' && pendingMarkingCount > 0"
+                  :value="pendingMarkingCount"
+                  :max="99"
+                  class="menu-badge"
+                />
+              </template>
+            </el-menu-item>
+          </template>
+        </el-sub-menu>
       </template>
-    </template>
-  </el-menu>
+    </el-menu>
+  </el-scrollbar>
 </template>
 
 <script setup>
@@ -65,6 +85,7 @@ const menuGroups = computed(() => ([
   { label: '概览', items: [getRoute('/dashboard')] },
   {
     label: '内容管理',
+    icon: 'Files',
     items: [
       getRoute('/article'),
       getRoute('/category'),
@@ -75,6 +96,7 @@ const menuGroups = computed(() => ([
   },
   {
     label: '考试管理',
+    icon: 'Tickets',
     items: [
       getRoute('/exam-questions'),
       getRoute('/exam-papers'),
@@ -83,6 +105,7 @@ const menuGroups = computed(() => ([
   },
   {
     label: '系统管理',
+    icon: 'Setting',
     items: [
       getRoute('/comment'),
       getRoute('/message'),
@@ -112,36 +135,38 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.menu-scrollbar {
+  flex: 1;
+  min-height: 0;
+}
+
 .sidebar-menu {
-  height: 100%;
   border-right: none;
   padding: var(--space-2);
+  width: 100%;
 }
 
 .sidebar-menu:not(.el-menu--collapse) {
   width: 220px;
 }
 
-.menu-group-title {
-  padding: var(--space-3) var(--space-3) var(--space-1);
-  font-size: var(--font-xs);
-  color: rgba(255, 255, 255, 0.35);
-  letter-spacing: 0.05em;
-}
-
-.menu-group-title:not(:first-child) {
-  margin-top: var(--space-3);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: var(--space-3);
-}
-
-:deep(.el-menu-item) {
+:deep(.el-menu-item),
+:deep(.el-sub-menu__title) {
   border-radius: var(--radius-md);
   margin-bottom: var(--space-1);
   height: 44px;
   line-height: 44px;
   color: rgba(255, 255, 255, 0.65);
   transition: all var(--transition-base);
+}
+
+:deep(.el-sub-menu .el-menu) {
+  background: transparent;
+}
+
+:deep(.el-sub-menu__title:hover) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
 }
 
 :deep(.el-menu-item:hover) {

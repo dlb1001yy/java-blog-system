@@ -52,6 +52,8 @@ const appStore = useAppStore()
   transition: width 0.3s;
   overflow: hidden;
   box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
 }
 
 .logo {
