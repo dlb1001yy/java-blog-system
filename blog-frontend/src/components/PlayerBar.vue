@@ -50,7 +50,13 @@
               <el-icon :size="16"><Sort /></el-icon>
             </el-button>
           </el-tooltip>
-          <el-icon class="volume-icon" :size="16"><Headset /></el-icon>
+          <el-tooltip :content="player.volume === 0 ? '取消静音' : '静音'" placement="top">
+            <el-button circle text class="ctrl-btn" @click="toggleMute">
+              <el-icon :size="16">
+                <component :is="player.volume === 0 ? 'Mute' : 'Headset'" />
+              </el-icon>
+            </el-button>
+          </el-tooltip>
           <input
             type="range"
             min="0"
@@ -58,8 +64,37 @@
             step="0.01"
             :value="player.volume"
             class="volume-slider"
-            @input="player.setVolume(Number($event.target.value))"
+            @input="onVolumeInput"
           />
+          <!-- 播放列表 -->
+          <el-popover placement="top-end" :width="320" trigger="click" popper-class="playlist-popover">
+            <template #reference>
+              <el-tooltip content="播放列表" placement="top">
+                <el-button circle text class="ctrl-btn">
+                  <el-icon :size="16"><List /></el-icon>
+                </el-button>
+              </el-tooltip>
+            </template>
+            <div class="playlist">
+              <div class="playlist-scroll">
+                <div
+                  v-for="(song, index) in player.playlist"
+                  :key="song.id || index"
+                  class="playlist-item"
+                  :class="{ current: index === player.currentIndex }"
+                  @click="player.playAt(index)"
+                >
+                  <span class="pl-index">
+                    <el-icon v-if="index === player.currentIndex" :size="12"><Headset /></el-icon>
+                    <template v-else>{{ index + 1 }}</template>
+                  </span>
+                  <span class="pl-title">{{ song.title }}</span>
+                  <span class="pl-artist">{{ song.artist }}</span>
+                </div>
+              </div>
+              <div class="playlist-footer">共 {{ player.playlist.length }} 首</div>
+            </div>
+          </el-popover>
         </div>
       </div>
     </div>
@@ -68,12 +103,28 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
+import { ArrowLeft, ArrowRight, List, Headset } from '@element-plus/icons-vue'
 import { usePlayerStore } from '@/stores/player'
 
 const player = usePlayerStore()
 const progressRef = ref(null)
 const dragging = ref(false)
+const lastVolume = ref(0.8)
+
+const onVolumeInput = (e) => {
+  const v = Number(e.target.value)
+  if (v > 0) lastVolume.value = v
+  player.setVolume(v)
+}
+
+const toggleMute = () => {
+  if (player.volume === 0) {
+    player.setVolume(lastVolume.value || 0.8)
+  } else {
+    lastVolume.value = player.volume
+    player.setVolume(0)
+  }
+}
 
 const progressPercent = computed(() => {
   if (!player.duration) return 0
@@ -287,6 +338,71 @@ const onCoverError = (e) => {
   width: 90px;
   accent-color: var(--primary-color);
   cursor: pointer;
+}
+
+.playlist {
+  display: flex;
+  flex-direction: column;
+}
+
+.playlist-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.playlist-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.playlist-item:hover {
+  background: var(--bg-color, #f5f7fa);
+}
+
+.playlist-item.current .pl-title {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.pl-index {
+  width: 20px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 12px;
+}
+
+.playlist-item.current .pl-index {
+  color: var(--primary-color);
+}
+
+.pl-title {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+
+.pl-artist {
+  color: var(--text-secondary);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.playlist-footer {
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid var(--border-color, #ebeef5);
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
 }
 
 .player-slide-enter-active,

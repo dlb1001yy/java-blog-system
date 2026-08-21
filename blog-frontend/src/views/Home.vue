@@ -87,49 +87,19 @@
             查看全部 →
           </el-button>
         </div>
-        <div class="layout">
-          <!-- 主内容 -->
-          <div class="main-content">
-            <!-- Tabs -->
-            <div class="card tab-card">
-              <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-                <el-tab-pane label="全部" name="all" />
-                <el-tab-pane label="原创" name="original" />
-                <el-tab-pane label="转载" name="reproduced" />
-                <el-tab-pane label="翻译" name="translated" />
-              </el-tabs>
-            </div>
-
-            <template v-if="loading">
-              <SkeletonCard v-for="n in 3" :key="n" />
-            </template>
-            <template v-else>
-              <!-- 文章列表 -->
-              <ArticleCard
-                v-for="article in articleList"
-                :key="article.id"
-                :article="article"
-              />
-            </template>
-
-            <!-- 分页 -->
-            <div class="pagination" v-if="total > 0">
-              <el-pagination
-                v-model:current-page="currentPage"
-                :page-size="pageSize"
-                :total="total"
-                layout="prev, pager, next"
-                @current-change="handlePageChange"
-              />
-            </div>
-
-            <!-- 空状态 -->
-            <el-empty v-if="!loading && articleList.length === 0" description="暂无文章" />
-          </div>
-
-          <!-- 侧边栏 -->
-          <AppSidebar />
+        <div class="latest-grid">
+          <template v-if="loading">
+            <SkeletonCard v-for="n in 3" :key="n" />
+          </template>
+          <template v-else>
+            <LatestBlogCard
+              v-for="article in latestArticles"
+              :key="article.id"
+              :article="article"
+            />
+          </template>
         </div>
+        <el-empty v-if="!loading && latestArticles.length === 0" description="暂无文章" />
       </section>
     </div>
   </div>
@@ -140,8 +110,8 @@ import { ref, reactive, onMounted } from 'vue'
 import articleApi from '@/api/article'
 import interviewApi from '@/api/interview'
 import ArticleCard from '@/components/ArticleCard.vue'
+import LatestBlogCard from '@/components/LatestBlogCard.vue'
 import SkeletonCard from '@/components/SkeletonCard.vue'
-import AppSidebar from '@/components/AppSidebar.vue'
 import {
   Notebook, FolderOpened, CollectionTag, ChatLineSquare,
   EditPen, Tickets, ChatDotRound, Headset, User
@@ -155,12 +125,8 @@ const modules = [
   { name: '我的简历', desc: '展示项目经验与技能', path: '/resume', icon: User, color: '#9b59b6', bg: 'rgba(155,89,182,0.1)' }
 ]
 
-const activeTab = ref('all')
-const articleList = ref([])
+const latestArticles = ref([])
 const loading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
 const questionCount = ref(0)
 const stats = reactive({
   articleCount: 0,
@@ -169,41 +135,14 @@ const stats = reactive({
   tagCount: 0
 })
 
-const typeMap = {
-  all: null,
-  original: 0,
-  reproduced: 1,
-  translated: 2
-}
-
-const fetchArticles = async () => {
-  const params = {
-    current: currentPage.value,
-    size: pageSize.value
-  }
-  const type = typeMap[activeTab.value]
-  if (type !== null) {
-    params.type = type
-  }
-
+const fetchLatest = async () => {
   loading.value = true
   try {
-    const res = await articleApi.getArticles(params)
-    articleList.value = res.data.records
-    total.value = res.data.total
+    const res = await articleApi.getLatestArticles(3)
+    latestArticles.value = (res.data || []).slice(0, 3)
   } finally {
     loading.value = false
   }
-}
-
-const handleTabChange = () => {
-  currentPage.value = 1
-  fetchArticles()
-}
-
-const handlePageChange = () => {
-  fetchArticles()
-  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 const fetchStats = async () => {
@@ -221,7 +160,7 @@ const fetchQuestionCount = async () => {
 }
 
 onMounted(() => {
-  fetchArticles()
+  fetchLatest()
   fetchStats()
   fetchQuestionCount()
 })
@@ -355,6 +294,26 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 16px;
+}
+
+/* 最新博客网格 */
+.latest-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 992px) {
+  .latest-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .latest-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* 功能卡片 */
