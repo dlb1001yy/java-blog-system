@@ -274,7 +274,12 @@ const handleCreateShare = async () => {
     const res = await resumeApi.createShare({ expireMinutes })
     ElMessage.success('分享链接生成成功')
     if (res.data) {
-      shareList.value.unshift(res.data)
+      // 后端返回字段为 token，列表展示使用 shareToken
+      shareList.value.unshift({
+        id: res.data.id,
+        shareToken: res.data.token,
+        expireTime: res.data.expireTime
+      })
     } else {
       fetchShares()
     }
