@@ -137,7 +137,7 @@ blog-admin/
 │   │   └── Login.vue                  # 登录
 │   ├── components/                   # 公共组件
 │   │   ├── Editor.vue                 # Markdown 编辑器
-│   │   ├── Upload.vue                 # 文件上传
+│   │   ├── Upload.vue                 # 文件上传（el-upload，自动附带 Token 与 API 签名头）
 │   │   └── SvgIcon.vue                # SVG 图标
 │   ├── api/                          # 接口请求
 │   ├── stores/                       # Pinia 状态
@@ -159,7 +159,8 @@ blog-frontend/
 │   ├── App.vue
 │   ├── router/index.js               # 路由配置
 │   ├── views/                        # 页面
-│   │   ├── Home.vue                   # 首页
+│   │   ├── Home.vue                   # 首页（最新博客 3 篇精选卡片）
+│   │   ├── Music.vue                  # 音乐（歌曲列表/推荐歌单/正在播放+LRC 歌词）
 │   │   ├── ArticleList.vue            # 文章列表
 │   │   ├── ArticleDetail.vue          # 文章详情
 │   │   ├── Category.vue               # 分类
@@ -173,6 +174,8 @@ blog-frontend/
 │   │   ├── AppFooter.vue
 │   │   ├── AppSidebar.vue
 │   │   ├── ArticleCard.vue
+│   │   ├── LatestBlogCard.vue          # 首页最新博客卡片
+│   │   ├── PlayerBar.vue               # 底部全局音乐播放器（与音乐页联动）
 │   │   ├── BackToTop.vue
 │   │   ├── CommentSection.vue
 │   │   └── LogoIcon.vue
@@ -456,6 +459,30 @@ Authorization: Bearer <token>
 | GET | /portal/messages | 公开留言列表 |
 | POST | /portal/messages | 提交留言 |
 | GET | /portal/stats | 站点统计 |
+| GET | /portal/music/songs | 歌曲分页（keyword 匹配歌名/歌手/专辑） |
+| GET | /portal/music/playlists | 歌单分页 |
+| GET | /portal/music/playlists/{id} | 歌单详情（含歌曲列表） |
+
+### 后台音乐接口（/admin/music，需 Token + 请求签名）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | /admin/music/songs/upload | 上传 mp3 并保存歌曲（file + title/artist/album/lyric/cover）；lyric 为空时自动「内嵌解析 → 在线匹配」补齐，cover 为空时自动按「歌名+歌手」生成 500×500 渐变封面，响应返回完整歌曲（含自动生成的 cover） |
+| POST | /admin/music/songs/parse-lyric | 解析歌词（file + 可选 title/artist）：优先 MP3 内嵌歌词（ID3v2 USLT，含 LRC 时间轴原样保留），无内嵌时按歌名+歌手调网易云公开接口在线匹配 LRC；message 标注来源（内嵌歌词/在线匹配/未找到歌词） |
+
+### 音乐歌词与封面自动化说明
+
+- **歌词来源三级**：表单手工填写 > MP3 内嵌歌词（[Mp3LyricParser](blog-backend/src/main/java/com/dlbyy/blog/utils/Mp3LyricParser.java)，解析 ID3v2 USLT 帧，支持 v2.3/v2.4 与 Latin-1/UTF-16/UTF-8 编码）> 在线匹配（[OnlineLyricService](blog-backend/src/main/java/com/dlbyy/blog/service/impl/OnlineLyricServiceImpl.java)，网易云音乐公开接口，5s 超时，失败静默降级）
+- **封面生成不依赖歌词**：上传/编辑时 cover 为空，后端始终用「歌名+歌手」生成 500×500 渐变封面（`CoverImageGenerator.generateSquare`，按歌名哈希取色），存入文件存储返回 URL
+- **管理端零手工流程**：选 mp3 → 歌名自动回填 → 点「解析歌词」自动补歌词（内嵌优先、在线兜底，提示来源）→ 确认上传自动生成封面；也可手动上传封面图覆盖
+- **在线匹配依赖出网**：服务器需能访问 music.163.com（非官方公开接口，可能限流）；失败仅影响歌词字段（可手工补），不影响上传与封面生成
+- **门户端封面兜底**：前台歌曲/歌单封面为空时显示渐变+耳机图标占位，不出现裂图
+
+### 首页与播放器（blog-frontend）
+
+- 首页「最新博客」区块：调 `GET /portal/articles/latest?limit=3` 展示 3 篇纵向卡片（封面 16:9、分类标签、日期、标题/摘要、阅读/点赞数），保留「查看全部」入口；响应式 992px 以下 2 列、640px 以下 1 列
+- 底部播放器 [PlayerBar](blog-frontend/src/components/PlayerBar.vue)：封面/歌名歌手、上下曲/播放暂停（>3s 回开头）、进度条、循环模式（none/all/one）、随机、音量滑块与静音切换、播放列表弹层（当前曲目高亮，点击切歌）
+- **音乐页联动**：音乐页（[Music.vue](blog-frontend/src/views/Music.vue)）点击歌曲/歌单调用全局 `player.setPlaylist(songs, index)`，与底部播放器实时同步；播放器切歌后音乐页「正在播放」面板同步刷新
 
 ## 默认账号
 
