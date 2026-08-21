@@ -18,6 +18,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +75,37 @@ public class AdminMusicController {
         data.put("lyric", lyric);
         data.put("cover", cover);
         return Result.success("解析完成", data);
+    }
+
+    @PostMapping("/songs/backfill-duration")
+    @Admin("回填歌曲时长")
+    @Operation(summary = "回填存量歌曲时长：下载 fileUrl 对应 mp3 并解析时长（跳过已有 duration 的歌曲）")
+    public Result<Map<String, Object>> backfillDuration() throws Exception {
+        List<MusicSong> songs = musicSongService.lambdaQuery()
+                .and(w -> w.isNull(MusicSong::getDuration).or().eq(MusicSong::getDuration, 0))
+                .isNotNull(MusicSong::getFileUrl)
+                .list();
+        int updated = 0, failed = 0;
+        for (MusicSong song : songs) {
+            Integer duration;
+            try (InputStream in = new java.net.URI(song.getFileUrl()).toURL().openStream()) {
+                duration = Mp3LyricParser.parseDurationBytes(in.readAllBytes());
+            } catch (Exception e) {
+                duration = null;
+            }
+            if (duration != null) {
+                song.setDuration(duration);
+                musicSongService.updateById(song);
+                updated++;
+            } else {
+                failed++;
+            }
+        }
+        Map<String, Object> stat = new HashMap<>();
+        stat.put("total", songs.size());
+        stat.put("updated", updated);
+        stat.put("failed", failed);
+        return Result.success("回填完成", stat);
     }
 
     @GetMapping("/songs")

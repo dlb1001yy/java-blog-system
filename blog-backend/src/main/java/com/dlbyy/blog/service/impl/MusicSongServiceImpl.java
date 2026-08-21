@@ -68,6 +68,8 @@ public class MusicSongServiceImpl extends ServiceImpl<MusicSongMapper, MusicSong
         song.setFormat("mp3");
         song.setFileSize(file.getSize());
         song.setPlayCount(0);
+        // 解析 mp3 时长（按首个 MPEG 帧头比特率估算）
+        song.setDuration(Mp3LyricParser.parseDurationSeconds(file));
         // 歌词兜底：未提供时先解析 MP3 内嵌歌词，再按歌名+歌手在线匹配 LRC
         if (lyric == null || lyric.isBlank()) {
             lyric = Mp3LyricParser.parse(file);

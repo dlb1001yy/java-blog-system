@@ -34,6 +34,89 @@ public final class Mp3LyricParser {
         }
     }
 
+    /**
+     * 估算 MP3 时长（秒）：读取第一个 MPEG 帧头的比特率，按 (音频字节数 * 8 / 比特率) 计算
+     */
+    public static Integer parseDurationSeconds(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return null;
+        }
+        try {
+            return parseDurationBytes(file.getBytes());
+        } catch (IOException e) {
+            log.warn("读取 MP3 文件失败：{}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 估算 MP3 字节数组时长（秒），用于存量歌曲回填
+     */
+    public static Integer parseDurationBytes(byte[] data) {
+        if (data == null || data.length < 4) {
+            return null;
+        }
+        try (InputStream in = new ByteArrayInputStream(data)) {
+            long audioBytes = data.length;
+            // 跳过 ID3v2 头
+            byte[] header = readN(in, 10);
+            if (header != null && header[0] == 'I' && header[1] == 'D' && header[2] == '3') {
+                int tagSize = syncsafe(header[6], header[7], header[8], header[9]);
+                if (tagSize > 0 && in.skip(tagSize) == tagSize) {
+                    audioBytes -= tagSize + 10;
+                }
+            }
+            // 找第一个帧同步字（0xFF Ex/Fx）
+            int b1 = in.read(), b2 = in.read();
+            int guard = 0;
+            while ((b1 == 0xFF && (b2 & 0xE0) == 0xE0) == false && guard++ < 4096) {
+                b1 = b2;
+                b2 = in.read();
+                if (b2 < 0) return null;
+            }
+            if (b1 != 0xFF || (b2 & 0xE0) != 0xE0) {
+                return null;
+            }
+            int versionBits = (b2 >> 3) & 0x03; // 00=2.5 01=保留 10=2 11=1
+            int layerBits = (b2 >> 1) & 0x03;   // 01=Layer III 10=Layer II 11=Layer I
+            if (versionBits == 1 || layerBits == 0) {
+                return null;
+            }
+            int b3 = in.read();
+            if (b3 < 0) return null;
+            int bitrateIndex = (b3 >> 4) & 0x0F;
+            int[] bitrateTable = bitrateTable(versionBits, layerBits);
+            if (bitrateTable == null || bitrateIndex == 0 || bitrateIndex >= bitrateTable.length) {
+                return null;
+            }
+            int bitrateKbps = bitrateTable[bitrateIndex];
+            if (bitrateKbps <= 0) return null;
+            // 减去 ID3v1 尾标签（128 字节，若存在）影响很小，忽略
+            long duration = audioBytes * 8 / (bitrateKbps * 1000L);
+            return duration > 0 && duration < 24 * 3600 ? (int) duration : null;
+        } catch (IOException e) {
+            log.warn("解析 MP3 时长失败：{}", e.getMessage());
+            return null;
+        }
+    }
+
+    /** MPEG 比特率表（kbps），索引即帧头的 bitrate index */
+    private static int[] bitrateTable(int versionBits, int layerBits) {
+        boolean mpeg1 = versionBits == 3;
+        if (layerBits == 1) { // Layer III
+            return mpeg1
+                    ? new int[]{0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 0}
+                    : new int[]{0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0};
+        }
+        if (layerBits == 2) { // Layer II
+            return new int[]{0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 0};
+        }
+        // Layer I
+        return mpeg1
+                ? new int[]{0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0}
+                : new int[]{0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256, 0};
+    }
+
     public static String parse(InputStream in) throws IOException {
         // ID3v2 头："ID3" + 版本2字节 + 标志1字节 + 大小4字节（syncsafe）
         byte[] header = readN(in, 10);
