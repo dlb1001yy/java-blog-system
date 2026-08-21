@@ -1,0 +1,9 @@
+- [x] sql/04-requirement-gap.sql 与 sql/05-resume-multi-user.sql 存在且语句合理（04 已在本地库执行成功，4 个新字段就位；05 需用户手动执行）
+- [x] 面试题 tips：管理端可编辑保存，门户详情可展示
+- [x] 试卷及格线：组卷可设置，成绩页显示及格/不及格
+- [x] 作弊标记：switchCount>=3 交卷后 cheatFlag=1，成绩页与阅卷中心显示标记
+- [x] 题库 xlsx 导入：模板可下载，合法文件导入成功，非法行返回行号+原因（接口与前端已实现，运行时验证待用户执行）
+- [x] 编程题使用 Monaco Editor，Java/Python/JS 高亮，答案正常提交判分（含加载失败回退 textarea）
+- [x] 简历：用户中心可编辑自己的简历，/resume/:userId 可访问对应公开页
+- [x] 歌词：管理端可填 LRC，音乐页播放时当前行高亮滚动；无歌词不显示区块
+- [ ] 后端 mvn compile 通过；blog-frontend、blog-admin npm run build 通过（由用户手动执行验证；sql/05 增量脚本同样由用户手动执行）

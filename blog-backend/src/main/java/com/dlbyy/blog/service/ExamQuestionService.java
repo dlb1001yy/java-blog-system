@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.dlbyy.blog.common.PageResult;
 import com.dlbyy.blog.entity.ExamQuestion;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,4 +36,17 @@ public interface ExamQuestionService extends IService<ExamQuestion> {
      * @return key=题型 type，value=数量
      */
     Map<Integer, Long> countByType();
+
+    /**
+     * Excel 批量导入题目（xlsx，先全量校验再批量插入）
+     *
+     * @return ImportResult（count=导入条数，errors=错误明细；有错误时整体不落库，count=0）
+     */
+    ImportResult importFromExcel(org.springframework.web.multipart.MultipartFile file);
+
+    /**
+     * Excel 导入结果
+     */
+    record ImportResult(int count, List<String> errors) {
+    }
 }

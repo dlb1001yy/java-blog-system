@@ -3,13 +3,14 @@ import request from './request'
 export default {
   // ---------------- 歌曲 ----------------
 
-  // 上传音频文件（file + title/artist/album）
-  uploadSong(file, title, artist, album) {
+  // 上传音频文件（file + title/artist/album/lyric）
+  uploadSong(file, title, artist, album, lyric) {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('title', title)
     if (artist) formData.append('artist', artist)
     if (album) formData.append('album', album)
+    if (lyric) formData.append('lyric', lyric)
     return request.post('/admin/music/songs/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 120000

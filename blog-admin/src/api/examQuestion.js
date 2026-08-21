@@ -21,6 +21,21 @@ export default {
     return request.post('/admin/exam-questions', data)
   },
 
+  // 批量导入题目（xlsx 文件）
+  importQuestions(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return request.post('/admin/exam-questions/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120000
+    })
+  },
+
+  // 下载导入模板（xlsx）
+  downloadTemplate() {
+    return request.get('/admin/exam-questions/template', { responseType: 'blob' })
+  },
+
   // 删除题目
   delete(id) {
     return request.delete(`/admin/exam-questions/${id}`)

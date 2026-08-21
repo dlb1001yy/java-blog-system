@@ -21,6 +21,7 @@ import com.dlbyy.blog.mapper.ExamPaperQuestionMapper;
 import com.dlbyy.blog.mapper.ExamQuestionMapper;
 import com.dlbyy.blog.mapper.ExamRecordMapper;
 import com.dlbyy.blog.service.ExamService;
+import com.dlbyy.blog.utils.JsoupXssUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -92,9 +93,13 @@ public class ExamServiceImpl implements ExamService {
                 continue;
             }
             Object myAnswer = answerMap.get(rel.getQuestionId());
+            int type = question.getType() == null ? 0 : question.getType();
+            // XSS 清洗：主观题（5 简答 / 6 编程）的文本答案入库前用 relaxed 白名单清洗
+            if ((type == 5 || type == 6) && myAnswer instanceof String text) {
+                myAnswer = JsoupXssUtil.cleanHtml(text);
+            }
             storedAnswers.add(Map.of("questionId", rel.getQuestionId(), "answer", myAnswer == null ? "" : myAnswer));
 
-            int type = question.getType() == null ? 0 : question.getType();
             if (type >= 1 && type <= 4) {
                 // 客观题自动判分
                 if (judgeObjective(type, question.getCorrect(), myAnswer)) {
@@ -112,6 +117,9 @@ public class ExamServiceImpl implements ExamService {
         record.setAnswers(toJson(storedAnswers));
         record.setObjectiveScore(objectiveScore);
         record.setSwitchCount(dto.getSwitchCount() == null ? 0 : dto.getSwitchCount());
+        // 切屏次数达 3 次及以上视为切屏超限，标记作弊
+        int switchCount = record.getSwitchCount() == null ? 0 : record.getSwitchCount();
+        record.setCheatFlag(switchCount >= 3 ? 1 : 0);
         record.setDurationSeconds(dto.getDurationSeconds());
         record.setStatus(0); // 待批改
         record.setSubmitTime(LocalDateTime.now());
@@ -345,6 +353,8 @@ public class ExamServiceImpl implements ExamService {
         dto.setObjectiveScore(record.getObjectiveScore());
         dto.setSubjectiveScore(record.getSubjectiveScore());
         dto.setFinalScore(record.getFinalScore());
+        dto.setPassScore(paper == null ? null : paper.getPassScore());
+        dto.setCheatFlag(record.getCheatFlag());
         dto.setStatus(record.getStatus());
         dto.setSwitchCount(record.getSwitchCount());
         dto.setDurationSeconds(record.getDurationSeconds());

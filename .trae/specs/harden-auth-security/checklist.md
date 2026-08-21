@@ -1,0 +1,7 @@
+- [x] 注册接口存在：用户名/邮箱唯一校验、密码强度、confirmPassword 一致性、BCrypt、默认 user 角色
+- [x] 登录支持用户名或邮箱
+- [x] SecurityConfig 中 /admin/** 为 hasRole("admin")，普通用户 403 JSON（JwtAccessDeniedHandler）
+- [x] JsoupXssUtil Safelist 不含 style 属性
+- [x] 文章保存/修改（cleanHtml content）、简历保存（cleanText 纯文本字段）、考试主观题答案（cleanHtml）入库前清洗 XSS
+- [x] 门户 /register 注册页可用，Login 页有互跳入口，登录 token 字段（accessToken）与后端一致
+- [ ] 后端 mvn compile、前端 npm run build 由用户手动执行通过

@@ -2,11 +2,14 @@ package com.dlbyy.blog.controller.portal;
 
 import com.dlbyy.blog.common.Result;
 import com.dlbyy.blog.common.exception.BusinessException;
+import com.dlbyy.blog.entity.User;
 import com.dlbyy.blog.security.JwtTokenProvider;
 import com.dlbyy.blog.service.CaptchaService;
 import com.dlbyy.blog.service.LoginAttemptService;
+import com.dlbyy.blog.service.UserService;
 import com.dlbyy.blog.utils.CookieUtils;
 import com.dlbyy.blog.utils.JwtUtils;
+import com.dlbyy.blog.utils.PasswordStrengthValidator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +19,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -37,6 +41,54 @@ public class AuthController {
     private final LoginAttemptService loginAttemptService;
     private final CookieUtils cookieUtils;
     private final CaptchaService captchaService;
+    private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
+
+    /**
+     * 公开注册：用户名 + 邮箱 + 密码（需通过强度校验），注册后角色为普通用户
+     */
+    @PostMapping("/register")
+    public Result<?> register(@RequestBody RegisterRequest request) {
+        String username = request.getUsername();
+        String email = request.getEmail();
+        String password = request.getPassword();
+
+        // 基础参数校验
+        if (username == null || username.isBlank()) {
+            throw new BusinessException("用户名不能为空");
+        }
+        if (email == null || email.isBlank() || !email.contains("@")) {
+            throw new BusinessException("邮箱格式不正确");
+        }
+        if (password == null || !password.equals(request.getConfirmPassword())) {
+            throw new BusinessException("两次输入的密码不一致");
+        }
+
+        // 密码强度校验
+        PasswordStrengthValidator.ValidationResult result = PasswordStrengthValidator.validate(password);
+        if (!result.isValid()) {
+            throw new BusinessException(result.getMessage());
+        }
+
+        // 用户名 / 邮箱唯一性校验
+        if (userService.lambdaQuery().eq(User::getUsername, username).count() > 0) {
+            throw new BusinessException("用户名已被注册");
+        }
+        if (userService.lambdaQuery().eq(User::getEmail, email).count() > 0) {
+            throw new BusinessException("邮箱已被注册");
+        }
+
+        // 创建用户：BCrypt 加密密码，普通用户角色，正常启用状态
+        User user = new User();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setRole("user");
+        user.setStatus(1);
+        user.setFailCount(0);
+        userService.save(user);
+        return Result.success("注册成功", null);
+    }
 
     /**
      * 获取图形验证码
@@ -51,6 +103,15 @@ public class AuthController {
         String username = request.getUsername();
         if (username == null || username.isBlank()) {
             return Result.error(400, "用户名不能为空");
+        }
+
+        // 支持邮箱登录：账号含 @ 时按邮箱查用户，映射为其用户名后再走原认证流程
+        if (username.contains("@")) {
+            User user = userService.lambdaQuery().eq(User::getEmail, username).one();
+            if (user == null) {
+                return Result.error(401, "用户名或密码错误");
+            }
+            username = user.getUsername();
         }
 
         // 1) 账户锁定检查（基于 Redis 的连续失败计数 / 锁定时间）
@@ -166,6 +227,14 @@ public class AuthController {
             ip = ip.split(",")[0].trim();
         }
         return ip;
+    }
+
+    @lombok.Data
+    public static class RegisterRequest {
+        private String username;
+        private String email;
+        private String password;
+        private String confirmPassword;
     }
 
     @lombok.Data

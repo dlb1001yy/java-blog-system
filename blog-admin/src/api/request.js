@@ -60,6 +60,8 @@ function refreshTokenOnce() {
 // 响应拦截器
 request.interceptors.response.use(
   response => {
+    // 文件流响应（如模板下载）直接透传
+    if (response.config.responseType === 'blob') return response
     const res = response.data
     if (res.code !== 200) {
       ElMessage.error(res.message || '请求失败')

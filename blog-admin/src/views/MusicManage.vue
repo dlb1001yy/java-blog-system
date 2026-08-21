@@ -217,6 +217,15 @@
         <el-form-item label="专辑">
           <el-input v-model="uploadForm.album" placeholder="请输入专辑" />
         </el-form-item>
+        <el-form-item label="歌词">
+          <el-input
+            v-model="uploadForm.lyric"
+            type="textarea"
+            :rows="4"
+            class="lyric-textarea"
+            placeholder="请输入歌词（LRC 格式，可选），如：[00:12.00]第一句歌词"
+          />
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="uploadDialogVisible = false">取消</el-button>
@@ -235,6 +244,15 @@
         </el-form-item>
         <el-form-item label="专辑">
           <el-input v-model="songEditForm.album" />
+        </el-form-item>
+        <el-form-item label="歌词">
+          <el-input
+            v-model="songEditForm.lyric"
+            type="textarea"
+            :rows="4"
+            class="lyric-textarea"
+            placeholder="请输入歌词（LRC 格式）"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -364,13 +382,14 @@ const formatSize = (bytes) => {
 const uploadDialogVisible = ref(false)
 const uploading = ref(false)
 const uploadFileList = ref([])
-const uploadForm = reactive({ file: null, title: '', artist: '', album: '' })
+const uploadForm = reactive({ file: null, title: '', artist: '', album: '', lyric: '' })
 
 const openUploadDialog = () => {
   uploadForm.file = null
   uploadForm.title = ''
   uploadForm.artist = ''
   uploadForm.album = ''
+  uploadForm.lyric = ''
   uploadFileList.value = []
   uploadDialogVisible.value = true
 }
@@ -412,7 +431,7 @@ const handleUpload = async () => {
   }
   uploading.value = true
   try {
-    await musicApi.uploadSong(uploadForm.file, uploadForm.title.trim(), uploadForm.artist.trim(), uploadForm.album.trim())
+    await musicApi.uploadSong(uploadForm.file, uploadForm.title.trim(), uploadForm.artist.trim(), uploadForm.album.trim(), uploadForm.lyric)
     ElMessage.success('上传成功')
     uploadDialogVisible.value = false
     fetchSongs()
@@ -425,13 +444,14 @@ const handleUpload = async () => {
 // 编辑歌曲
 const songEditVisible = ref(false)
 const songSaving = ref(false)
-const songEditForm = reactive({ id: null, title: '', artist: '', album: '' })
+const songEditForm = reactive({ id: null, title: '', artist: '', album: '', lyric: '' })
 
 const openSongEdit = (row) => {
   songEditForm.id = row.id
   songEditForm.title = row.title
   songEditForm.artist = row.artist || ''
   songEditForm.album = row.album || ''
+  songEditForm.lyric = row.lyric || ''
   songEditVisible.value = true
 }
 
@@ -445,7 +465,8 @@ const handleSongSave = async () => {
     await musicApi.updateSong(songEditForm.id, {
       title: songEditForm.title.trim(),
       artist: songEditForm.artist.trim(),
-      album: songEditForm.album.trim()
+      album: songEditForm.album.trim(),
+      lyric: songEditForm.lyric || null
     })
     ElMessage.success('保存成功')
     songEditVisible.value = false
@@ -693,6 +714,12 @@ onMounted(() => {
 .upload-icon {
   color: var(--text-secondary);
   margin-bottom: 8px;
+}
+
+.lyric-textarea :deep(textarea) {
+  font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .song-check-item {

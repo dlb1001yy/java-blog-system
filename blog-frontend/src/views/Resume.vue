@@ -172,12 +172,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import {
   Phone, Message, Location, User, Cpu, Briefcase,
   Folder, Reading, Download, EditPen, Medal, Star, Printer
 } from '@element-plus/icons-vue'
 import articleApi from '@/api/article'
 
+const route = useRoute()
 const resume = ref(null)
 
 const skills = computed(() => {
@@ -244,7 +246,9 @@ const age = computed(() => {
 
 const fetchResume = async () => {
   try {
-    const res = await articleApi.getResume()
+    const res = route.params.userId
+      ? await articleApi.getResumeByUserId(route.params.userId)
+      : await articleApi.getResume()
     resume.value = res.data || null
   } catch {
     resume.value = null

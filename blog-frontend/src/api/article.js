@@ -72,6 +72,21 @@ export default {
   getResume() {
     return request.get('/portal/resume')
   },
+
+  // 获取指定用户简历
+  getResumeByUserId(userId) {
+    return request.get(`/portal/resume/${userId}`)
+  },
+
+  // 获取我的简历
+  getMyResume() {
+    return request.get('/portal/resume/mine')
+  },
+
+  // 保存我的简历
+  saveMyResume(data) {
+    return request.put('/portal/resume/mine', data)
+  },
   
   // 获取友情链接
   getLinks() {

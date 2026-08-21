@@ -81,6 +81,10 @@
         <el-form-item label="时长(分)" prop="duration">
           <el-input-number v-model="form.duration" :min="10" :max="300" :step="10" />
         </el-form-item>
+        <el-form-item label="及格线" prop="passScore">
+          <el-input-number v-model="form.passScore" :min="0" :max="form.totalScore || 100" :step="5" />
+          <span class="form-tip">总分：{{ form.totalScore || '—' }}</span>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -202,7 +206,9 @@ const form = reactive({
   id: null,
   title: '',
   description: '',
-  duration: 60
+  duration: 60,
+  passScore: 60,
+  totalScore: 100
 })
 
 const rules = {
@@ -261,7 +267,7 @@ const handleReset = () => {
 }
 
 const handleCreate = () => {
-  Object.assign(form, { id: null, title: '', description: '', duration: 60 })
+  Object.assign(form, { id: null, title: '', description: '', duration: 60, passScore: 60, totalScore: 100 })
   dialogVisible.value = true
 }
 
@@ -270,8 +276,11 @@ const handleEdit = (row) => {
     id: row.id,
     title: row.title,
     description: row.description || '',
-    duration: row.duration
+    duration: row.duration,
+    passScore: row.passScore != null ? Number(row.passScore) : 60,
+    totalScore: Number(row.totalScore) || 100
   })
+  if (form.passScore > form.totalScore) form.passScore = form.totalScore
   dialogVisible.value = true
 }
 
@@ -279,7 +288,9 @@ const handleSave = async () => {
   await formRef.value.validate()
   saving.value = true
   try {
-    await examPaperApi.save({ ...form })
+    // totalScore 由后端按组卷题目分值自动汇总，不随表单提交
+    const { totalScore: _ts, ...payload } = form
+    await examPaperApi.save(payload)
     ElMessage.success('保存成功')
     dialogVisible.value = false
     fetchData()
@@ -542,5 +553,11 @@ onMounted(() => fetchData())
   justify-content: space-between;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+.form-tip {
+  margin-left: var(--space-3);
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 </style>

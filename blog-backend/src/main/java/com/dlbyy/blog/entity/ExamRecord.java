@@ -37,6 +37,9 @@ public class ExamRecord extends BaseEntity {
     /** 切屏次数 */
     private Integer switchCount;
 
+    /** 作弊标记 0:正常 1:切屏超限 */
+    private Integer cheatFlag;
+
     /** 实际用时（秒） */
     private Integer durationSeconds;
 

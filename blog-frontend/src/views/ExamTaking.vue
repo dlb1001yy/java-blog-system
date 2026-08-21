@@ -133,7 +133,27 @@
 
         <!-- 编程 -->
         <div v-else-if="currentQuestion.type === 6" class="blank-area">
+          <!-- 语言切换 -->
+          <div class="lang-bar">
+            <el-radio-group v-model="codeLang" size="small">
+              <el-radio-button label="javascript">JavaScript</el-radio-button>
+              <el-radio-button label="java">Java</el-radio-button>
+              <el-radio-button label="python">Python</el-radio-button>
+            </el-radio-group>
+          </div>
+          <!-- Monaco 编辑器：加载失败或超时回退 textarea -->
+          <vue-monaco-editor
+            v-if="monacoReady"
+            :value="textAnswer"
+            :language="codeLang"
+            theme="vs-dark"
+            :options="monacoOptions"
+            class="code-editor"
+            @change="v => setText(v)"
+            @mount="onMonacoMount"
+          />
           <el-input
+            v-else
             :model-value="textAnswer"
             type="textarea"
             :rows="10"
@@ -231,6 +251,38 @@ const toggleMulti = (val) => {
 }
 const setBlank = (v) => { answers.value[currentQuestion.value.questionId] = [v] }
 const setText = (v) => { answers.value[currentQuestion.value.questionId] = v.split('\n') }
+
+// 编程题 Monaco 编辑器
+const codeLang = ref('javascript')
+const monacoReady = ref(true) // Monaco 加载失败/超时后置 false 回退 textarea
+const monacoOptions = {
+  minimap: { enabled: false },
+  fontSize: 13,
+  automaticLayout: true,
+  scrollBeyondLastLine: false,
+  tabSize: 4,
+  renderLineHighlight: 'all'
+}
+let monacoMounted = false
+let monacoTimeout = null
+const onMonacoMount = () => {
+  monacoMounted = true
+  clearTimeout(monacoTimeout)
+}
+// 监控 Monaco 是否加载成功：15 秒内未 mount 视为加载失败（如 CDN 不可用），回退 textarea
+const watchMonaco = () => {
+  clearTimeout(monacoTimeout)
+  monacoTimeout = setTimeout(() => {
+    if (!monacoMounted) monacoReady.value = false
+  }, 15000)
+}
+watchMonaco()
+// Monaco 内部加载异常（AMD loader error 等）时回退
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (e) => {
+    if (typeof e?.message === 'string' && e.message.includes('vs/loader')) monacoReady.value = false
+  })
+}
 
 const toggleMark = () => {
   const qid = currentQuestion.value.questionId
@@ -334,6 +386,7 @@ const doSubmit = async () => {
 
 const cleanup = () => {
   clearInterval(timer)
+  clearTimeout(monacoTimeout)
   document.removeEventListener('visibilitychange', onVisibilityChange)
   document.removeEventListener('contextmenu', blockEvent)
   document.removeEventListener('copy', blockEvent)
@@ -617,6 +670,17 @@ onBeforeUnmount(cleanup)
 .code-input :deep(textarea) {
   font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
   font-size: 13px;
+}
+
+.lang-bar {
+  margin-bottom: 10px;
+}
+
+.code-editor {
+  height: 360px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border-color, #e4e7ed);
 }
 
 /* 底部栏 */

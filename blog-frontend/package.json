@@ -15,7 +15,8 @@
     "@element-plus/icons-vue": "^2.3.1",
     "markdown-it": "^13.0.2",
     "highlight.js": "^11.9.0",
-    "github-markdown-css": "^5.1.0"
+    "github-markdown-css": "^5.1.0",
+    "@guolao/vue-monaco-editor": "^1.5.4"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.5.0",

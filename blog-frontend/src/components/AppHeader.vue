@@ -17,6 +17,7 @@
         <router-link to="/scores" class="nav-item">成绩</router-link>
         <router-link to="/music" class="nav-item">音乐</router-link>
         <router-link to="/resume" class="nav-item">简历</router-link>
+        <router-link v-if="userStore.token" to="/profile/resume" class="nav-item">我的简历</router-link>
         <router-link to="/messages" class="nav-item">留言</router-link>
         <router-link to="/about" class="nav-item">关于</router-link>
       </nav>
@@ -40,8 +41,10 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
 import LogoIcon from './LogoIcon.vue'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 const searchKeyword = ref('')
 
 const handleSearch = () => {

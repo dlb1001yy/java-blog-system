@@ -24,6 +24,9 @@ public class ExamPaper extends BaseEntity {
     /** 总分 */
     private BigDecimal totalScore;
 
+    /** 及格线 */
+    private BigDecimal passScore;
+
     /** 考试时长（分钟） */
     private Integer duration;
 

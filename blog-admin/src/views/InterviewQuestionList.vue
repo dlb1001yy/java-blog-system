@@ -103,6 +103,14 @@
         <el-form-item label="标签" prop="tags">
           <el-input v-model="form.tags" placeholder="多个标签用英文逗号分隔，如：Java,并发,JVM" />
         </el-form-item>
+        <el-form-item label="解题思路" prop="tips">
+          <el-input
+            v-model="form.tips"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入解题思路/分析要点（可选）"
+          />
+        </el-form-item>
         <el-form-item label="参考答案" prop="answer">
           <el-input
             v-model="form.answer"
@@ -153,6 +161,7 @@ const form = reactive({
   category: '',
   difficulty: '',
   tags: '',
+  tips: '',
   answer: '',
   status: 1
 })
@@ -203,7 +212,7 @@ const handleCurrentChange = () => fetchData()
 
 const handleAdd = () => {
   dialogTitle.value = '新增面试题'
-  Object.assign(form, { id: null, title: '', category: '', difficulty: '', tags: '', answer: '', status: 1 })
+  Object.assign(form, { id: null, title: '', category: '', difficulty: '', tags: '', tips: '', answer: '', status: 1 })
   dialogVisible.value = true
 }
 
@@ -216,6 +225,7 @@ const handleEdit = async (row) => {
     category: res.data.category,
     difficulty: res.data.difficulty,
     tags: res.data.tags || '',
+    tips: res.data.tips || '',
     answer: res.data.answer || '',
     status: res.data.status ?? 1
   })

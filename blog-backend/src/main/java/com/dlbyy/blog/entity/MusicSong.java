@@ -36,6 +36,9 @@ public class MusicSong extends BaseEntity {
     /** 文件大小（字节） */
     private Long fileSize;
 
+    /** 歌词（LRC 格式） */
+    private String lyric;
+
     /** 播放次数 */
     private Integer playCount;
 }

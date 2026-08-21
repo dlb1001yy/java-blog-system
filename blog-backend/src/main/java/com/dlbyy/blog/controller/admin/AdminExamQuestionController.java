@@ -8,8 +8,19 @@ import com.dlbyy.blog.service.ExamQuestionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -61,5 +72,52 @@ public class AdminExamQuestionController {
     public Result<?> delete(@PathVariable Long id) {
         examQuestionService.adminDelete(id);
         return Result.success("删除成功", null);
+    }
+
+    @PostMapping("/import")
+    @Admin("Excel批量导入题目")
+    @Operation(summary = "Excel 批量导入题目（xlsx，全量校验通过才落库）")
+    public Result<Map<String, Object>> importQuestions(@RequestParam("file") MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return Result.error("请选择要上传的 Excel 文件");
+        }
+        String filename = file.getOriginalFilename();
+        if (!StringUtils.hasText(filename) || !filename.toLowerCase().endsWith(".xlsx")) {
+            return Result.error("仅支持 .xlsx 格式的 Excel 文件");
+        }
+        ExamQuestionService.ImportResult result = examQuestionService.importFromExcel(file);
+        Map<String, Object> data = new HashMap<>();
+        data.put("count", result.count());
+        data.put("errors", result.errors());
+        return result.errors().isEmpty()
+                ? Result.success("导入成功", data)
+                : Result.success("导入失败，共 " + result.errors().size() + " 条错误", data);
+    }
+
+    @GetMapping("/template")
+    @Admin("下载题目导入模板")
+    @Operation(summary = "下载题目导入 Excel 模板（表头 + 2 行示例）")
+    public void template(HttpServletResponse response) throws IOException {
+        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("题目导入模板");
+            String[][] rows = {
+                    {"题干(stem)", "题型(1单选2多选3判断4填空5简答6编程)", "分类(category)", "难度(简单/中等/困难)",
+                            "选项(options, JSON数组)", "正确答案(correct, JSON)", "参考答案/解析(reference_answer)", "分值(score)"},
+                    {"Java 中用于定义常量的关键字是？", "1", "Java基础", "简单",
+                            "[\"final\",\"finally\",\"finalize\",\"const\"]", "[0]", "final 修饰的变量不可重新赋值", "2"},
+                    {"简述 JVM 的垃圾回收机制", "5", "JVM", "中等",
+                            "", "", "可从可达性分析、常见回收器等角度作答", "10"}
+            };
+            for (int i = 0; i < rows.length; i++) {
+                Row row = sheet.createRow(i);
+                for (int j = 0; j < rows[i].length; j++) {
+                    row.createCell(j).setCellValue(rows[i][j]);
+                }
+            }
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            String fileName = URLEncoder.encode("题目导入模板.xlsx", StandardCharsets.UTF_8).replace("+", "%20");
+            response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + fileName);
+            workbook.write(response.getOutputStream());
+        }
     }
 }

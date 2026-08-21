@@ -77,11 +77,10 @@ public class AdminArticleController {
         Article article = new Article();
         article.setUserId(1L); // TODO: 从当前登录用户获取
         article.setCategoryId(dto.getCategoryId());
-        // XSS 清洗：纯文本字段移除所有 HTML 标签；content 为 Markdown，白名单 cleanHtml 会破坏代码块等语法，
-        // 前端渲染时已有转义，故不在此处清洗
+        // XSS 清洗：纯文本字段移除所有 HTML 标签；content 用 relaxed 白名单清洗，Markdown 源文本基本无损
         article.setTitle(JsoupXssUtil.cleanText(dto.getTitle()));
         article.setSummary(JsoupXssUtil.cleanText(dto.getSummary()));
-        article.setContent(dto.getContent());
+        article.setContent(JsoupXssUtil.cleanHtml(dto.getContent()));
         article.setCoverImage(dto.getCoverImage());
         article.setType(dto.getType());
         article.setSourceUrl(dto.getSourceUrl());
@@ -112,10 +111,10 @@ public class AdminArticleController {
         }
 
         article.setCategoryId(dto.getCategoryId());
-        // XSS 清洗：纯文本字段移除所有 HTML 标签；content 为 Markdown，同 create 说明不清洗
+        // XSS 清洗：纯文本字段移除所有 HTML 标签；content 用 relaxed 白名单清洗，同 create 说明
         article.setTitle(JsoupXssUtil.cleanText(dto.getTitle()));
         article.setSummary(JsoupXssUtil.cleanText(dto.getSummary()));
-        article.setContent(dto.getContent());
+        article.setContent(JsoupXssUtil.cleanHtml(dto.getContent()));
         article.setCoverImage(dto.getCoverImage());
         article.setType(dto.getType());
         article.setSourceUrl(dto.getSourceUrl());

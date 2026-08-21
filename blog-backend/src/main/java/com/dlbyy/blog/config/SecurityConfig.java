@@ -2,6 +2,7 @@ package com.dlbyy.blog.config;
 
 import com.dlbyy.blog.properties.CorsProperties;
 import com.dlbyy.blog.properties.SecurityProperties;
+import com.dlbyy.blog.security.JwtAccessDeniedHandler;
 import com.dlbyy.blog.security.JwtAuthenticationEntryPoint;
 import com.dlbyy.blog.security.JwtAuthenticationFilter;
 import com.dlbyy.blog.security.RequestSignatureFilter;
@@ -35,6 +36,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final RequestSignatureFilter requestSignatureFilter;
     private final CorsProperties corsProperties;
 
@@ -59,7 +61,9 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+            .exceptionHandling(exception -> exception
+                    .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                    .accessDeniedHandler(jwtAccessDeniedHandler))
             .authorizeHttpRequests(auth -> {
                 auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     .requestMatchers("/auth/**").permitAll()
@@ -73,7 +77,8 @@ public class SecurityConfig {
                         .requestMatchers("/webjars/**").permitAll();
                 }
                 auth.requestMatchers("/user/**").authenticated()
-                    .requestMatchers("/admin/**").authenticated()
+                    // 管理端接口仅允许 ADMIN 角色访问（CustomUserDetailsService 授予 ROLE_admin）
+                    .requestMatchers("/admin/**").hasRole("admin")
                     .anyRequest().permitAll();
             })
             .addFilterBefore(requestSignatureFilter, UsernamePasswordAuthenticationFilter.class)

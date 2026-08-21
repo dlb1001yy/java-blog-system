@@ -47,6 +47,16 @@ const routes = [
     component: () => import('@/views/Resume.vue')
   },
   {
+    path: '/resume/:userId',
+    name: 'UserResume',
+    component: () => import('@/views/Resume.vue')
+  },
+  {
+    path: '/profile/resume',
+    name: 'ProfileResume',
+    component: () => import('@/views/ProfileResume.vue')
+  },
+  {
     path: '/about',
     name: 'About',
     component: () => import('@/views/About.vue')
@@ -72,6 +82,16 @@ const routes = [
     name: 'Scores',
     meta: { title: '成绩查询' },
     component: () => import('@/views/Scores.vue')
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/Login.vue')
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/Register.vue')
   },
   {
     path: '/exam/:paperId',

@@ -73,6 +73,14 @@
               <span class="hero-num">{{ detail.finalScore ?? '-' }}</span>
               <span class="hero-total">/ {{ totalScore }} 分</span>
             </div>
+            <el-tag
+              v-if="detail.passScore !== null && detail.passScore !== undefined && detail.finalScore !== null && detail.finalScore !== undefined"
+              size="large"
+              :type="detail.finalScore >= detail.passScore ? 'success' : 'danger'"
+            >
+              {{ detail.finalScore >= detail.passScore ? '及格' : '不及格' }}
+            </el-tag>
+            <el-tag v-if="detail.cheatFlag === 1" size="large" type="danger" effect="dark">作弊嫌疑</el-tag>
             <div class="hero-sub">
               <div class="hero-item">
                 <span class="hero-label">用时</span>

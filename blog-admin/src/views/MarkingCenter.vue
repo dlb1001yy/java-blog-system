@@ -26,7 +26,10 @@
             <div class="pending-card__title">{{ row.paperTitle }}</div>
             <div class="pending-card__meta">
               <span>客观题 {{ row.objectiveScore ?? 0 }} 分</span>
-              <span>{{ row.submitTime }}</span>
+              <span>
+                <el-tag v-if="row.cheatFlag === 1" type="danger" size="small" effect="dark" class="cheat-tag">作弊嫌疑</el-tag>
+                {{ row.submitTime }}
+              </span>
             </div>
           </div>
           <el-empty v-if="!listLoading && !pendingList.length" description="暂无待批答卷" :image-size="80" />
@@ -51,6 +54,8 @@
             <span>考生：<b>{{ selectedRecord?.userName }}</b></span>
             <span>试卷：<b>{{ detail.paperTitle }}</b></span>
             <span>客观题得分：<b class="score-num">{{ detail.objectiveScore ?? 0 }}</b></span>
+            <span v-if="detail.switchCount != null">切屏次数：<b>{{ detail.switchCount }}</b></span>
+            <el-tag v-if="detail.cheatFlag === 1" type="danger" size="small" effect="dark">作弊嫌疑</el-tag>
           </div>
 
           <div class="marking-body" v-loading="detailLoading">
@@ -304,9 +309,12 @@ onMounted(() => fetchPending())
 .pending-card__meta {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   color: var(--text-secondary, #909399);
   font-size: 12px;
 }
+
+.cheat-tag { margin-right: 4px; }
 
 .pagination-wrap { display: flex; justify-content: center; }
 

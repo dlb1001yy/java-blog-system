@@ -87,6 +87,12 @@
               </div>
               <div v-else-if="q.answerHtml" class="markdown-body answer-body" v-html="q.answerHtml"></div>
               <div v-else class="answer-empty">暂无参考答案</div>
+              <template v-if="!q.answerLoading && q.tipsHtml">
+                <div class="tips-panel">
+                  <h4 class="tips-title">解题思路</h4>
+                  <div class="markdown-body answer-body" v-html="q.tipsHtml"></div>
+                </div>
+              </template>
             </div>
           </div>
 
@@ -170,7 +176,7 @@ const fetchQuestions = async () => {
     total.value = data.total || 0
     questionList.value = (data.records || []).map(r => {
       const q = r.question || r
-      return { ...q, expanded: false, answerLoading: false, answerHtml: '' }
+      return { ...q, expanded: false, answerLoading: false, answerHtml: '', tipsHtml: '' }
     })
   } finally {
     loading.value = false
@@ -190,6 +196,8 @@ const toggleExpand = async (q) => {
       const res = await interviewApi.getQuestionAnswer(q.id)
       const answer = res.data?.answer || ''
       q.answerHtml = answer ? md.render(answer) : ''
+      const tips = res.data?.tips || ''
+      q.tipsHtml = tips ? md.render(tips) : ''
     } finally {
       q.answerLoading = false
     }
@@ -236,5 +244,13 @@ onMounted(fetchQuestions)
 .answer-panel { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--border-color); cursor: default; }
 .answer-body { font-size: 14px; line-height: 1.7; color: var(--text-regular); }
 .answer-empty { color: var(--text-secondary); }
+.tips-panel {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-left: 3px solid var(--primary-color);
+  background: rgba(64, 158, 255, 0.05);
+  border-radius: var(--radius-sm, 6px);
+}
+.tips-title { margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--primary-color); }
 .pagination { display: flex; justify-content: center; margin-top: 20px; }
 </style>

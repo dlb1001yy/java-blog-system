@@ -65,7 +65,25 @@ public class ExamPaperServiceImpl extends ServiceImpl<ExamPaperMapper, ExamPaper
         } else {
             this.updateById(paper);
         }
+        // 总分由组卷题目分值自动汇总，保证与题目一致（编辑时按已有明细重算）
+        recalcTotalScore(paper.getId());
         return paper.getId();
+    }
+
+    /**
+     * 按试卷题目明细重算 totalScore 并更新
+     */
+    private void recalcTotalScore(Long paperId) {
+        List<ExamPaperQuestion> rels = examPaperQuestionMapper.selectList(
+                new LambdaQueryWrapper<ExamPaperQuestion>().eq(ExamPaperQuestion::getPaperId, paperId));
+        java.math.BigDecimal total = rels.stream()
+                .map(ExamPaperQuestion::getScore)
+                .filter(java.util.Objects::nonNull)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+        ExamPaper update = new ExamPaper();
+        update.setId(paperId);
+        update.setTotalScore(total);
+        this.updateById(update);
     }
 
     @Override
@@ -101,6 +119,8 @@ public class ExamPaperServiceImpl extends ServiceImpl<ExamPaperMapper, ExamPaper
                 examPaperQuestionMapper.addUsageCount(questionId, 1);
             }
         }
+        // 组卷变更后同步重算总分
+        recalcTotalScore(paperId);
     }
 
     @Override

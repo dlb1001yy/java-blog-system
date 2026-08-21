@@ -1,6 +1,8 @@
 <template>
   <PageContainer title="题库管理" description="考试题库维护：题目增删改查与题型统计">
     <template #action>
+      <el-button :icon="Download" @click="handleDownloadTemplate">下载模板</el-button>
+      <el-button :icon="Upload" @click="openImportDialog">批量导入</el-button>
       <el-button type="primary" :icon="Plus" @click="handleCreate">新增题目</el-button>
     </template>
 
@@ -206,13 +208,49 @@
         <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
       </template>
     </el-dialog>
+
+    <!-- 批量导入对话框 -->
+    <el-dialog v-model="importVisible" title="批量导入题目" width="520px" destroy-on-close>
+      <el-upload
+        drag
+        class="import-uploader"
+        accept=".xlsx,.xls"
+        :auto-upload="false"
+        :limit="1"
+        :on-change="handleImportFileChange"
+        :on-remove="() => (importFile = null)"
+        :file-list="importFileList"
+      >
+        <el-icon :size="36" class="upload-icon"><UploadFilled /></el-icon>
+        <div class="el-upload__text">拖拽 xlsx 文件到此处，或 <em>点击选择</em></div>
+        <template #tip>
+          <div class="el-upload__tip">请按模板格式填写，支持 .xlsx / .xls 文件</div>
+        </template>
+      </el-upload>
+
+      <el-alert
+        v-if="importErrors.length"
+        type="error"
+        show-icon
+        :closable="false"
+        class="import-error-alert"
+        title="部分数据导入失败，错误明细如下"
+      >
+        <div v-for="(err, i) in importErrors" :key="i" class="import-error-item">{{ err }}</div>
+      </el-alert>
+
+      <template #footer>
+        <el-button @click="importVisible = false">关闭</el-button>
+        <el-button type="primary" :loading="importing" :disabled="!importFile" @click="handleImport">开始导入</el-button>
+      </template>
+    </el-dialog>
   </PageContainer>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Delete } from '@element-plus/icons-vue'
+import { Plus, Delete, Upload, Download, UploadFilled } from '@element-plus/icons-vue'
 import PageContainer from '@/components/PageContainer.vue'
 import examQuestionApi from '@/api/examQuestion'
 
@@ -460,6 +498,69 @@ const handleDelete = (row) => {
 const handleSizeChange = () => fetchData()
 const handleCurrentChange = () => fetchData()
 
+// ---- 批量导入 ----
+const importVisible = ref(false)
+const importing = ref(false)
+const importFile = ref(null)
+const importFileList = ref([])
+const importErrors = ref([])
+
+const openImportDialog = () => {
+  importFile.value = null
+  importFileList.value = []
+  importErrors.value = []
+  importVisible.value = true
+}
+
+const handleImportFileChange = (file) => {
+  const name = file.name.toLowerCase()
+  if (!name.endsWith('.xlsx') && !name.endsWith('.xls')) {
+    ElMessage.error('仅支持 xlsx / xls 格式文件')
+    importFileList.value = []
+    importFile.value = null
+    return
+  }
+  importFileList.value = [file]
+  importFile.value = file.raw
+}
+
+const handleDownloadTemplate = async () => {
+  const res = await examQuestionApi.downloadTemplate()
+  const url = URL.createObjectURL(new Blob([res.data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'exam-template.xlsx'
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+const handleImport = async () => {
+  if (!importFile.value) {
+    ElMessage.warning('请先选择 xlsx 文件')
+    return
+  }
+  importing.value = true
+  try {
+    const res = await examQuestionApi.importQuestions(importFile.value)
+    const { count = 0, errors = [] } = res.data || {}
+    importErrors.value = errors || []
+    if (!errors || !errors.length) {
+      ElMessage.success(`导入成功，共 ${count} 条`)
+      importVisible.value = false
+      fetchData()
+      fetchStats()
+    } else {
+      ElMessage.warning(`导入完成：成功 ${count} 条，失败 ${errors.length} 条`)
+      if (count > 0) {
+        fetchData()
+        fetchStats()
+      }
+    }
+  } finally {
+    importing.value = false
+  }
+}
+
 onMounted(() => {
   fetchData()
   fetchStats()
@@ -568,5 +669,23 @@ onMounted(() => {
   min-width: 36px;
   font-weight: 600;
   color: var(--text-secondary);
+}
+
+.import-uploader :deep(.el-upload-dragger) {
+  width: 100%;
+}
+
+.upload-icon {
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.import-error-alert {
+  margin-top: var(--space-4);
+}
+
+.import-error-item {
+  font-size: 13px;
+  line-height: 1.6;
 }
 </style>

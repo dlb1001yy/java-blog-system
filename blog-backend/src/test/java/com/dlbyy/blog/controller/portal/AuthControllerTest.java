@@ -5,6 +5,7 @@ import com.dlbyy.blog.common.exception.BusinessException;
 import com.dlbyy.blog.security.JwtTokenProvider;
 import com.dlbyy.blog.service.CaptchaService;
 import com.dlbyy.blog.service.LoginAttemptService;
+import com.dlbyy.blog.service.UserService;
 import com.dlbyy.blog.utils.CookieUtils;
 import com.dlbyy.blog.utils.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +21,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collections;
 import java.util.Map;
@@ -60,13 +62,20 @@ class AuthControllerTest {
     @Mock
     private CaptchaService captchaService;
 
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     private AuthController authController;
 
     @BeforeEach
     void setUp() {
-        // @RequiredArgsConstructor 生成的构造器，手动注入全部 mock 协作者（末尾为 CaptchaService）
+        // @RequiredArgsConstructor 生成的构造器，手动注入全部 mock 协作者（末尾为 CaptchaService/UserService/PasswordEncoder）
         authController = new AuthController(
-                authenticationManager, jwtTokenProvider, jwtUtils, loginAttemptService, cookieUtils, captchaService);
+                authenticationManager, jwtTokenProvider, jwtUtils, loginAttemptService, cookieUtils, captchaService,
+                userService, passwordEncoder);
     }
 
     /** 构造登录请求体 */

@@ -27,6 +27,9 @@ public class InterviewQuestion extends BaseEntity {
     /** 参考答案（支持 Markdown/代码块） */
     private String answer;
 
+    /** 解题思路/拓展（支持 Markdown） */
+    private String tips;
+
     /** 状态 0:停用 1:启用 */
     private Integer status;
 }

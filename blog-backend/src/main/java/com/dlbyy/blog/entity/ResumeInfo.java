@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 public class ResumeInfo {
     @TableId(type = IdType.AUTO)
     private Long id;
+    /** 所属用户ID（NULL 为站长简历） */
+    private Long userId;
     private String name;
     private String jobTitle;
     private Integer gender;

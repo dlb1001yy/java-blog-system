@@ -29,6 +29,12 @@ public class ExamRecordDetailDTO {
     /** 状态 0:待批改 1:已发布 */
     private Integer status;
 
+    /** 及格线（来源试卷） */
+    private BigDecimal passScore;
+
+    /** 作弊标记 0:正常 1:切屏超限 */
+    private Integer cheatFlag;
+
     private Integer switchCount;
 
     private Integer durationSeconds;
