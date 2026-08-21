@@ -13,7 +13,8 @@
         <router-link to="/exam" class="nav-item">考试</router-link>
         <router-link to="/scores" class="nav-item">成绩</router-link>
         <router-link to="/music" class="nav-item">音乐</router-link>
-        <router-link to="/resume" class="nav-item">简历</router-link>
+        <!-- 简历展示功能暂时屏蔽 -->
+        <!-- <router-link to="/resume" class="nav-item">简历</router-link> -->
         <router-link to="/about-site" class="nav-item">关于站点</router-link>
         <router-link v-if="userStore.token" to="/profile/resume" class="nav-item">我的简历</router-link>
       </nav>

@@ -111,7 +111,8 @@ const menuGroups = computed(() => ([
       getRoute('/message'),
       getRoute('/link'),
       getRoute('/users'),
-      getRoute('/resume'),
+      // 简历管理暂时屏蔽
+      // getRoute('/resume'),
       getRoute('/resumeManage'),
       getRoute('/operation-log'),
       getRoute('/settings')

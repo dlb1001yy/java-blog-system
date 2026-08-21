@@ -121,8 +121,9 @@ const modules = [
   { name: '个人博客', desc: '记录学习笔记与技术心得', path: '/articles', icon: EditPen, color: '#409eff', bg: 'rgba(64,158,255,0.1)' },
   { name: '在线考试', desc: '模拟真实考试环境', path: '/exam', icon: Tickets, color: '#67c23a', bg: 'rgba(103,194,58,0.1)' },
   { name: '面试刷题', desc: '精选面试题库，助力求职', path: '/interview', icon: ChatDotRound, color: '#e6a23c', bg: 'rgba(230,162,60,0.1)' },
-  { name: '音乐放松', desc: '学习之余聆听音乐放松', path: '/music', icon: Headset, color: '#f56c6c', bg: 'rgba(245,108,108,0.1)' },
-  { name: '我的简历', desc: '展示项目经验与技能', path: '/resume', icon: User, color: '#9b59b6', bg: 'rgba(155,89,182,0.1)' }
+  { name: '音乐放松', desc: '学习之余聆听音乐放松', path: '/music', icon: Headset, color: '#f56c6c', bg: 'rgba(245,108,108,0.1)' }
+  // 简历功能暂时屏蔽
+  // { name: '我的简历', desc: '展示项目经验与技能', path: '/resume', icon: User, color: '#9b59b6', bg: 'rgba(155,89,182,0.1)' }
 ]
 
 const latestArticles = ref([])

@@ -41,24 +41,25 @@ const routes = [
     name: 'Music',
     component: () => import('@/views/Music.vue')
   },
-  {
-    path: '/resume',
-    name: 'Resume',
-    meta: { requiresAuth: true },
-    component: () => import('@/views/Resume.vue')
-  },
+  // 简历展示功能暂时屏蔽（恢复时取消注释即可；我的简历编辑 /profile/resume、分享页 /resume/share/:token 保留）
+  // {
+  //   path: '/resume',
+  //   name: 'Resume',
+  //   meta: { requiresAuth: true },
+  //   component: () => import('@/views/Resume.vue')
+  // },
   {
     path: '/resume/share/:token',
     name: 'ResumeShare',
     meta: { title: '简历' },
     component: () => import('@/views/Resume.vue')
   },
-  {
-    path: '/resume/:userId',
-    name: 'UserResume',
-    meta: { requiresAuth: true },
-    component: () => import('@/views/Resume.vue')
-  },
+  // {
+  //   path: '/resume/:userId',
+  //   name: 'UserResume',
+  //   meta: { requiresAuth: true },
+  //   component: () => import('@/views/Resume.vue')
+  // },
   {
     path: '/profile/resume',
     name: 'ProfileResume',

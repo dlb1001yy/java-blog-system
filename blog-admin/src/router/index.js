@@ -67,12 +67,13 @@ const routes = [
         component: () => import('@/views/MessageList.vue'),
         meta: { title: '留言管理', icon: 'Message' }
       },
-      {
-        path: 'resume',
-        name: 'ResumeEdit',
-        component: () => import('@/views/ResumeEdit.vue'),
-        meta: { title: '简历管理', icon: 'User' }
-      },
+      // 简历管理暂时屏蔽（恢复时取消注释，并同步恢复 Sidebar.vue 中的菜单项）
+      // {
+      //   path: 'resume',
+      //   name: 'ResumeEdit',
+      //   component: () => import('@/views/ResumeEdit.vue'),
+      //   meta: { title: '简历管理', icon: 'User' }
+      // },
       {
         path: 'resumeManage',
         name: 'ResumeManage',

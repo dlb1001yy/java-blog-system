@@ -4,8 +4,7 @@
       <div class="card">
         <h1 class="page-title">我的简历</h1>
         <p class="page-desc">
-          编辑完成后可
-          <router-link class="view-link" :to="`/resume/${userInfo?.id}`" target="_blank">查看我的简历页</router-link>
+          <!-- 简历展示页暂时屏蔽 -->
           <el-tag :type="auditStatusTagType" style="margin-left:12px">{{ auditStatusText }}</el-tag>
           <span v-if="auditStatus === 2 && auditRemark" class="audit-remark">拒绝原因：{{ auditRemark }}</span>
         </p>
