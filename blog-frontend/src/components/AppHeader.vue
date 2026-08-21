@@ -31,14 +31,25 @@
           @keyup.enter="handleSearch"
           clearable
         />
+        <!-- 未登录：登录/注册入口 -->
+        <template v-if="!userStore.token">
+          <router-link to="/login" class="auth-link">登录</router-link>
+          <router-link to="/register" class="auth-link auth-register">注册</router-link>
+        </template>
+        <!-- 已登录：用户名 + 退出 -->
+        <template v-else>
+          <span class="username" :title="displayName">{{ displayName }}</span>
+          <el-button link type="danger" size="small" @click="handleLogout">退出</el-button>
+        </template>
       </div>
     </div>
   </header>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import LogoIcon from './LogoIcon.vue'
 import { useUserStore } from '@/stores/user'
@@ -46,6 +57,16 @@ import { useUserStore } from '@/stores/user'
 const router = useRouter()
 const userStore = useUserStore()
 const searchKeyword = ref('')
+
+const displayName = computed(() =>
+  userStore.userInfo?.nickname || userStore.userInfo?.username || '用户'
+)
+
+const handleLogout = () => {
+  userStore.logout()
+  ElMessage.success('已退出登录')
+  router.push('/')
+}
 
 const handleSearch = () => {
   if (searchKeyword.value.trim()) {
@@ -124,11 +145,42 @@ const handleSearch = () => {
 }
 
 .header-right {
-  width: 220px;
+  width: 320px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .search-input {
-  width: 100%;
+  flex: 1;
+  min-width: 140px;
+}
+
+.auth-link {
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-regular);
+  text-decoration: none;
+  padding: 4px 8px;
+}
+
+.auth-link:hover {
+  color: var(--primary-color);
+}
+
+.auth-register {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.username {
+  white-space: nowrap;
+  max-width: 96px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  color: var(--text-regular);
 }
 
 @media (max-width: 768px) {

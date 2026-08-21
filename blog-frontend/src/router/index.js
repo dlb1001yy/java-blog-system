@@ -44,16 +44,19 @@ const routes = [
   {
     path: '/resume',
     name: 'Resume',
+    meta: { requiresAuth: true },
     component: () => import('@/views/Resume.vue')
   },
   {
     path: '/resume/:userId',
     name: 'UserResume',
+    meta: { requiresAuth: true },
     component: () => import('@/views/Resume.vue')
   },
   {
     path: '/profile/resume',
     name: 'ProfileResume',
+    meta: { requiresAuth: true },
     component: () => import('@/views/ProfileResume.vue')
   },
   {
@@ -64,7 +67,7 @@ const routes = [
   {
     path: '/interview',
     name: 'Interview',
-    meta: { title: '面试刷题' },
+    meta: { title: '面试刷题', requiresAuth: true },
     component: () => import('@/views/Interview.vue')
   },
   {
@@ -75,12 +78,13 @@ const routes = [
   {
     path: '/exam',
     name: 'Exam',
+    meta: { requiresAuth: true },
     component: () => import('@/views/Exam.vue')
   },
   {
     path: '/scores',
     name: 'Scores',
-    meta: { title: '成绩查询' },
+    meta: { title: '成绩查询', requiresAuth: true },
     component: () => import('@/views/Scores.vue')
   },
   {
@@ -97,7 +101,7 @@ const routes = [
     path: '/exam/:paperId',
     name: 'ExamTaking',
     component: () => import('@/views/ExamTaking.vue'),
-    meta: { hideLayout: true }
+    meta: { hideLayout: true, requiresAuth: true }
   }
 ]
 
@@ -107,6 +111,13 @@ const router = createRouter({
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) return savedPosition
     return { top: 0 }
+  }
+})
+
+// 登录限制：刷题/考试/成绩/简历相关页面未登录跳转登录页（登录后回跳）
+router.beforeEach((to) => {
+  if (to.meta.requiresAuth && !localStorage.getItem('token')) {
+    return { path: '/login', query: { redirect: to.fullPath } }
   }
 })
 
