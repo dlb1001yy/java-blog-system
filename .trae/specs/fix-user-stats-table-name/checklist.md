@@ -1,0 +1,4 @@
+- [x] UserMapper.countByRole 使用 `sys_user` 表名（注：sys_user 无 is_deleted 列，User 实体无逻辑删除字段，无需过滤）
+- [x] 修正后的 SQL 在 dlbyy_zp_blog 库可成功执行并返回角色分组计数（admin: 1）
+- [x] 全代码库无其他对 `user` 表（非 sys_user）的错误引用
+- [ ] 用户管理页查询统计不再报 Table doesn't exist（需后端重启后人工验证）

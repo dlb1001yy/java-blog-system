@@ -14,6 +14,6 @@ public interface UserMapper extends BaseMapper<User> {
     /**
      * 按角色分组统计用户数
      */
-    @Select("SELECT role, COUNT(*) AS cnt FROM user GROUP BY role")
+    @Select("SELECT role, COUNT(*) AS cnt FROM sys_user GROUP BY role")
     List<Map<String, Object>> countByRole();
 }
