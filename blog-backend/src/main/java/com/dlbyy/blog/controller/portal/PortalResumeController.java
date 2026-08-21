@@ -93,11 +93,15 @@ public class PortalResumeController {
     }
 
     /**
-     * 获取当前登录用户ID（写法与 PortalInterviewController 一致）
+     * 获取当前登录用户ID
+     * <p>/portal/** 为 permitAll，未登录时 SecurityContext 中是 AnonymousAuthenticationToken，
+     * 其 isAuthenticated() 也为 true，必须先排除匿名认证再查用户。
      */
     private Long currentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken) {
             throw new com.dlbyy.blog.common.exception.BusinessException(401, "未登录");
         }
         com.dlbyy.blog.entity.User user = resumeInfoService.getUserByUsername(authentication.getName());

@@ -101,11 +101,14 @@ public class PortalInterviewController {
     }
 
     /**
-     * 获取当前登录用户ID（写法与 UserController 一致）
+     * 获取当前登录用户ID
+     * <p>/portal/** 为 permitAll，需排除匿名认证（AnonymousAuthenticationToken 的 isAuthenticated() 也为 true）
      */
     private Long currentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken) {
             throw new com.dlbyy.blog.common.exception.BusinessException(401, "未登录");
         }
         User user = userService.getByUsername(authentication.getName());
