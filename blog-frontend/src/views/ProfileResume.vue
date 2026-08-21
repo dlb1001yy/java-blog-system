@@ -247,12 +247,30 @@ const shareUrl = (token) => `${location.origin}/blog/resume/share/${token}`
 const isExpired = (row) => !!row.expireTime && new Date(row.expireTime).getTime() < Date.now()
 
 const copyLink = async (token) => {
+  const text = shareUrl(token)
+  // navigator.clipboard 仅在安全上下文（HTTPS/localhost）可用，非安全上下文降级为 execCommand
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text)
+      ElMessage.success('已复制')
+      return
+    } catch {
+      // 继续降级
+    }
+  }
+  const input = document.createElement('textarea')
+  input.value = text
+  input.style.position = 'fixed'
+  input.style.opacity = '0'
+  document.body.appendChild(input)
+  input.select()
   try {
-    await navigator.clipboard.writeText(shareUrl(token))
+    document.execCommand('copy')
     ElMessage.success('已复制')
   } catch {
     ElMessage.error('复制失败，请手动复制')
   }
+  document.body.removeChild(input)
 }
 
 const fetchShares = async () => {
