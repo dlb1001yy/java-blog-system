@@ -12,7 +12,7 @@
           <el-divider content-position="left">基本信息</el-divider>
           <el-row :gutter="20">
             <el-col :span="8"><el-form-item label="姓名"><el-input v-model="form.name" placeholder="姓名" /></el-form-item></el-col>
-            <el-col :span="8"><el-form-item label="性别"><el-radio-group v-model="form.gender"><el-radio :label="0">男</el-radio><el-radio :label="1">女</el-radio></el-radio-group></el-form-item></el-col>
+            <el-col :span="8"><el-form-item label="性别"><el-radio-group v-model="form.gender"><el-radio :value="0">男</el-radio><el-radio :value="1">女</el-radio></el-radio-group></el-form-item></el-col>
             <el-col :span="8"><el-form-item label="出生日期"><el-date-picker v-model="form.birthDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width:100%"/></el-form-item></el-col>
           </el-row>
           <el-row :gutter="20">

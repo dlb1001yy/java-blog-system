@@ -136,9 +136,9 @@
           <!-- 语言切换 -->
           <div class="lang-bar">
             <el-radio-group v-model="codeLang" size="small">
-              <el-radio-button label="javascript">JavaScript</el-radio-button>
-              <el-radio-button label="java">Java</el-radio-button>
-              <el-radio-button label="python">Python</el-radio-button>
+              <el-radio-button value="javascript">JavaScript</el-radio-button>
+              <el-radio-button value="java">Java</el-radio-button>
+              <el-radio-button value="python">Python</el-radio-button>
             </el-radio-group>
           </div>
           <!-- Monaco 编辑器：加载失败或超时回退 textarea -->
