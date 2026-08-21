@@ -2,10 +2,36 @@
   <transition name="player-slide">
     <div v-if="player.currentSong" class="player-bar">
       <div class="player-inner">
+        <!-- 歌词弹出面板 -->
+        <transition name="lyric-fade">
+          <div v-if="showLyric" ref="lyricPanelRef" class="lyric-panel">
+            <div class="lyric-header">
+              <span class="lyric-title">歌词</span>
+              <span class="lyric-song">{{ player.currentSong.title }} - {{ player.currentSong.artist }}</span>
+              <el-button circle text size="small" class="lyric-close" @click="showLyric = false">
+                <el-icon :size="14"><Close /></el-icon>
+              </el-button>
+            </div>
+            <div v-if="lyricLines.length" ref="lyricScrollRef" class="lyric-scroll">
+              <div
+                v-for="(line, i) in lyricLines"
+                :key="i"
+                :ref="el => setLineRef(el, i)"
+                class="lyric-line"
+                :class="{ active: i === activeLyricIndex }"
+                @click="player.seek(line.time)"
+              >{{ line.text }}</div>
+            </div>
+            <div v-else class="lyric-empty">暂无歌词</div>
+          </div>
+        </transition>
+
         <!-- 左：封面 + 信息 -->
-        <div class="song-info">
-          <img v-if="player.currentSong.cover" :src="player.currentSong.cover" alt="cover" class="cover" @error="onCoverError" />
-          <div v-else class="cover cover-placeholder">
+        <div ref="songInfoRef" class="song-info" @click="showLyric = !showLyric">
+          <el-tooltip content="歌词" placement="top">
+            <img v-if="player.currentSong.cover" :src="player.currentSong.cover" alt="cover" class="cover" @error="onCoverError" />
+          </el-tooltip>
+          <div v-if="!player.currentSong.cover" class="cover cover-placeholder">
             <el-icon :size="20"><Headset /></el-icon>
           </div>
           <div class="meta">
@@ -105,14 +131,94 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { ArrowLeft, ArrowRight, List, Headset } from '@element-plus/icons-vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ArrowLeft, ArrowRight, List, Headset, Close } from '@element-plus/icons-vue'
 import { usePlayerStore } from '@/stores/player'
 
 const player = usePlayerStore()
 const progressRef = ref(null)
 const dragging = ref(false)
 const lastVolume = ref(0.8)
+
+/* ---- 歌词弹出面板 ---- */
+const showLyric = ref(false)
+const lyricPanelRef = ref(null)
+const songInfoRef = ref(null)
+const lyricScrollRef = ref(null)
+const lineEls = []
+
+const parseLrc = (lrc) => {
+  if (!lrc) return []
+  const lines = []
+  for (const raw of String(lrc).split(/\r?\n/)) {
+    const text = raw.replace(/\[[^\]]*\]/g, '').trim()
+    if (!text) continue
+    const tags = raw.match(/\[(\d+):(\d+(?:\.\d+)?)\]/g) || []
+    for (const tag of tags) {
+      const m = tag.match(/\[(\d+):(\d+(?:\.\d+)?)\]/)
+      const time = parseInt(m[1], 10) * 60 + parseFloat(m[2])
+      lines.push({ time, text })
+    }
+  }
+  return lines.sort((a, b) => a.time - b.time)
+}
+
+const lyricLines = computed(() => parseLrc(player.currentSong?.lyric))
+
+const activeLyricIndex = computed(() => {
+  const t = player.currentTime
+  let idx = -1
+  for (let i = 0; i < lyricLines.value.length; i++) {
+    if (lyricLines.value[i].time <= t + 0.3) idx = i
+    else break
+  }
+  return idx
+})
+
+const setLineRef = (el, i) => {
+  if (el) lineEls[i] = el
+}
+
+watch(activeLyricIndex, (idx) => {
+  if (idx < 0) return
+  const el = lineEls[idx]
+  const box = lyricScrollRef.value
+  if (el && box) {
+    box.scrollTo({
+      top: el.offsetTop - box.clientHeight / 2 + el.offsetHeight / 2,
+      behavior: 'smooth'
+    })
+  }
+})
+
+watch(() => player.currentSong?.id, () => {
+  lineEls.length = 0
+  if (lyricScrollRef.value) lyricScrollRef.value.scrollTop = 0
+})
+
+const onDocClick = (e) => {
+  if (!showLyric.value) return
+  const target = e.target
+  if (
+    (lyricPanelRef.value && lyricPanelRef.value.contains(target)) ||
+    (songInfoRef.value && songInfoRef.value.contains(target))
+  ) return
+  showLyric.value = false
+}
+
+const onDocKeydown = (e) => {
+  if (e.key === 'Escape') showLyric.value = false
+}
+
+onMounted(() => {
+  document.addEventListener('click', onDocClick)
+  document.addEventListener('keydown', onDocKeydown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocClick)
+  document.removeEventListener('keydown', onDocKeydown)
+})
 
 const onVolumeInput = (e) => {
   const v = Number(e.target.value)
@@ -189,6 +295,7 @@ const onCoverError = (e) => {
 }
 
 .player-inner {
+  position: relative;
   width: 1400px;
   max-width: 100%;
   margin: 0 auto;
@@ -198,12 +305,97 @@ const onCoverError = (e) => {
   gap: 24px;
 }
 
+/* ---- 歌词弹出面板 ---- */
+.lyric-panel {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 20px;
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  z-index: 10;
+}
+
+.lyric-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.lyric-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.lyric-song {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lyric-scroll {
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 8px 4px;
+  scroll-behavior: smooth;
+}
+
+.lyric-line {
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color 0.3s, transform 0.3s, font-size 0.3s;
+}
+
+.lyric-line.active {
+  color: var(--primary-color);
+  font-weight: 600;
+  font-size: 16px;
+  transform: scale(1.05);
+  transform-origin: left center;
+  background: rgba(64, 158, 255, 0.06);
+}
+
+.lyric-empty {
+  padding: 32px 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.lyric-fade-enter-active,
+.lyric-fade-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.lyric-fade-enter-from,
+.lyric-fade-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
 .song-info {
   display: flex;
   align-items: center;
   gap: 12px;
   width: 240px;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .cover {

@@ -43,23 +43,6 @@
       </template>
     </div>
 
-    <!-- 歌词面板 -->
-    <div class="card lyric-card" v-if="player.currentSong && lyricLines.length">
-      <div class="section-header">
-        <h2 class="section-title">歌词</h2>
-      </div>
-      <div class="lyric-scroll" ref="lyricScrollRef">
-        <div
-          v-for="(line, i) in lyricLines"
-          :key="i"
-          :ref="el => setLineRef(el, i)"
-          class="lyric-line"
-          :class="{ active: i === activeLyricIndex }"
-          @click="player.seek(line.time)"
-        >{{ line.text }}</div>
-      </div>
-    </div>
-
     <!-- 歌曲列表 -->
     <div class="card song-list-card">
       <div class="section-header">
@@ -230,59 +213,6 @@ const loadPlaylist = async (pl) => {
 
 const onSeek = (val) => player.seek(val)
 
-/* ---- 歌词 ---- */
-const lyricScrollRef = ref(null)
-const lineEls = []
-
-const parseLrc = (lrc) => {
-  if (!lrc) return []
-  const lines = []
-  for (const raw of String(lrc).split(/\r?\n/)) {
-    const text = raw.replace(/\[[^\]]*\]/g, '').trim()
-    if (!text) continue
-    const tags = raw.match(/\[(\d+):(\d+(?:\.\d+)?)\]/g) || []
-    for (const tag of tags) {
-      const m = tag.match(/\[(\d+):(\d+(?:\.\d+)?)\]/)
-      const time = parseInt(m[1], 10) * 60 + parseFloat(m[2])
-      lines.push({ time, text })
-    }
-  }
-  return lines.sort((a, b) => a.time - b.time)
-}
-
-const lyricLines = computed(() => parseLrc(player.currentSong?.lyric))
-
-const activeLyricIndex = computed(() => {
-  const t = player.currentTime
-  let idx = -1
-  for (let i = 0; i < lyricLines.value.length; i++) {
-    if (lyricLines.value[i].time <= t + 0.3) idx = i
-    else break
-  }
-  return idx
-})
-
-const setLineRef = (el, i) => {
-  if (el) lineEls[i] = el
-}
-
-watch(activeLyricIndex, (idx) => {
-  if (idx < 0) return
-  const el = lineEls[idx]
-  const box = lyricScrollRef.value
-  if (el && box) {
-    box.scrollTo({
-      top: el.offsetTop - box.clientHeight / 2 + el.offsetHeight / 2,
-      behavior: 'smooth'
-    })
-  }
-})
-
-watch(() => player.currentSong?.id, () => {
-  lineEls.length = 0
-  if (lyricScrollRef.value) lyricScrollRef.value.scrollTop = 0
-})
-
 onMounted(() => {
   fetchSongs()
   fetchPlaylists()
@@ -410,37 +340,6 @@ onMounted(() => {
 @keyframes eq-bounce {
   from { height: 4px; }
   to { height: 24px; }
-}
-
-/* ---- 歌词 ---- */
-.lyric-card {
-  max-width: 640px;
-}
-
-.lyric-scroll {
-  max-height: 320px;
-  overflow-y: auto;
-  padding: 8px 4px;
-  scroll-behavior: smooth;
-}
-
-.lyric-line {
-  padding: 6px 12px;
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--text-secondary);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition: color 0.3s, transform 0.3s, font-size 0.3s;
-}
-
-.lyric-line.active {
-  color: var(--primary-color);
-  font-weight: 600;
-  font-size: 16px;
-  transform: scale(1.05);
-  transform-origin: left center;
-  background: rgba(64, 158, 255, 0.06);
 }
 
 /* ---- 歌曲列表 ---- */
