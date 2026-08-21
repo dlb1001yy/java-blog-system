@@ -115,8 +115,8 @@
       </div>
     </div>
 
-    <!-- 推荐歌单 -->
-    <div class="card playlists-card">
+    <!-- 推荐歌单（无数据不展示） -->
+    <div v-if="playlists.length > 0" class="card playlists-card">
       <div class="section-header">
         <h2 class="section-title">推荐歌单</h2>
       </div>
@@ -128,7 +128,6 @@
           </div>
           <div class="playlist-name">{{ pl.name }}</div>
         </div>
-        <el-empty v-if="!loadingPlaylists && playlists.length === 0" description="暂无歌单" :image-size="60" />
       </div>
     </div>
   </div>
@@ -176,7 +175,7 @@ const fetchPlaylists = async () => {
   loadingPlaylists.value = true
   try {
     const res = await musicApi.getPlaylists()
-    playlists.value = res.data || []
+    playlists.value = res.data?.records || []
   } catch {
     /* ignore */
   } finally {
