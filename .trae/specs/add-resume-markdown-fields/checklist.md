@@ -1,0 +1,6 @@
+- [x] ResumePreview.vue 四种风格的 summary / selfEvaluation / 工作描述 / 项目描述 / 教育描述均通过 renderMd + v-html 渲染
+- [x] ProfileResume.vue 的 5 个描述输入框 placeholder 提示支持 Markdown
+- [x] md-text 样式使 Markdown 元素（列表、段落等）排版正常
+- [x] 空字段不产生多余渲染，布局不变（教育描述用 v-if，renderMd 空值返回 ''）
+- [x] 分享页 /resume/share/:token 展示同样为 Markdown 渲染（复用 ResumePreview 组件）
+- [x] GetDiagnostics 无错误

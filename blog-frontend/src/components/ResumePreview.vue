@@ -20,7 +20,7 @@
 
       <section v-if="resume.summary">
         <h2>个人简介</h2>
-        <p class="rp-text">{{ resume.summary }}</p>
+        <div class="md-text" v-html="renderMd(resume.summary)"></div>
       </section>
       <section v-if="skills.length">
         <h2>技能特长</h2>
@@ -33,7 +33,7 @@
         <div v-for="(w, i) in works" :key="i" class="m-item">
           <div class="m-item-head"><strong>{{ w.company }}</strong><span>{{ w.startDate }} ~ {{ w.endDate || '至今' }}</span></div>
           <p class="m-sub">{{ w.position }}</p>
-          <p class="rp-text">{{ w.description }}</p>
+          <div class="md-text" v-html="renderMd(w.description)"></div>
         </div>
       </section>
       <section v-if="projects.length">
@@ -41,7 +41,7 @@
         <div v-for="(p, i) in projects" :key="i" class="m-item">
           <div class="m-item-head"><strong>{{ p.name }}</strong><span>{{ p.date }}</span></div>
           <p class="m-sub">{{ p.role }}<template v-if="p.technologies?.length"> · {{ p.technologies.join(' / ') }}</template></p>
-          <p class="rp-text">{{ p.description }}</p>
+          <div class="md-text" v-html="renderMd(p.description)"></div>
         </div>
       </section>
       <section v-if="educations.length">
@@ -49,6 +49,7 @@
         <div v-for="(e, i) in educations" :key="i" class="m-item">
           <div class="m-item-head"><strong>{{ e.school }}</strong><span>{{ e.startDate }} ~ {{ e.endDate }}</span></div>
           <p class="m-sub">{{ e.major }} · {{ e.degree }}</p>
+          <div v-if="e.description" class="md-text" v-html="renderMd(e.description)"></div>
         </div>
       </section>
       <section v-if="certificates.length">
@@ -57,7 +58,7 @@
       </section>
       <section v-if="resume.selfEvaluation">
         <h2>自我评价</h2>
-        <p class="rp-text">{{ resume.selfEvaluation }}</p>
+        <div class="md-text" v-html="renderMd(resume.selfEvaluation)"></div>
       </section>
       <section v-if="resume.interests">
         <h2>兴趣爱好</h2>
@@ -79,7 +80,7 @@
       </header>
       <section v-if="resume.summary">
         <h3 class="c-center-title">个人简介</h3>
-        <p class="rp-text c-center">{{ resume.summary }}</p>
+        <div class="md-text c-center" v-html="renderMd(resume.summary)"></div>
       </section>
       <section v-if="skills.length">
         <h3 class="c-center-title">技能特长</h3>
@@ -90,7 +91,7 @@
         <div v-for="(w, i) in works" :key="i" class="c-item">
           <p class="c-line"><strong>{{ w.company }}</strong><span>{{ w.startDate }} ~ {{ w.endDate || '至今' }}</span></p>
           <p class="c-line em">{{ w.position }}</p>
-          <p class="rp-text">{{ w.description }}</p>
+          <div class="md-text" v-html="renderMd(w.description)"></div>
         </div>
       </section>
       <section v-if="projects.length">
@@ -98,7 +99,7 @@
         <div v-for="(p, i) in projects" :key="i" class="c-item">
           <p class="c-line"><strong>{{ p.name }}</strong><span>{{ p.date }}</span></p>
           <p class="c-line em">{{ p.role }}<template v-if="p.technologies?.length"> · {{ p.technologies.join(' / ') }}</template></p>
-          <p class="rp-text">{{ p.description }}</p>
+          <div class="md-text" v-html="renderMd(p.description)"></div>
         </div>
       </section>
       <section v-if="educations.length">
@@ -106,6 +107,7 @@
         <div v-for="(e, i) in educations" :key="i" class="c-item">
           <p class="c-line"><strong>{{ e.school }}</strong><span>{{ e.startDate }} ~ {{ e.endDate }}</span></p>
           <p class="c-line em">{{ e.major }} · {{ e.degree }}</p>
+          <div v-if="e.description" class="md-text" v-html="renderMd(e.description)"></div>
         </div>
       </section>
       <section v-if="certificates.length">
@@ -114,7 +116,7 @@
       </section>
       <section v-if="resume.selfEvaluation">
         <h3 class="c-center-title">自我评价</h3>
-        <p class="rp-text">{{ resume.selfEvaluation }}</p>
+        <div class="md-text" v-html="renderMd(resume.selfEvaluation)"></div>
       </section>
     </div>
 
@@ -151,13 +153,13 @@
         <p class="s-title">{{ resume.jobTitle }}</p>
         <section v-if="resume.summary">
           <h3>个人简介</h3>
-          <p class="rp-text">{{ resume.summary }}</p>
+          <div class="md-text" v-html="renderMd(resume.summary)"></div>
         </section>
         <section v-if="works.length">
           <h3>工作经历</h3>
           <div v-for="(w, i) in works" :key="i" class="s-item">
             <p class="s-line"><strong>{{ w.company }} · {{ w.position }}</strong><span>{{ w.startDate }} ~ {{ w.endDate || '至今' }}</span></p>
-            <p class="rp-text">{{ w.description }}</p>
+            <div class="md-text" v-html="renderMd(w.description)"></div>
           </div>
         </section>
         <section v-if="projects.length">
@@ -165,7 +167,7 @@
           <div v-for="(p, i) in projects" :key="i" class="s-item">
             <p class="s-line"><strong>{{ p.name }} · {{ p.role }}</strong><span>{{ p.date }}</span></p>
             <p v-if="p.technologies?.length" class="s-tech">{{ p.technologies.join(' / ') }}</p>
-            <p class="rp-text">{{ p.description }}</p>
+            <div class="md-text" v-html="renderMd(p.description)"></div>
           </div>
         </section>
         <section v-if="educations.length">
@@ -173,11 +175,12 @@
           <div v-for="(e, i) in educations" :key="i" class="s-item">
             <p class="s-line"><strong>{{ e.school }} · {{ e.major }}</strong><span>{{ e.startDate }} ~ {{ e.endDate }}</span></p>
             <p class="rp-text">{{ e.degree }}</p>
+            <div v-if="e.description" class="md-text" v-html="renderMd(e.description)"></div>
           </div>
         </section>
         <section v-if="resume.selfEvaluation">
           <h3>自我评价</h3>
-          <p class="rp-text">{{ resume.selfEvaluation }}</p>
+          <div class="md-text" v-html="renderMd(resume.selfEvaluation)"></div>
         </section>
       </main>
     </div>
@@ -201,7 +204,7 @@
       <div class="b-body">
         <section v-if="resume.summary">
           <h2>个人简介</h2>
-          <p class="rp-text">{{ resume.summary }}</p>
+          <div class="md-text" v-html="renderMd(resume.summary)"></div>
         </section>
         <section v-if="skills.length">
           <h2>技能特长</h2>
@@ -213,7 +216,7 @@
           <h2>工作经历</h2>
           <div v-for="(w, i) in works" :key="i" class="b-item">
             <div class="b-item-head"><strong>{{ w.company }} · {{ w.position }}</strong><span>{{ w.startDate }} ~ {{ w.endDate || '至今' }}</span></div>
-            <p class="rp-text">{{ w.description }}</p>
+            <div class="md-text" v-html="renderMd(w.description)"></div>
           </div>
         </section>
         <section v-if="projects.length">
@@ -221,13 +224,14 @@
           <div v-for="(p, i) in projects" :key="i" class="b-item">
             <div class="b-item-head"><strong>{{ p.name }} · {{ p.role }}</strong><span>{{ p.date }}</span></div>
             <p v-if="p.technologies?.length" class="b-tech">{{ p.technologies.join(' / ') }}</p>
-            <p class="rp-text">{{ p.description }}</p>
+            <div class="md-text" v-html="renderMd(p.description)"></div>
           </div>
         </section>
         <section v-if="educations.length">
           <h2>教育背景</h2>
           <div v-for="(e, i) in educations" :key="i" class="b-item">
             <div class="b-item-head"><strong>{{ e.school }} · {{ e.major }} · {{ e.degree }}</strong><span>{{ e.startDate }} ~ {{ e.endDate }}</span></div>
+            <div v-if="e.description" class="md-text" v-html="renderMd(e.description)"></div>
           </div>
         </section>
         <section v-if="certificates.length">
@@ -236,7 +240,7 @@
         </section>
         <section v-if="resume.selfEvaluation">
           <h2>自我评价</h2>
-          <p class="rp-text">{{ resume.selfEvaluation }}</p>
+          <div class="md-text" v-html="renderMd(resume.selfEvaluation)"></div>
         </section>
         <section v-if="resume.interests">
           <h2>兴趣爱好</h2>
@@ -249,6 +253,9 @@
 
 <script setup>
 import { computed } from 'vue'
+import md from '@/utils/markdown'
+
+const renderMd = (text) => (text ? md.render(String(text)) : '')
 
 const props = defineProps({
   resume: { type: Object, required: true },
@@ -277,6 +284,10 @@ const basics = computed(() => {
 <style scoped>
 .rp-root { background: #fff; color: #1f2328; line-height: 1.6; }
 .rp-text { color: #424a53; white-space: pre-wrap; margin: 4px 0; }
+.md-text { color: #424a53; }
+.md-text :deep(p) { margin: 4px 0; }
+.md-text :deep(ul), .md-text :deep(ol) { margin: 4px 0; padding-left: 20px; }
+.md-text :deep(a) { color: inherit; }
 .rp-root section { margin-bottom: 20px; }
 
 /* ---------- 现代极简 modern ---------- */
