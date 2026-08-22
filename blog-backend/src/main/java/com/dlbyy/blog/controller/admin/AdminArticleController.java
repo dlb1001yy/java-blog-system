@@ -80,7 +80,7 @@ public class AdminArticleController {
         // XSS 清洗：纯文本字段移除所有 HTML 标签；content 用 relaxed 白名单清洗，Markdown 源文本基本无损
         article.setTitle(JsoupXssUtil.cleanText(dto.getTitle()));
         article.setSummary(JsoupXssUtil.cleanText(dto.getSummary()));
-        article.setContent(JsoupXssUtil.cleanHtml(dto.getContent()));
+        article.setContent(dto.getContent());
         article.setCoverImage(dto.getCoverImage());
         article.setType(dto.getType());
         article.setSourceUrl(dto.getSourceUrl());
