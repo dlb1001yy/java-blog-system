@@ -1,36 +1,61 @@
 <template>
-  <div class="md-editor">
-    <div class="md-editor__toolbar">
-      <el-button size="small" text @mousedown.prevent @click="wrapSelection('**', '**')">加粗</el-button>
-      <el-button size="small" text @mousedown.prevent @click="wrapSelection('*', '*')">斜体</el-button>
-      <el-button size="small" text @mousedown.prevent @click="insertLinePrefix('## ')">标题</el-button>
-      <el-button size="small" text @mousedown.prevent @click="insertLinePrefix('- ')">无序列表</el-button>
-      <el-button size="small" text @mousedown.prevent @click="insertLinePrefix('1. ')">有序列表</el-button>
-      <el-button size="small" text @mousedown.prevent @click="insertLink">链接</el-button>
-      <el-button size="small" text @mousedown.prevent @click="wrapSelection('\n```\n', '\n```\n')">代码块</el-button>
-      <div class="md-editor__preview-switch">
-        <span>预览</span>
-        <el-switch v-model="showPreview" size="small" />
-      </div>
+  <div class="editor-wrapper">
+    <!-- 工具栏（借鉴 blog-admin ArticleEdit） -->
+    <div class="editor-toolbar">
+      <el-button-group>
+        <el-button size="small" @mousedown.prevent @click="insertText('# ', '', '标题')">H1</el-button>
+        <el-button size="small" @mousedown.prevent @click="insertText('## ', '', '标题')">H2</el-button>
+        <el-button size="small" @mousedown.prevent @click="insertText('### ', '', '标题')">H3</el-button>
+      </el-button-group>
+      <el-button-group style="margin-left: 8px;">
+        <el-button size="small" @mousedown.prevent @click="insertText('**', '**', '粗体')">B</el-button>
+        <el-button size="small" @mousedown.prevent @click="insertText('*', '*', '斜体')">I</el-button>
+        <el-button size="small" @mousedown.prevent @click="insertText('`', '`', '代码')">&lt;/&gt;</el-button>
+      </el-button-group>
+      <el-button-group style="margin-left: 8px;">
+        <el-button size="small" @mousedown.prevent @click="insertText('- ', '', '列表项')">列表</el-button>
+        <el-button size="small" @mousedown.prevent @click="insertText('> ', '', '引用')">引用</el-button>
+        <el-button size="small" @mousedown.prevent @click="insertText('\n```\n', '\n```\n', '代码块')">代码块</el-button>
+      </el-button-group>
+      <el-button-group style="margin-left: 8px;">
+        <el-button size="small" @mousedown.prevent @click="insertText('[', '](url)', '链接')">链接</el-button>
+        <el-button size="small" @mousedown.prevent @click="insertText('![', '](url)', '图片')">图片</el-button>
+      </el-button-group>
+      <el-button
+        size="small"
+        style="margin-left: 8px;"
+        @click="previewMode = !previewMode"
+      >
+        {{ previewMode ? '编辑' : '预览' }}
+      </el-button>
     </div>
-    <div class="md-editor__body" :class="{ 'is-split': showPreview }">
-      <textarea
-        ref="textareaRef"
-        class="md-editor__textarea"
-        :value="modelValue"
+
+    <div class="editor-content">
+      <el-input
+        v-show="!previewMode"
+        ref="inputRef"
+        v-model="text"
+        type="textarea"
+        :rows="rows"
         :placeholder="placeholder"
-        :style="{ height: height + 'px' }"
-        @input="onInput"
+        class="markdown-editor"
+        :input-style="{ fontFamily: 'Consolas, Monaco, monospace', fontSize: '14px' }"
         @keydown.tab="onTab"
-      ></textarea>
-      <div v-if="showPreview" class="md-editor__preview md-text" v-html="html"></div>
+      />
+      <div
+        v-show="previewMode"
+        class="markdown-body preview"
+        v-html="renderedContent"
+      ></div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
-import md from '@/utils/markdown'
+import { ref, computed } from 'vue'
+import { nextTick } from 'vue'
+import MarkdownIt from 'markdown-it'
+import 'github-markdown-css'
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
@@ -40,134 +65,111 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const textareaRef = ref(null)
-const showPreview = ref(true)
+const inputRef = ref(null)
+const previewMode = ref(false)
 
-const html = computed(() => md.render(props.modelValue || ''))
+// 行数按高度估算（约 28px/行），与 height prop 兼容
+const rows = computed(() => Math.max(3, Math.round(props.height / 28)))
 
-function onInput(e) {
-  emit('update:modelValue', e.target.value)
+const text = computed({
+  get: () => props.modelValue,
+  set: (v) => emit('update:modelValue', v)
+})
+
+// 简历描述多为单换行文本，开启 breaks 使单个换行即时生效
+const md = new MarkdownIt({
+  html: true,
+  linkify: true,
+  breaks: true
+})
+
+// 外链新窗口打开（锚点链接除外）
+const defaultLinkOpen = md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
+  return self.renderToken(tokens, idx, options)
+}
+md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+  const href = tokens[idx].attrGet('href') || ''
+  if (/^https?:\/\//i.test(href)) {
+    tokens[idx].attrSet('target', '_blank')
+    tokens[idx].attrSet('rel', 'noopener noreferrer')
+  }
+  return defaultLinkOpen(tokens, idx, options, env, self)
+}
+// 图片：防盗链 + 懒加载
+const defaultImage = md.renderer.rules.image || function (tokens, idx, options, env, self) {
+  return self.renderToken(tokens, idx, options)
+}
+md.renderer.rules.image = function (tokens, idx, options, env, self) {
+  tokens[idx].attrSet('referrerpolicy', 'no-referrer')
+  tokens[idx].attrSet('loading', 'lazy')
+  return defaultImage(tokens, idx, options, env, self)
+}
+
+const renderedContent = computed(() => md.render(props.modelValue || ''))
+
+// 作用于光标选区的插入（借鉴 admin，通过 ref 获取自身 textarea，多实例隔离）
+function insertText(before, after = '', placeholder = '') {
+  const textarea = inputRef.value?.textarea ?? inputRef.value?.$el?.querySelector('textarea')
+  if (!textarea) return
+
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const value = props.modelValue || ''
+  const selected = value.substring(start, end) || placeholder
+
+  emit('update:modelValue',
+    value.substring(0, start) + before + selected + after + value.substring(end)
+  )
+
+  nextTick(() => {
+    textarea.focus()
+    textarea.setSelectionRange(start + before.length, start + before.length + selected.length)
+  })
 }
 
 function onTab(e) {
   e.preventDefault()
-  insertText('  ')
-}
-
-function update(value, selStart, selEnd) {
-  emit('update:modelValue', value)
-  requestAnimationFrame(() => {
-    const ta = textareaRef.value
-    if (!ta) return
-    ta.focus()
-    ta.setSelectionRange(selStart, selEnd)
+  const textarea = inputRef.value?.textarea ?? inputRef.value?.$el?.querySelector('textarea')
+  if (!textarea) return
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const value = props.modelValue || ''
+  emit('update:modelValue', value.substring(0, start) + '  ' + value.substring(end))
+  nextTick(() => {
+    textarea.focus()
+    textarea.setSelectionRange(start + 2, start + 2)
   })
-}
-
-function insertText(text, selectStartOffset = 0, selectEndOffset = 0) {
-  const ta = textareaRef.value
-  if (!ta) return
-  const { selectionStart: start, selectionEnd: end, value } = ta
-  const next = value.slice(0, start) + text + value.slice(end)
-  update(next, start + selectStartOffset, start + selectEndOffset || start + text.length + selectEndOffset)
-}
-
-// 包裹选中文本
-function wrapSelection(before, after) {
-  const ta = textareaRef.value
-  if (!ta) return
-  const { selectionStart: start, selectionEnd: end, value } = ta
-  const selected = value.slice(start, end)
-  const next = value.slice(0, start) + before + selected + after + value.slice(end)
-  update(next, start + before.length, start + before.length + selected.length)
-}
-
-// 行前缀（作用于选区涉及的所有行）
-function insertLinePrefix(prefix) {
-  const ta = textareaRef.value
-  if (!ta) return
-  const { selectionStart: start, selectionEnd: end, value } = ta
-  const lineStart = value.lastIndexOf('\n', start - 1) + 1
-  const lineEndIdx = value.indexOf('\n', end)
-  const lineEnd = lineEndIdx === -1 ? value.length : lineEndIdx
-  const lines = value.slice(lineStart, lineEnd).split('\n')
-  const prefixed = lines.map(l => (l.startsWith(prefix) ? l : prefix + l)).join('\n')
-  const next = value.slice(0, lineStart) + prefixed + value.slice(lineEnd)
-  update(next, lineStart, lineStart + prefixed.length)
-}
-
-function insertLink() {
-  const ta = textareaRef.value
-  if (!ta) return
-  const { selectionStart: start, selectionEnd: end, value } = ta
-  const selected = value.slice(start, end) || '链接文字'
-  const text = `[${selected}](https://)`
-  const next = value.slice(0, start) + text + value.slice(end)
-  update(next, start + text.length, start + text.length)
 }
 </script>
 
 <style scoped>
-.md-editor {
-  border: 1px solid var(--el-border-color, #dcdfe6);
+.editor-wrapper {
+  width: 100%;
+  border: 1px solid var(--border-color, #dcdfe6);
   border-radius: 6px;
   overflow: hidden;
 }
 
-.md-editor__toolbar {
+.editor-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   padding: 4px 8px;
+  border-bottom: 1px solid var(--border-color, #ebeef5);
   background: #f5f7fa;
-  border-bottom: 1px solid var(--el-border-color-lighter, #ebeef5);
 }
 
-.md-editor__preview-switch {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: #606266;
-}
-
-.md-editor__body {
-  display: flex;
-}
-
-.md-editor__textarea {
-  flex: 1;
-  width: 100%;
+.editor-content :deep(.el-textarea__inner) {
   border: none;
-  outline: none;
+  border-radius: 0;
+  box-shadow: none;
   resize: vertical;
-  padding: 10px 12px;
-  font-family: Consolas, Monaco, 'Courier New', monospace;
-  font-size: 14px;
-  line-height: 1.6;
-  color: #303133;
 }
 
-.md-editor__body.is-split .md-editor__textarea {
-  width: 50%;
-  flex: none;
-}
-
-.md-editor__preview {
-  width: 50%;
-  flex: none;
-  overflow: auto;
-  padding: 10px 14px;
-  border-left: 1px solid var(--el-border-color-lighter, #ebeef5);
-}
-
-.md-editor__preview.md-text :deep(p) {
-  margin: 4px 0;
-}
-
-.md-editor__preview.md-text :deep(ul),
-.md-editor__preview.md-text :deep(ol) {
-  padding-left: 20px;
+.preview {
+  padding: 16px 20px;
+  min-height: 120px;
+  background: #fff;
 }
 </style>

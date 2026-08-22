@@ -35,10 +35,10 @@ public class ResumeInfoServiceImpl extends ServiceImpl<ResumeInfoMapper, ResumeI
         ResumeInfo existing = getByUserId(userId);
         LocalDateTime now = LocalDateTime.now();
         resumeInfo.setUserId(userId);
-        // XSS 清洗：这些为纯文本段落字段，用 cleanText 保留纯文本；JSON 数组字段（skills/workExperience 等）跳过
-        resumeInfo.setSummary(JsoupXssUtil.cleanText(resumeInfo.getSummary()));
-        resumeInfo.setSelfEvaluation(JsoupXssUtil.cleanText(resumeInfo.getSelfEvaluation()));
-        resumeInfo.setInterests(JsoupXssUtil.cleanText(resumeInfo.getInterests()));
+        // XSS 清洗：summary/selfEvaluation 为 Markdown 文本，保留换行；JSON 数组字段（skills/workExperience 等）跳过
+        resumeInfo.setSummary(JsoupXssUtil.cleanMarkdown(resumeInfo.getSummary()));
+        resumeInfo.setSelfEvaluation(JsoupXssUtil.cleanMarkdown(resumeInfo.getSelfEvaluation()));
+        resumeInfo.setInterests(JsoupXssUtil.cleanMarkdown(resumeInfo.getInterests()));
         // 不信任客户端：保存/更新后重置为待审核
         resumeInfo.setStatus(0);
         resumeInfo.setAuditRemark(null);

@@ -57,4 +57,22 @@ public class JsoupXssUtil {
         }
         return Jsoup.clean(text, Safelist.none());
     }
+
+    /**
+     * 过滤 Markdown 文本：移除所有 HTML 标签（防 XSS），但保留换行符。
+     * <p>Jsoup 清洗会把 \n 当作空白折叠，因此先用占位符保护换行，清洗后还原。</p>
+     *
+     * @param text 原始 Markdown 内容
+     * @return 无 HTML 标签、保留换行的 Markdown 文本
+     */
+    public static String cleanMarkdown(String text) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+        String placeholder = "\u0000NL\u0000";
+        String guarded = text.replace("\n", placeholder);
+        String cleaned = Jsoup.clean(guarded, "", Safelist.none(),
+                new org.jsoup.nodes.Document.OutputSettings().prettyPrint(false));
+        return cleaned.replace(placeholder, "\n").strip();
+    }
 }
