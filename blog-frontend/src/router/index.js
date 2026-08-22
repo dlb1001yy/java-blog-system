@@ -51,7 +51,7 @@ const routes = [
   {
     path: '/resume/share/:token',
     name: 'ResumeShare',
-    meta: { title: '简历' },
+    meta: { title: '简历', hideLayout: true },
     component: () => import('@/views/Resume.vue')
   },
   // {
