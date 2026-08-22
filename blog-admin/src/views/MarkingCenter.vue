@@ -55,7 +55,7 @@
             <span>试卷：<b>{{ detail.paperTitle }}</b></span>
             <span>客观题得分：<b class="score-num">{{ detail.objectiveScore ?? 0 }}</b></span>
             <span v-if="detail.switchCount != null">切屏次数：<b>{{ detail.switchCount }}</b></span>
-            <el-tag v-if="detail.cheatFlag === 1" type="danger" size="small" effect="dark">作弊嫌疑</el-tag>
+            <el-tag v-if="detail.cheatFlag === 1" type="danger" size="small" effect="dark">作弊嫌疑 · 主观题已默认零分，可直接提交</el-tag>
           </div>
 
           <div class="marking-body" v-loading="detailLoading">
@@ -166,12 +166,22 @@ const handleSelect = async (row) => {
   try {
     const res = await markingApi.detail(row.id)
     detail.value = res.data
-    // 重建评分表单，已批过的（gotScore 非空）回填
+    // 重建评分表单，已批过的（gotScore 非空）回填；作弊答卷未批的主观题默认记零分
+    const isCheat = detail.value.cheatFlag === 1
     Object.keys(markForms).forEach(k => delete markForms[k])
     subjectiveItems.value.forEach(item => {
-      markForms[item.questionId] = {
-        score: item.gotScore == null ? null : Number(item.gotScore),
-        comment: item.comment || ''
+      if (item.gotScore != null) {
+        markForms[item.questionId] = {
+          score: Number(item.gotScore),
+          comment: item.comment || ''
+        }
+      } else if (isCheat) {
+        markForms[item.questionId] = {
+          score: 0,
+          comment: '作弊嫌疑，主观题记零分'
+        }
+      } else {
+        markForms[item.questionId] = { score: null, comment: item.comment || '' }
       }
     })
   } finally {
