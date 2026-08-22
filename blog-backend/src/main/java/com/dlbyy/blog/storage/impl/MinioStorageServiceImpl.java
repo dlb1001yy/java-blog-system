@@ -8,6 +8,7 @@ import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import io.minio.SetBucketPolicyArgs;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -120,6 +121,29 @@ public class MinioStorageServiceImpl implements FileStorageService {
             ensureBucketExists();
         } catch (Exception e) {
             log.warn("MinIO 启动预建桶失败（上传时将重试）: {}", e.getMessage());
+        }
+    }
+
+    @Override
+    public void delete(String url) {
+        if (url == null || url.isBlank()) {
+            return;
+        }
+        String urlPrefix = config.getUrlPrefix();
+        if (urlPrefix == null || !url.startsWith(urlPrefix)) {
+            // 非本存储的文件（外链等），跳过
+            log.info("URL 不属于 MinIO 存储，跳过删除: {}", url);
+            return;
+        }
+        String objectKey = url.substring(urlPrefix.length());
+        try {
+            minioClient.removeObject(RemoveObjectArgs.builder()
+                    .bucket(config.getBucketName())
+                    .object(objectKey)
+                    .build());
+            log.info("MinIO 文件删除成功: bucket={}, key={}", config.getBucketName(), objectKey);
+        } catch (Exception e) {
+            log.warn("MinIO 文件删除失败（仅记录，不影响业务）: key={}, 原因: {}", objectKey, e.getMessage());
         }
     }
 

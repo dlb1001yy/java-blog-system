@@ -35,4 +35,13 @@ public interface FileStorageService {
      * @throws com.dlbyy.blog.common.exception.BusinessException 内容为空或保存失败时抛出
      */
     FileUploadResult saveBytes(byte[] data, String suffix, String contentType, String originalFilename);
+
+    /**
+     * 删除文件
+     * <p>传入上传时返回的完整访问 URL；URL 为空或不属于本存储（前缀不匹配）时静默跳过，
+     * 仅记录日志。删除失败同样只记日志不抛异常，避免影响业务记录的删除。
+     *
+     * @param url 文件访问 URL
+     */
+    void delete(String url);
 }

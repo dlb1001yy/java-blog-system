@@ -104,7 +104,13 @@ public class MusicSongServiceImpl extends ServiceImpl<MusicSongMapper, MusicSong
 
     @Override
     public void adminDelete(Long id) {
+        MusicSong song = this.getById(id);
         this.removeById(id);
+        // 删除 DB 记录后同步清理存储文件（音频 + 封面）；删除失败仅记日志，不影响业务
+        if (song != null) {
+            fileStorageService.delete(song.getFileUrl());
+            fileStorageService.delete(song.getCover());
+        }
     }
 
     @Override

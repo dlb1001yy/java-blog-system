@@ -100,6 +100,26 @@ public class LocalFileStorageServiceImpl implements FileStorageService {
                 .build();
     }
 
+    @Override
+    public void delete(String url) {
+        if (url == null || url.isBlank()) {
+            return;
+        }
+        String urlPrefix = config.getUrlPrefix();
+        if (urlPrefix == null || !url.startsWith(urlPrefix)) {
+            // 非本存储的文件（外链等），跳过，防止误删本地其他文件
+            log.info("URL 不属于本地存储，跳过删除: {}", url);
+            return;
+        }
+        String relativePath = url.substring(urlPrefix.length());
+        try {
+            Files.deleteIfExists(new File(config.getUploadPath(), relativePath).getAbsoluteFile().toPath());
+            log.info("本地文件删除成功: {}", relativePath);
+        } catch (Exception e) {
+            log.warn("本地文件删除失败（仅记录，不影响业务）: {}, 原因: {}", relativePath, e.getMessage());
+        }
+    }
+
     /** 生成 相对路径（日期子目录 + 唯一文件名），path 非空时优先作为子目录 */
     private String buildRelativePath(String suffix, String path) {
         String dateSubDir = LocalDate.now().format(DATE_DIR);

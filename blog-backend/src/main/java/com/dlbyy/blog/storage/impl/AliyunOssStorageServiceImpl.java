@@ -101,6 +101,26 @@ public class AliyunOssStorageServiceImpl implements FileStorageService {
                 .build();
     }
 
+    @Override
+    public void delete(String url) {
+        if (url == null || url.isBlank()) {
+            return;
+        }
+        String urlPrefix = config.getUrlPrefix();
+        if (urlPrefix == null || !url.startsWith(urlPrefix)) {
+            // 非本存储的文件（外链等），跳过
+            log.info("URL 不属于 OSS 存储，跳过删除: {}", url);
+            return;
+        }
+        String objectKey = url.substring(urlPrefix.length());
+        try {
+            ossClient.deleteObject(config.getBucketName(), objectKey);
+            log.info("OSS 文件删除成功: bucket={}, key={}", config.getBucketName(), objectKey);
+        } catch (Exception e) {
+            log.warn("OSS 文件删除失败（仅记录，不影响业务）: key={}, 原因: {}", objectKey, e.getMessage());
+        }
+    }
+
     private String extractSuffix(String filename) {
         if (filename == null || !filename.contains(".")) {
             return "";
