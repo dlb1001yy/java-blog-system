@@ -60,6 +60,9 @@ function refreshTokenOnce() {
 // 响应拦截器
 request.interceptors.response.use(
   response => {
+    // 滑动续期：后端在响应头下发新 AccessToken 时静默替换
+    const newToken = response.headers['x-new-token']
+    if (newToken) localStorage.setItem('admin_token', newToken)
     // 文件流响应（如模板下载）直接透传
     if (response.config.responseType === 'blob') return response
     const res = response.data

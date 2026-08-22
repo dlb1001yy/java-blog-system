@@ -100,6 +100,8 @@ public class SecurityConfig {
         }
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
+        // 暴露滑动续期响应头，便于前端读取 X-New-Token
+        configuration.setExposedHeaders(Arrays.asList("X-New-Token"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
         

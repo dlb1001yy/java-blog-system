@@ -1,5 +1,6 @@
 package com.dlbyy.blog.security;
 
+import com.dlbyy.blog.properties.SecurityProperties;
 import com.dlbyy.blog.utils.JwtUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -30,6 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
     private final CustomUserDetailsService userDetailsService;
+    private final SecurityProperties securityProperties;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -55,6 +57,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
+            // 滑动续期：剩余有效期不足一半时，在响应头下发新 AccessToken，前端静默替换
+            try {
+                long remaining = jwtUtils.getExpirationFromToken(token) - System.currentTimeMillis();
+                long halfLife = securityProperties.getAccessTokenMinutes() * 60_000L / 2;
+                if (remaining < halfLife) {
+                    response.setHeader("X-New-Token", jwtUtils.generateAccessToken(username));
+                }
+            } catch (Exception e) {
+                log.warn("滑动续期生成新令牌失败（不影响本次请求）: {}", e.getMessage());
+            }
         }
 
         filterChain.doFilter(request, response);

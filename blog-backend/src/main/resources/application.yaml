@@ -83,8 +83,8 @@ security:
     bcrypt-strength: 12        # BCrypt 加密强度（盐值轮数）
     access-token-minutes: 15   # 访问令牌有效期（分钟）
     refresh-token-days: 7      # 刷新令牌有效期（天）
-    cookie-secure: true        # refresh Cookie 是否带 Secure（本地 HTTP 联调置 false）
-    cookie-same-site: "None"    # refresh Cookie SameSite 策略
+    cookie-secure: false       # refresh Cookie 是否带 Secure（本地 HTTP 联调置 false；生产 HTTPS 必须 true）
+    cookie-same-site: "Lax"    # 非 Secure 时不能用 None（浏览器会拒绝），Lax 适配同源场景
   signing:
     enabled: true                # 是否开启请求签名验证（false 时完全跳过，行为与之前一致）
     secret: ${API_SIGNING_SECRET:BlogApiSigningSecret2024!}  # 签名密钥，生产环境必须通过环境变量注入强随机值，勿用默认值
