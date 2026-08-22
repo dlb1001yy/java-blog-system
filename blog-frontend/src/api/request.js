@@ -34,6 +34,10 @@ request.interceptors.response.use(
         case 401:
           ElMessage.error('登录已过期，请重新登录')
           localStorage.removeItem('token')
+          // 同步清空 Pinia 登录态，让右上角恢复“登录/注册”
+          import('@/stores/user').then(({ useUserStore }) => {
+            try { useUserStore().logout() } catch { /* pinia 未初始化时忽略 */ }
+          })
           break
         case 403:
           ElMessage.error('没有权限访问')
