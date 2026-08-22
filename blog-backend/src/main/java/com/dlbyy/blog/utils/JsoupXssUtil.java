@@ -69,10 +69,18 @@ public class JsoupXssUtil {
         if (text == null || text.isBlank()) {
             return "";
         }
-        String placeholder = "\u0000NL\u0000";
-        String guarded = text.replace("\n", placeholder);
+        // 自愈：还原旧版本被实体转义残留的占位符（\u0000 被 Jsoup 转义为 &#x0; 导致入库污染）
+        String healed = text
+                .replace("\u0000NL\u0000", "\n")
+                .replace("&#x0;NL&#x0;", "\n")
+                .replace("&amp;#x0;NL&amp;#x0;", "\n")
+                .replace("&#0;NL&#0;", "\n");
+        // 占位符使用纯字母数字 token，避免被 Jsoup 实体转义
+        String placeholder = "Zq7nLZq";
+        String guarded = healed.replace("\n", placeholder);
         String cleaned = Jsoup.clean(guarded, "", Safelist.none(),
                 new org.jsoup.nodes.Document.OutputSettings().prettyPrint(false));
-        return cleaned.replace(placeholder, "\n").strip();
+        return org.jsoup.parser.Parser.unescapeEntities(cleaned, false)
+                .replace(placeholder, "\n").strip();
     }
 }

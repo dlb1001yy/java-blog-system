@@ -1,0 +1,4 @@
+- [x] cleanMarkdown 输出保留换行且无任何占位符/实体残留（纯字母 token 不会被转义）
+- [x] 旧脏数据（&#x0;NL&#x0; 等）保存时自动还原为换行（入口自愈四种变体）
+- [x] XSS 防护不降级（仍走 Jsoup.clean Safelist.none）
+- [x] IDE 诊断无错误
