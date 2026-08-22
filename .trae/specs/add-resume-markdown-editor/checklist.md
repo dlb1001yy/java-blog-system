@@ -1,0 +1,6 @@
+- [x] MarkdownEditor.vue 提供工具栏与实时预览，v-model 为 Markdown 字符串
+- [x] 粘贴 Markdown 文本原样保留并实时渲染（textarea 原生行为 + md.render 预览）
+- [x] ProfileResume.vue 5 个描述字段使用 MarkdownEditor
+- [x] 保存/预览/分享页渲染链路不变（复用 renderMd，v-model 为纯 Markdown 字符串）
+- [x] 旧纯文本数据正常加载（modelValue 直接回显 textarea）
+- [x] GetDiagnostics 无错误

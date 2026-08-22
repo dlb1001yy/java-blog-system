@@ -63,10 +63,10 @@
           </el-row>
 
           <el-divider content-position="left">个人简介</el-divider>
-          <el-form-item label="简介"><el-input v-model="form.summary" type="textarea" :rows="4" placeholder="支持 Markdown，如 - 列表项、**加粗**" /></el-form-item>
+          <el-form-item label="简介"><MarkdownEditor v-model="form.summary" :height="180" /></el-form-item>
 
           <el-divider content-position="left">自我评价</el-divider>
-          <el-form-item label="自我评价"><el-input v-model="form.selfEvaluation" type="textarea" :rows="4" placeholder="支持 Markdown，如 - 列表项、**加粗**" /></el-form-item>
+          <el-form-item label="自我评价"><MarkdownEditor v-model="form.selfEvaluation" :height="180" /></el-form-item>
 
           <el-divider content-position="left">技能特长</el-divider>
           <div class="dynamic-list">
@@ -90,7 +90,7 @@
               <el-row :gutter="20">
                 <el-col :span="8"><el-form-item label="结束月份"><el-date-picker v-model="work.endDate" type="month" value-format="YYYY-MM" placeholder="至今可不填" style="width:100%"/></el-form-item></el-col>
               </el-row>
-              <el-form-item label="工作描述"><el-input v-model="work.description" type="textarea" :rows="3" placeholder="支持 Markdown，如 - 列表项、**加粗**" /></el-form-item>
+              <el-form-item label="工作描述"><MarkdownEditor v-model="work.description" :height="150" /></el-form-item>
               <div class="block-actions"><el-button type="danger" :icon="Delete" @click="removeWork(i)">删除该经历</el-button></div>
             </div>
             <el-button type="primary" plain :icon="Plus" @click="addWork">新增工作经历</el-button>
@@ -104,7 +104,7 @@
                 <el-col :span="8"><el-form-item label="担任角色"><el-input v-model="project.role" /></el-form-item></el-col>
                 <el-col :span="8"><el-form-item label="项目时间"><el-input v-model="project.date" placeholder="如 2023-01" /></el-form-item></el-col>
               </el-row>
-              <el-form-item label="项目描述"><el-input v-model="project.description" type="textarea" :rows="3" placeholder="支持 Markdown，如 - 列表项、**加粗**" /></el-form-item>
+              <el-form-item label="项目描述"><MarkdownEditor v-model="project.description" :height="150" /></el-form-item>
               <el-form-item label="技术栈">
                 <div class="tech-tags">
                   <el-tag v-for="(tech, ti) in project.technologies" :key="ti" closable @close="removeTech(project, ti)" style="margin-right:6px">{{ tech }}</el-tag>
@@ -128,7 +128,7 @@
                 <el-col :span="8"><el-form-item label="开始月份"><el-date-picker v-model="edu.startDate" type="month" value-format="YYYY-MM" style="width:100%"/></el-form-item></el-col>
                 <el-col :span="8"><el-form-item label="结束月份"><el-date-picker v-model="edu.endDate" type="month" value-format="YYYY-MM" style="width:100%"/></el-form-item></el-col>
               </el-row>
-              <el-form-item label="描述"><el-input v-model="edu.description" type="textarea" :rows="2" placeholder="支持 Markdown，如 - 列表项、**加粗**" /></el-form-item>
+              <el-form-item label="描述"><MarkdownEditor v-model="edu.description" :height="120" /></el-form-item>
               <div class="block-actions"><el-button type="danger" :icon="Delete" @click="removeEducation(i)">删除该经历</el-button></div>
             </div>
             <el-button type="primary" plain :icon="Plus" @click="addEducation">新增教育经历</el-button>
@@ -207,6 +207,7 @@ import { Delete, Plus } from '@element-plus/icons-vue'
 import resumeApi from '@/api/resume'
 import Upload from '@/components/Upload.vue'
 import ResumePreview from '@/components/ResumePreview.vue'
+import MarkdownEditor from '@/components/MarkdownEditor.vue'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
