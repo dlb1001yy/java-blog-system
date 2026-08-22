@@ -253,7 +253,10 @@
 
 <script setup>
 import { computed } from 'vue'
-import md from '@/utils/markdown'
+import MarkdownIt from 'markdown-it'
+
+// 简历描述多为单换行文本，开启 breaks 使单个换行即时生效（不影响文章页全局 md 实例）
+const md = new MarkdownIt({ html: true, linkify: true, breaks: true })
 
 const renderMd = (text) => (text ? md.render(String(text)) : '')
 
