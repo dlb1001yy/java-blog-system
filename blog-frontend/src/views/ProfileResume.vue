@@ -7,7 +7,31 @@
           <!-- 简历展示页暂时屏蔽 -->
           <el-tag :type="auditStatusTagType" style="margin-left:12px">{{ auditStatusText }}</el-tag>
           <span v-if="auditStatus === 2 && auditRemark" class="audit-remark">拒绝原因：{{ auditRemark }}</span>
+          <el-button type="primary" plain style="margin-left:12px" @click="previewVisible = true">预览简历</el-button>
         </p>
+
+        <!-- 简历预览抽屉 -->
+        <el-drawer v-model="previewVisible" title="简历预览" size="860px" destroy-on-close>
+          <div class="preview-toolbar">
+            <el-radio-group v-model="previewStyle">
+              <el-radio-button value="modern">现代极简</el-radio-button>
+              <el-radio-button value="classic">经典衬线</el-radio-button>
+              <el-radio-button value="sidebar">双栏侧边栏</el-radio-button>
+              <el-radio-button value="bold">粗体页眉</el-radio-button>
+            </el-radio-group>
+          </div>
+          <div class="preview-paper">
+            <ResumePreview
+              :resume="form"
+              :skills="skillList"
+              :works="workList"
+              :projects="projectList"
+              :educations="educationList"
+              :certificates="certificateList"
+              :style="previewStyle"
+            />
+          </div>
+        </el-drawer>
 
         <el-form :model="form" label-width="100px">
           <el-divider content-position="left">基本信息</el-divider>
@@ -182,6 +206,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Plus } from '@element-plus/icons-vue'
 import resumeApi from '@/api/resume'
 import Upload from '@/components/Upload.vue'
+import ResumePreview from '@/components/ResumePreview.vue'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
@@ -214,6 +239,10 @@ const projectList = ref([])
 const educationList = ref([])
 const certificateList = ref([])
 const saving = ref(false)
+
+// 预览
+const previewVisible = ref(false)
+const previewStyle = ref('modern')
 
 // 审核状态：0待审核 1已通过 2已拒绝
 const auditStatus = ref(null)
@@ -532,5 +561,15 @@ onMounted(() => {
     flex-wrap: wrap;
     gap: 8px;
   }
+}
+
+.preview-toolbar {
+  margin-bottom: 16px;
+}
+.preview-paper {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  overflow: hidden;
+  min-height: 400px;
 }
 </style>
