@@ -57,6 +57,17 @@
       </template>
 
       <!-- ========== 成绩详情 ========== -->
+      <template v-else-if="judging">
+        <div class="detail-head">
+          <el-button :icon="ArrowLeft" @click="backToList">返回列表</el-button>
+          <span class="detail-paper">成绩详情</span>
+        </div>
+        <div class="card judging-card">
+          <el-icon class="is-loading" :size="28"><Loading /></el-icon>
+          <span class="judging-text">判分中，请稍候...</span>
+        </div>
+      </template>
+
       <template v-else>
         <div class="detail-head">
           <el-button :icon="ArrowLeft" @click="backToList">返回列表</el-button>
@@ -187,8 +198,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { ArrowLeft } from '@element-plus/icons-vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ArrowLeft, Loading } from '@element-plus/icons-vue'
 import examApi from '@/api/exam'
 import { useUserStore } from '@/stores/user'
 import md from '@/utils/markdown'
@@ -208,6 +219,7 @@ const listLoading = ref(false)
 // 详情
 const detail = ref(null)
 const detailLoading = ref(false)
+const judging = ref(false)
 
 const fetchRecords = async () => {
   listLoading.value = true
@@ -221,13 +233,38 @@ const fetchRecords = async () => {
   }
 }
 
+// 异步判分：items 为空或客观题未判出说明尚未就绪
+const isDetailReady = (d) =>
+  d && Array.isArray(d.items) && d.items.length > 0 && d.objectiveScore !== null && d.objectiveScore !== undefined
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+let pollCancelled = false
+
 const openDetail = async (row) => {
+  pollCancelled = false
   detailLoading.value = true
+  judging.value = false
   detail.value = { items: [] }
   try {
-    const res = await examApi.getRecordDetail(row.id)
-    detail.value = res.data
+    let res = await examApi.getRecordDetail(row.id)
+    let data = res.data
+    if (!isDetailReady(data)) {
+      // 判分未就绪，轮询等待（最多 10 次，间隔 2 秒）
+      judging.value = true
+      detailLoading.value = false
+      for (let i = 0; i < 10; i++) {
+        await sleep(2000)
+        if (pollCancelled) return
+        res = await examApi.getRecordDetail(row.id)
+        data = res.data
+        if (isDetailReady(data)) break
+      }
+      judging.value = false
+    }
+    detail.value = data
   } catch (e) {
+    judging.value = false
     detail.value = null
   } finally {
     detailLoading.value = false
@@ -235,6 +272,8 @@ const openDetail = async (row) => {
 }
 
 const backToList = () => {
+  pollCancelled = true
+  judging.value = false
   detail.value = null
   fetchRecords()
 }
@@ -297,6 +336,10 @@ onMounted(() => {
   }
   fetchRecords()
 })
+
+onBeforeUnmount(() => {
+  pollCancelled = true
+})
 </script>
 
 <style scoped>
@@ -321,6 +364,10 @@ onMounted(() => {
 .hero-item { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--text-regular); }
 .hero-label { font-size: 12px; color: var(--text-secondary); }
 .hero-alert { margin-top: 16px; }
+
+/* 判分中占位 */
+.judging-card { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 60px 20px; }
+.judging-text { font-size: 15px; color: var(--text-secondary); }
 
 /* 图表区 */
 .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }

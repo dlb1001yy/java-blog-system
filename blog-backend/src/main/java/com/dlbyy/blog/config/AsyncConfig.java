@@ -49,4 +49,21 @@ public class AsyncConfig {
         executor.initialize();
         return executor;
     }
+
+    /**
+     * 考试判分专用线程池：交卷后异步判分与主观题批改草稿批量写入，
+     * 队列满时由调用线程兜底执行，避免判分任务丢失。
+     */
+    @Bean("examJudgeExecutor")
+    public Executor examJudgeExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(8);
+        executor.setQueueCapacity(200);
+        executor.setKeepAliveSeconds(60);
+        executor.setThreadNamePrefix("exam-judge-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.initialize();
+        return executor;
+    }
 }

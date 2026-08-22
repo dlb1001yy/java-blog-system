@@ -53,6 +53,7 @@ public class ExamServiceImpl implements ExamService {
     private final ExamPaperQuestionMapper examPaperQuestionMapper;
     private final ExamQuestionMapper examQuestionMapper;
     private final ExamMarkingMapper examMarkingMapper;
+    private final ExamJudgeAsyncService examJudgeAsyncService;
 
     // ==================== 交卷 ====================
 
@@ -73,9 +74,10 @@ public class ExamServiceImpl implements ExamService {
                 new LambdaQueryWrapper<ExamPaperQuestion>()
                         .eq(ExamPaperQuestion::getPaperId, paperId)
                         .orderByAsc(ExamPaperQuestion::getSortOrder));
-        Map<Long, ExamQuestion> questionMap = examQuestionMapper.selectBatchIds(
-                        rels.stream().map(ExamPaperQuestion::getQuestionId).collect(Collectors.toList()))
-                .stream().collect(Collectors.toMap(ExamQuestion::getId, Function.identity()));
+        Map<Long, ExamQuestion> questionMap = rels.isEmpty() ? Map.of() :
+                examQuestionMapper.selectBatchIds(rels.stream()
+                                .map(ExamPaperQuestion::getQuestionId).collect(Collectors.toList())).stream()
+                        .collect(Collectors.toMap(ExamQuestion::getId, Function.identity()));
 
         // 考生答案索引
         Map<Long, Object> answerMap = dto.getAnswers() == null ? Map.of() :
@@ -84,14 +86,15 @@ public class ExamServiceImpl implements ExamService {
                         .collect(Collectors.toMap(ExamAnswerDTO::getQuestionId, ExamAnswerDTO::getAnswer,
                                 (a, b) -> b));
 
-        BigDecimal objectiveScore = BigDecimal.ZERO;
+        // 同步部分：仅构建入库答案（XSS 清洗主观题文本），不做判分
+        int validQuestionCount = 0;
         List<Map<String, Object>> storedAnswers = new ArrayList<>();
-
         for (ExamPaperQuestion rel : rels) {
             ExamQuestion question = questionMap.get(rel.getQuestionId());
             if (question == null) {
                 continue;
             }
+            validQuestionCount++;
             Object myAnswer = answerMap.get(rel.getQuestionId());
             int type = question.getType() == null ? 0 : question.getType();
             // XSS 清洗：主观题（5 简答 / 6 编程）的文本答案入库前用 relaxed 白名单清洗
@@ -99,143 +102,35 @@ public class ExamServiceImpl implements ExamService {
                 myAnswer = JsoupXssUtil.cleanHtml(text);
             }
             storedAnswers.add(Map.of("questionId", rel.getQuestionId(), "answer", myAnswer == null ? "" : myAnswer));
-
-            if (type >= 1 && type <= 4) {
-                // 客观题自动判分
-                if (judgeObjective(type, question.getCorrect(), myAnswer)) {
-                    objectiveScore = objectiveScore.add(rel.getScore() == null ? BigDecimal.ZERO : rel.getScore());
-                }
-            } else {
-                // 主观题（5 简答 / 6 编程）：保存记录后统一生成批改草稿
-            }
         }
 
-        // 保存答卷记录
+        // 保存占位答卷记录，立即返回，判分异步进行
         ExamRecord record = new ExamRecord();
         record.setPaperId(paperId);
         record.setUserId(userId);
         record.setAnswers(toJson(storedAnswers));
-        record.setObjectiveScore(objectiveScore);
+        record.setObjectiveScore(BigDecimal.ZERO);
         record.setSwitchCount(dto.getSwitchCount() == null ? 0 : dto.getSwitchCount());
-        // 切屏次数达 3 次及以上视为切屏超限，标记作弊
+        // 切屏次数达 3 次及以上，或题量较大且作答时间异常偏短，视为疑似作弊
         int switchCount = record.getSwitchCount() == null ? 0 : record.getSwitchCount();
-        record.setCheatFlag(switchCount >= 3 ? 1 : 0);
-        record.setDurationSeconds(dto.getDurationSeconds());
+        Integer durationSeconds = dto.getDurationSeconds();
+        boolean cheat = switchCount >= 3
+                || (validQuestionCount >= 8 && durationSeconds != null && durationSeconds < validQuestionCount * 10);
+        record.setCheatFlag(cheat ? 1 : 0);
+        record.setDurationSeconds(durationSeconds);
         record.setStatus(0); // 待批改
         record.setSubmitTime(LocalDateTime.now());
         examRecordMapper.insert(record);
 
-        // 主观题生成批改草稿（score 空）
-        for (ExamPaperQuestion rel : rels) {
-            ExamQuestion question = questionMap.get(rel.getQuestionId());
-            if (question == null) continue;
-            int type = question.getType() == null ? 0 : question.getType();
-            if (type == 5 || type == 6) {
-                ExamMarking marking = new ExamMarking();
-                marking.setRecordId(record.getId());
-                marking.setQuestionId(rel.getQuestionId());
-                marking.setStatus(0);
-                examMarkingMapper.insert(marking);
-            }
-        }
+        // 异步判分：客观题判分 + 主观题批改草稿批量插入
+        Map<Long, Object> rawAnswerMap = answerMap;
+        examJudgeAsyncService.judge(record.getId(), paperId, rawAnswerMap);
         return record.getId();
     }
 
     /**
-     * 客观题判分：correct 为 JSON
-     * 1 单选/3 判断：[index]，答案可为数字索引或单元素列表；
-     * 2 多选：[i,j,...] 需与考生答案集合完全一致（顺序无关）；
-     * 4 填空：["答案文本", ...]，忽略首尾空格、大小写不敏感，逐空比对全部一致。
+     * 客观题判分逻辑见 {@link ExamJudgeAsyncService#judgeObjective(int, String, Object)}。
      */
-    private boolean judgeObjective(int type, String correctJson, Object myAnswer) {
-        if (correctJson == null || myAnswer == null) {
-            return false;
-        }
-        try {
-            List<Object> correct = OBJECT_MAPPER.readValue(correctJson, new TypeReference<List<Object>>() {});
-            switch (type) {
-                case 1:
-                case 3: {
-                    Integer idx = toIndex(myAnswer);
-                    return idx != null && correct.size() == 1
-                            && idx.equals(Integer.valueOf(String.valueOf(correct.get(0))));
-                }
-                case 2: {
-                    Set<Integer> correctSet = correct.stream()
-                            .map(c -> Integer.valueOf(String.valueOf(c))).collect(Collectors.toSet());
-                    Set<Integer> mySet = toIndexSet(myAnswer);
-                    return !mySet.isEmpty() && mySet.equals(correctSet);
-                }
-                case 4: {
-                    List<String> myTexts = toStringList(myAnswer);
-                    if (myTexts.size() != correct.size()) {
-                        return false;
-                    }
-                    for (int i = 0; i < correct.size(); i++) {
-                        String expect = String.valueOf(correct.get(i)).trim().toLowerCase();
-                        String actual = myTexts.get(i) == null ? "" : myTexts.get(i).trim().toLowerCase();
-                        if (!expect.equals(actual)) {
-                            return false;
-                        }
-                    }
-                    return true;
-                }
-                default:
-                    return false;
-            }
-        } catch (JsonProcessingException e) {
-            return false;
-        }
-    }
-
-    /** 考生答案 → 单个选项索引 */
-    private Integer toIndex(Object answer) {
-        if (answer instanceof Number) {
-            return ((Number) answer).intValue();
-        }
-        if (answer instanceof List<?> && !((List<?>) answer).isEmpty()) {
-            return toIndex(((List<?>) answer).get(0));
-        }
-        try {
-            return Integer.valueOf(String.valueOf(answer).trim());
-        } catch (NumberFormatException e) {
-            return null;
-        }
-    }
-
-    /** 考生答案 → 选项索引集合 */
-    private Set<Integer> toIndexSet(Object answer) {
-        Set<Integer> set = new TreeSet<>();
-        if (answer instanceof List<?>) {
-            ((List<?>) answer).forEach(a -> {
-                Integer idx = toIndex(a);
-                if (idx != null) set.add(idx);
-            });
-        } else {
-            Integer idx = toIndex(answer);
-            if (idx != null) set.add(idx);
-        }
-        return set;
-    }
-
-    /** 考生答案 → 字符串列表（填空） */
-    private List<String> toStringList(Object answer) {
-        List<String> list = new ArrayList<>();
-        if (answer instanceof List<?>) {
-            ((List<?>) answer).forEach(a -> list.add(a == null ? "" : String.valueOf(a)));
-        } else {
-            list.add(String.valueOf(answer));
-        }
-        return list;
-    }
-
-    private String toJson(Object obj) {
-        try {
-            return OBJECT_MAPPER.writeValueAsString(obj);
-        } catch (JsonProcessingException e) {
-            throw new BusinessException("答案序列化失败");
-        }
-    }
 
     // ==================== 批改 ====================
 
@@ -393,7 +288,7 @@ public class ExamServiceImpl implements ExamService {
             int type = question.getType() == null ? 0 : question.getType();
             if (type >= 1 && type <= 4) {
                 item.setCorrectAnswer(question.getCorrect());
-                item.setCorrect(judgeObjective(type, question.getCorrect(), myAnswerMap.get(question.getId())));
+                item.setCorrect(examJudgeAsyncService.judgeObjective(type, question.getCorrect(), myAnswerMap.get(question.getId())));
                 item.setGotScore(Boolean.TRUE.equals(item.getCorrect()) ? rel.getScore() : BigDecimal.ZERO);
             } else {
                 ExamMarking marking = markingMap.get(question.getId());
@@ -433,6 +328,14 @@ public class ExamServiceImpl implements ExamService {
             return OBJECT_MAPPER.writeValueAsString(obj);
         } catch (JsonProcessingException e) {
             return String.valueOf(obj);
+        }
+    }
+
+    private String toJson(Object obj) {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            throw new BusinessException("答案序列化失败");
         }
     }
 }

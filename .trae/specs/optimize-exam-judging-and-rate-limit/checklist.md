@@ -1,0 +1,10 @@
+- [x] ExamServiceImpl 判分逻辑保持不变（BigDecimal 累加、四类题型判定规则、toIndex 递归解析）
+- [x] 服务端可疑耗时规则生效：题目数 ≥ 8 且 durationSeconds < 题目数×10 → cheatFlag=1
+- [x] switchCount >= 3 → cheatFlag=1 的原有行为保留
+- [x] 交卷接口立即返回 recordId，判分异步执行（examJudgeExecutor）
+- [x] 异步判分异常时记录日志且不产生脏数据
+- [x] 主观题批改草稿批量插入，无逐条 insert 循环
+- [x] RateLimitAspect 拦截日志含 key/方法/阈值上下文
+- [x] Lua 脚本仍通过 RateLimitConfig 的 DefaultRedisScript Bean 预加载（EVALSHA）
+- [x] 前端交卷结果页可容忍"判分中"占位状态
+- [x] mvn 编译与相关单测通过（67/67，BUILD SUCCESS）

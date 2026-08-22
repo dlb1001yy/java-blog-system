@@ -61,7 +61,7 @@ public class RateLimitAspect {
         );
 
         if (allowed == null || allowed == 0L) {
-            log.warn("接口限流触发 | key={} | method={}", key, method.getName());
+            log.warn("接口限流触发 | key={} | method={} | limit={}/{}s", key, method.getName(), rateLimit.count(), rateLimit.time());
             throw new RateLimitException("请求过于频繁，请稍后再试");
         }
 
