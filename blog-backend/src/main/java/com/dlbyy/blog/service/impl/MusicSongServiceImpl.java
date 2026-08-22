@@ -1,8 +1,11 @@
 package com.dlbyy.blog.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dlbyy.blog.common.exception.BusinessException;
+import com.dlbyy.blog.entity.MusicPlaylistSong;
 import com.dlbyy.blog.entity.MusicSong;
+import com.dlbyy.blog.mapper.MusicPlaylistSongMapper;
 import com.dlbyy.blog.mapper.MusicSongMapper;
 import com.dlbyy.blog.service.MusicSongService;
 import com.dlbyy.blog.service.OnlineLyricService;
@@ -29,6 +32,7 @@ import java.util.Map;
 public class MusicSongServiceImpl extends ServiceImpl<MusicSongMapper, MusicSong> implements MusicSongService {
 
     private final FileStorageService fileStorageService;
+    private final MusicPlaylistSongMapper musicPlaylistSongMapper;
     private final CoverImageGenerator coverImageGenerator;
     private final OnlineLyricService onlineLyricService;
 
@@ -106,6 +110,9 @@ public class MusicSongServiceImpl extends ServiceImpl<MusicSongMapper, MusicSong
     public void adminDelete(Long id) {
         MusicSong song = this.getById(id);
         this.removeById(id);
+        // 同步清理歌单关联，避免残留关联导致歌单歌曲数不减
+        musicPlaylistSongMapper.delete(new LambdaQueryWrapper<MusicPlaylistSong>()
+                .eq(MusicPlaylistSong::getSongId, id));
         // 删除 DB 记录后同步清理存储文件（音频 + 封面）；删除失败仅记日志，不影响业务
         if (song != null) {
             fileStorageService.delete(song.getFileUrl());

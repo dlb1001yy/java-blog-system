@@ -298,8 +298,11 @@
         <el-form-item label="描述">
           <el-input v-model="playlistForm.description" type="textarea" :rows="3" placeholder="请输入描述" />
         </el-form-item>
-        <el-form-item label="封面URL">
-          <el-input v-model="playlistForm.cover" placeholder="请输入封面图片地址" />
+        <el-form-item label="封面">
+          <div class="cover-field">
+            <Upload v-model="playlistForm.cover" placeholder="上传封面" />
+            <div class="cover-tip">留空保存时将根据歌单名自动生成封面</div>
+          </div>
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="playlistForm.status">

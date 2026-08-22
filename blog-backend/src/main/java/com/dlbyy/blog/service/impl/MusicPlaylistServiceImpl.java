@@ -12,7 +12,9 @@ import com.dlbyy.blog.mapper.MusicPlaylistMapper;
 import com.dlbyy.blog.mapper.MusicPlaylistSongMapper;
 import com.dlbyy.blog.mapper.MusicSongMapper;
 import com.dlbyy.blog.service.MusicPlaylistService;
+import com.dlbyy.blog.utils.CoverImageGenerator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 /**
  * 歌单服务实现
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MusicPlaylistServiceImpl extends ServiceImpl<MusicPlaylistMapper, MusicPlaylist>
@@ -34,6 +37,7 @@ public class MusicPlaylistServiceImpl extends ServiceImpl<MusicPlaylistMapper, M
 
     private final MusicPlaylistSongMapper musicPlaylistSongMapper;
     private final MusicSongMapper musicSongMapper;
+    private final CoverImageGenerator coverImageGenerator;
 
     @Override
     public PageResult<MusicPlaylist> adminPage(int page, int size, String keyword) {
@@ -47,6 +51,14 @@ public class MusicPlaylistServiceImpl extends ServiceImpl<MusicPlaylistMapper, M
 
     @Override
     public Long adminSave(MusicPlaylist playlist) {
+        // 新建歌单且未提供封面时，根据歌单名自动生成渐变封面；失败不阻断保存
+        if (playlist.getId() == null && (playlist.getCover() == null || playlist.getCover().isBlank())) {
+            try {
+                playlist.setCover(coverImageGenerator.generateSquare(playlist.getName(), null, 500));
+            } catch (Exception e) {
+                log.warn("歌单封面自动生成失败：{}", e.getMessage());
+            }
+        }
         if (playlist.getId() == null) {
             this.save(playlist);
         } else {
