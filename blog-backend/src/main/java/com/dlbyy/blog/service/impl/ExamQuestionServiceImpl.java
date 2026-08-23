@@ -99,7 +99,19 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
                 }
 
                 Integer type = resolveType(typeText);
-                String error = validateRow(stem, type, difficulty, options, correct, scoreText, objectMapper);
+                String error = validateRow(stem, type, difficulty, scoreText);
+                String parsedOptions = null;
+                String parsedCorrect = null;
+                if (error == null) {
+                    ParsedValue optionsResult = parseOptions(type, options, objectMapper);
+                    error = optionsResult.error();
+                    parsedOptions = optionsResult.value();
+                }
+                if (error == null) {
+                    ParsedValue correctResult = parseCorrect(type, options, correct, objectMapper);
+                    error = correctResult.error();
+                    parsedCorrect = correctResult.value();
+                }
                 if (error == null && !StringUtils.hasText(category)) {
                     error = "分类必须为分类管理中已有的分类";
                 }
@@ -116,8 +128,8 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
                 q.setType(type);
                 q.setCategory(category);
                 q.setDifficulty(StringUtils.hasText(difficulty) ? difficulty : "中等");
-                q.setOptions(StringUtils.hasText(options) ? options.trim() : null);
-                q.setCorrect(StringUtils.hasText(correct) ? correct.trim() : null);
+                q.setOptions(parsedOptions);
+                q.setCorrect(parsedCorrect);
                 q.setReferenceAnswer(referenceAnswer);
                 q.setScore(new BigDecimal(scoreText.trim()));
                 q.setStatus(1);
@@ -138,8 +150,7 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
     /**
      * 校验单行数据，返回错误原因；返回 null 表示合法
      */
-    private String validateRow(String stem, Integer type, String difficulty, String options,
-                               String correct, String scoreText, ObjectMapper mapper) {
+    private String validateRow(String stem, Integer type, String difficulty, String scoreText) {
         if (!StringUtils.hasText(stem)) {
             return "题干不能为空";
         }
@@ -159,17 +170,160 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
         } catch (NumberFormatException e) {
             return "分值必须为数字";
         }
-        boolean objective = type <= 4;
-        if (objective && !StringUtils.hasText(correct)) {
-            return "客观题（题型1-4）必须填写正确答案";
-        }
-        if (StringUtils.hasText(options) && !isValidJson(mapper, options.trim(), true)) {
-            return "选项必须是合法的 JSON 数组";
-        }
-        if (StringUtils.hasText(correct) && !isValidJson(mapper, correct.trim(), false)) {
-            return "正确答案必须是合法的 JSON";
-        }
         return null;
+    }
+
+    /** 解析结果：value 与 error 二选一 */
+    private record ParsedValue(String value, String error) {
+        static ParsedValue ok(String value) {
+            return new ParsedValue(value, null);
+        }
+
+        static ParsedValue fail(String error) {
+            return new ParsedValue(null, error);
+        }
+    }
+
+    /**
+     * 解析选项：题型1/2 支持 | 或换行分隔的纯文本，也兼容 JSON 数组；题型3-6 不允许填写
+     */
+    private ParsedValue parseOptions(Integer type, String options, ObjectMapper mapper) {
+        boolean hasOptions = StringUtils.hasText(options);
+        if (type != null && (type == 1 || type == 2)) {
+            if (!hasOptions) {
+                return ParsedValue.fail((type == 1 ? "单选题" : "多选题") + "必须填写选项（多个选项用|分隔）");
+            }
+            String text = options.trim();
+            if (text.startsWith("[")) {
+                if (!isValidJson(mapper, text, true)) {
+                    return ParsedValue.fail("选项必须是合法的 JSON 数组");
+                }
+                return ParsedValue.ok(text);
+            }
+            String[] items = text.split("[|\\n\\r]+");
+            List<String> list = new ArrayList<>();
+            for (String item : items) {
+                if (StringUtils.hasText(item)) {
+                    list.add(item.trim());
+                }
+            }
+            if (list.isEmpty()) {
+                return ParsedValue.fail((type == 1 ? "单选题" : "多选题") + "必须填写选项（多个选项用|分隔）");
+            }
+            try {
+                return ParsedValue.ok(mapper.writeValueAsString(list));
+            } catch (Exception e) {
+                return ParsedValue.fail("选项解析失败");
+            }
+        }
+        if (hasOptions) {
+            return ParsedValue.fail("该题型无需填写选项");
+        }
+        return ParsedValue.ok(null);
+    }
+
+    /** 选项数量（用于索引越界校验），解析失败返回 -1 */
+    private int optionCount(String options, ObjectMapper mapper) {
+        if (!StringUtils.hasText(options)) {
+            return 0;
+        }
+        String text = options.trim();
+        if (text.startsWith("[")) {
+            try {
+                JsonNode node = mapper.readTree(text);
+                return node.isArray() ? node.size() : -1;
+            } catch (Exception e) {
+                return -1;
+            }
+        }
+        return (int) java.util.Arrays.stream(text.split("[|\\n\\r]+"))
+                .filter(StringUtils::hasText)
+                .count();
+    }
+
+    /**
+     * 解析正确答案：按题型转换为存储格式的 JSON 字符串，兼容以 [ 开头的原 JSON
+     */
+    private ParsedValue parseCorrect(Integer type, String options, String correct, ObjectMapper mapper) {
+        boolean hasCorrect = StringUtils.hasText(correct);
+        // 兼容：以 [ 开头的按原 JSON 校验后原样存储
+        if (hasCorrect && correct.trim().startsWith("[")) {
+            if (!isValidJson(mapper, correct.trim(), true)) {
+                return ParsedValue.fail("正确答案必须是合法的 JSON 数组");
+            }
+            return ParsedValue.ok(correct.trim());
+        }
+        int count = optionCount(options, mapper);
+        switch (type) {
+            case 1 -> { // 单选
+                if (!hasCorrect) {
+                    return ParsedValue.fail("单选题正确答案必须为单个选项字母（如 A）");
+                }
+                String letter = correct.trim().toLowerCase();
+                if (letter.length() != 1 || letter.charAt(0) < 'a' || letter.charAt(0) > 'z'
+                        || count >= 0 && (letter.charAt(0) - 'a') >= count) {
+                    return ParsedValue.fail("单选题正确答案必须为单个选项字母（如 A）");
+                }
+                return ParsedValue.ok("[" + (letter.charAt(0) - 'a') + "]");
+            }
+            case 2 -> { // 多选
+                if (!hasCorrect) {
+                    return ParsedValue.fail("多选题正确答案必须为不重复的选项字母（如 AB）");
+                }
+                String letters = correct.trim().replaceAll("[,，\\s]", "").toLowerCase();
+                List<Integer> indexes = new ArrayList<>();
+                for (char c : letters.toCharArray()) {
+                    int idx = c - 'a';
+                    if (c < 'a' || c > 'z' || indexes.contains(idx)
+                            || count >= 0 && idx >= count) {
+                        return ParsedValue.fail("多选题正确答案必须为不重复的选项字母（如 AB）");
+                    }
+                    indexes.add(idx);
+                }
+                if (indexes.isEmpty()) {
+                    return ParsedValue.fail("多选题正确答案必须为不重复的选项字母（如 AB）");
+                }
+                java.util.Collections.sort(indexes);
+                String joined = indexes.stream().map(String::valueOf).collect(Collectors.joining(","));
+                return ParsedValue.ok("[" + joined + "]");
+            }
+            case 3 -> { // 判断
+                if (!hasCorrect) {
+                    return ParsedValue.fail("判断题正确答案必须为：对/错");
+                }
+                String text = correct.trim().toLowerCase();
+                return switch (text) {
+                    case "对", "正确", "true", "√", "是" -> ParsedValue.ok("[true]");
+                    case "错", "错误", "false", "×", "否" -> ParsedValue.ok("[false]");
+                    default -> ParsedValue.fail("判断题正确答案必须为：对/错");
+                };
+            }
+            case 4 -> { // 填空
+                if (!hasCorrect) {
+                    return ParsedValue.fail("填空题正确答案不能为空（多个空用|分隔）");
+                }
+                List<String> answers = new ArrayList<>();
+                for (String part : correct.trim().split("\\|")) {
+                    if (StringUtils.hasText(part)) {
+                        answers.add(part.trim());
+                    }
+                }
+                if (answers.isEmpty()) {
+                    return ParsedValue.fail("填空题正确答案不能为空（多个空用|分隔）");
+                }
+                try {
+                    return ParsedValue.ok(mapper.writeValueAsString(answers));
+                } catch (Exception e) {
+                    return ParsedValue.fail("正确答案解析失败");
+                }
+            }
+            default -> { // 简答/编程
+                if (hasCorrect) {
+                    return ParsedValue.fail("简答/编程题无需填写正确答案，请填参考答案列");
+                }
+                return ParsedValue.ok(null);
+            }
+        }
     }
 
     private boolean isValidJson(ObjectMapper mapper, String text, boolean requireArray) {

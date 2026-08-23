@@ -227,6 +227,8 @@
         <div class="el-upload__text">拖拽 xlsx 文件到此处，或 <em>点击选择</em></div>
         <template #tip>
           <div class="el-upload__tip">请按模板格式填写，支持 .xlsx / .xls 文件</div>
+          <div class="el-upload__tip">选项仅单选题/多选题填写（多个选项用|分隔）</div>
+          <div class="el-upload__tip">正确答案：单选填A、多选填AB、判断题填对/错、填空题多个空用|分隔，简答/编程题留空</div>
         </template>
       </el-upload>
 

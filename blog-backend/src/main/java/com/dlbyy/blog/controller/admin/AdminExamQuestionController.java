@@ -113,9 +113,9 @@ public class AdminExamQuestionController {
             String sampleCategory = categoryNames.isEmpty() ? "Java基础" : categoryNames.get(0);
             String[][] rows = {
                     {"题干(stem)", "题型(单选题/多选题/判断题/填空题/简答题/编程题)", "分类(category)", "难度(简单/中等/困难)",
-                            "选项(options, JSON数组)", "正确答案(correct, JSON)", "参考答案/解析(reference_answer)", "分值(score)"},
+                            "选项(仅单选题/多选题填写，多个选项用|分隔)", "正确答案(单选填A，多选填AB，判断题填对或错，填空题多个空用|分隔，简答/编程题留空)", "参考答案/解析(reference_answer)", "分值(score)"},
                     {"Java 中用于定义常量的关键字是？", "单选题", sampleCategory, "简单",
-                            "[\"final\",\"finally\",\"finalize\",\"const\"]", "[0]", "final 修饰的变量不可重新赋值", "2"},
+                            "final|finally|finalize|const", "A", "final 修饰的变量不可重新赋值", "2"},
                     {"简述 JVM 的垃圾回收机制", "简答题",
                             categoryNames.isEmpty() ? "JVM" : categoryNames.get(0), "中等",
                             "", "", "可从可达性分析、常见回收器等角度作答", "10"}
