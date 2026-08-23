@@ -126,12 +126,18 @@ public class AdminExamQuestionController {
                     row.createCell(j).setCellValue(rows[i][j]);
                 }
             }
+            XSSFDataValidationHelper helper = new XSSFDataValidationHelper(sheet);
+            var typeConstraint = helper.createExplicitListConstraint(new String[]{"1", "2", "3", "4", "5", "6"});
+            XSSFDataValidation typeValidation = (XSSFDataValidation) helper.createValidation(typeConstraint, new CellRangeAddressList(1, 500, 1, 1));
+            sheet.addValidationData(typeValidation);
             if (!categoryNames.isEmpty()) {
-                XSSFDataValidationHelper helper = new XSSFDataValidationHelper(sheet);
                 var constraint = helper.createExplicitListConstraint(categoryNames.toArray(new String[0]));
                 XSSFDataValidation validation = (XSSFDataValidation) helper.createValidation(constraint, new CellRangeAddressList(1, 500, 2, 2));
                 sheet.addValidationData(validation);
             }
+            var difficultyConstraint = helper.createExplicitListConstraint(new String[]{"简单", "中等", "困难"});
+            XSSFDataValidation difficultyValidation = (XSSFDataValidation) helper.createValidation(difficultyConstraint, new CellRangeAddressList(1, 500, 3, 3));
+            sheet.addValidationData(difficultyValidation);
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             String fileName = URLEncoder.encode("题目导入模板.xlsx", StandardCharsets.UTF_8).replace("+", "%20");
             response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + fileName);
