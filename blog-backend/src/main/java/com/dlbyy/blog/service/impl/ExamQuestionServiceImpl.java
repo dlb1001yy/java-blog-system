@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dlbyy.blog.common.PageResult;
+import com.dlbyy.blog.entity.Category;
 import com.dlbyy.blog.entity.ExamQuestion;
 import com.dlbyy.blog.mapper.ExamQuestionMapper;
+import com.dlbyy.blog.service.CategoryService;
 import com.dlbyy.blog.service.ExamQuestionService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,6 +40,7 @@ import java.util.stream.Collectors;
 public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, ExamQuestion> implements ExamQuestionService {
 
     private final ObjectMapper objectMapper;
+    private final CategoryService categoryService;
 
     private static final Set<String> VALID_DIFFICULTIES = Set.of("简单", "中等", "困难");
 
@@ -47,6 +50,10 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
         List<ExamQuestion> questions = new ArrayList<>();
         List<String> errors = new ArrayList<>();
         DataFormatter formatter = new DataFormatter();
+        Set<String> categoryNames = categoryService.list().stream()
+                .map(Category::getName)
+                .filter(StringUtils::hasText)
+                .collect(Collectors.toSet());
         try (InputStream in = file.getInputStream(); XSSFWorkbook workbook = new XSSFWorkbook(in)) {
             var sheet = workbook.getSheetAt(0);
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
@@ -70,6 +77,12 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
                 }
 
                 String error = validateRow(stem, typeText, difficulty, options, correct, scoreText, objectMapper);
+                if (error == null && !StringUtils.hasText(category)) {
+                    error = "分类必须为分类管理中已有的分类";
+                }
+                if (error == null && !categoryNames.contains(category.trim())) {
+                    error = "分类必须为分类管理中已有的分类";
+                }
                 if (error != null) {
                     errors.add("第" + (i + 1) + "行: " + error);
                     continue;

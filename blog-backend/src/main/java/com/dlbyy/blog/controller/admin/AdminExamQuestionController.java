@@ -3,13 +3,18 @@ package com.dlbyy.blog.controller.admin;
 import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.PageResult;
 import com.dlbyy.blog.common.Result;
+import com.dlbyy.blog.entity.Category;
 import com.dlbyy.blog.entity.ExamQuestion;
+import com.dlbyy.blog.service.CategoryService;
 import com.dlbyy.blog.service.ExamQuestionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.util.CellRangeAddressList;
+import org.apache.poi.xssf.usermodel.XSSFDataValidation;
+import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +38,7 @@ import java.util.Map;
 public class AdminExamQuestionController {
 
     private final ExamQuestionService examQuestionService;
+    private final CategoryService categoryService;
 
     @GetMapping
     @Operation(summary = "分页查询题目（支持题型/分类/难度/关键词/状态筛选）")
@@ -99,13 +105,19 @@ public class AdminExamQuestionController {
     @Operation(summary = "下载题目导入 Excel 模板（表头 + 2 行示例）")
     public void template(HttpServletResponse response) throws IOException {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet("题目导入模板");
+            XSSFSheet sheet = workbook.createSheet("题目导入模板");
+            List<String> categoryNames = categoryService.list().stream()
+                    .map(Category::getName)
+                    .filter(StringUtils::hasText)
+                    .toList();
+            String sampleCategory = categoryNames.isEmpty() ? "Java基础" : categoryNames.get(0);
             String[][] rows = {
                     {"题干(stem)", "题型(1单选2多选3判断4填空5简答6编程)", "分类(category)", "难度(简单/中等/困难)",
                             "选项(options, JSON数组)", "正确答案(correct, JSON)", "参考答案/解析(reference_answer)", "分值(score)"},
-                    {"Java 中用于定义常量的关键字是？", "1", "Java基础", "简单",
+                    {"Java 中用于定义常量的关键字是？", "1", sampleCategory, "简单",
                             "[\"final\",\"finally\",\"finalize\",\"const\"]", "[0]", "final 修饰的变量不可重新赋值", "2"},
-                    {"简述 JVM 的垃圾回收机制", "5", "JVM", "中等",
+                    {"简述 JVM 的垃圾回收机制", "5",
+                            categoryNames.isEmpty() ? "JVM" : categoryNames.get(0), "中等",
                             "", "", "可从可达性分析、常见回收器等角度作答", "10"}
             };
             for (int i = 0; i < rows.length; i++) {
@@ -113,6 +125,12 @@ public class AdminExamQuestionController {
                 for (int j = 0; j < rows[i].length; j++) {
                     row.createCell(j).setCellValue(rows[i][j]);
                 }
+            }
+            if (!categoryNames.isEmpty()) {
+                XSSFDataValidationHelper helper = new XSSFDataValidationHelper(sheet);
+                var constraint = helper.createExplicitListConstraint(categoryNames.toArray(new String[0]));
+                XSSFDataValidation validation = (XSSFDataValidation) helper.createValidation(constraint, new CellRangeAddressList(1, 500, 2, 2));
+                sheet.addValidationData(validation);
             }
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             String fileName = URLEncoder.encode("题目导入模板.xlsx", StandardCharsets.UTF_8).replace("+", "%20");

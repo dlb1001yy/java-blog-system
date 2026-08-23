@@ -101,7 +101,9 @@
             <el-select v-model="questionFilter.type" placeholder="题型" clearable size="small" style="width: 100px" @change="handleQuestionSearch">
               <el-option v-for="(item, key) in typeMap" :key="key" :label="item.label" :value="Number(key)" />
             </el-select>
-            <el-input v-model="questionFilter.category" placeholder="分类" clearable size="small" style="width: 110px" @keyup.enter="handleQuestionSearch" />
+            <el-select v-model="questionFilter.category" placeholder="分类" clearable size="small" style="width: 110px" @change="handleQuestionSearch">
+              <el-option v-for="item in categories" :key="item.name" :label="item.name" :value="item.name" />
+            </el-select>
             <el-button type="primary" size="small" @click="handleQuestionSearch">查询</el-button>
           </div>
           <div v-loading="questionLoading" class="question-list">
@@ -172,6 +174,7 @@ import { Plus } from '@element-plus/icons-vue'
 import PageContainer from '@/components/PageContainer.vue'
 import examPaperApi from '@/api/examPaper'
 import examQuestionApi from '@/api/examQuestion'
+import categoryApi from '@/api/category'
 
 const loading = ref(false)
 const saving = ref(false)
@@ -179,6 +182,7 @@ const tableData = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
+const categories = ref([])
 
 const typeMap = {
   1: { label: '单选', type: 'primary' },
@@ -404,7 +408,15 @@ const handleDelete = (row) => {
 const handleSizeChange = () => fetchData()
 const handleCurrentChange = () => fetchData()
 
-onMounted(() => fetchData())
+const fetchCategories = async () => {
+  const res = await categoryApi.getAll()
+  categories.value = res.data || []
+}
+
+onMounted(() => {
+  fetchData()
+  fetchCategories()
+})
 </script>
 
 <style scoped>

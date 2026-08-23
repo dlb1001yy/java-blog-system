@@ -109,7 +109,9 @@
           </el-col>
           <el-col :span="8">
             <el-form-item label="分类" prop="category">
-              <el-input v-model="form.category" placeholder="如：Java 基础" />
+              <el-select v-model="form.category" placeholder="请选择分类" clearable filterable>
+                <el-option v-for="item in categories" :key="item.name" :label="item.name" :value="item.name" />
+              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
@@ -253,6 +255,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Delete, Upload, Download, UploadFilled } from '@element-plus/icons-vue'
 import PageContainer from '@/components/PageContainer.vue'
 import examQuestionApi from '@/api/examQuestion'
+import categoryApi from '@/api/category'
 
 const loading = ref(false)
 const saving = ref(false)
@@ -261,6 +264,7 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const stats = ref({})
+const categories = ref([])
 
 const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
 
@@ -321,7 +325,7 @@ const form = reactive(defaultForm())
 const rules = {
   stem: [{ required: true, message: '请输入题干', trigger: 'blur' }],
   type: [{ required: true, message: '请选择题型', trigger: 'change' }],
-  category: [{ required: true, message: '请输入分类', trigger: 'blur' }],
+  category: [{ required: true, message: '请选择分类', trigger: 'change' }],
   difficulty: [{ required: true, message: '请选择难度', trigger: 'change' }]
 }
 
@@ -561,9 +565,15 @@ const handleImport = async () => {
   }
 }
 
+const fetchCategories = async () => {
+  const res = await categoryApi.getAll()
+  categories.value = res.data || []
+}
+
 onMounted(() => {
   fetchData()
   fetchStats()
+  fetchCategories()
 })
 </script>
 
