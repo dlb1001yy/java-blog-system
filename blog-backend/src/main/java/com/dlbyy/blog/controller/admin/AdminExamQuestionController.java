@@ -112,11 +112,11 @@ public class AdminExamQuestionController {
                     .toList();
             String sampleCategory = categoryNames.isEmpty() ? "Java基础" : categoryNames.get(0);
             String[][] rows = {
-                    {"题干(stem)", "题型(1单选2多选3判断4填空5简答6编程)", "分类(category)", "难度(简单/中等/困难)",
+                    {"题干(stem)", "题型(单选题/多选题/判断题/填空题/简答题/编程题)", "分类(category)", "难度(简单/中等/困难)",
                             "选项(options, JSON数组)", "正确答案(correct, JSON)", "参考答案/解析(reference_answer)", "分值(score)"},
-                    {"Java 中用于定义常量的关键字是？", "1", sampleCategory, "简单",
+                    {"Java 中用于定义常量的关键字是？", "单选题", sampleCategory, "简单",
                             "[\"final\",\"finally\",\"finalize\",\"const\"]", "[0]", "final 修饰的变量不可重新赋值", "2"},
-                    {"简述 JVM 的垃圾回收机制", "5",
+                    {"简述 JVM 的垃圾回收机制", "简答题",
                             categoryNames.isEmpty() ? "JVM" : categoryNames.get(0), "中等",
                             "", "", "可从可达性分析、常见回收器等角度作答", "10"}
             };
@@ -127,7 +127,7 @@ public class AdminExamQuestionController {
                 }
             }
             XSSFDataValidationHelper helper = new XSSFDataValidationHelper(sheet);
-            var typeConstraint = helper.createExplicitListConstraint(new String[]{"1", "2", "3", "4", "5", "6"});
+            var typeConstraint = helper.createExplicitListConstraint(new String[]{"单选题", "多选题", "判断题", "填空题", "简答题", "编程题"});
             XSSFDataValidation typeValidation = (XSSFDataValidation) helper.createValidation(typeConstraint, new CellRangeAddressList(1, 500, 1, 1));
             sheet.addValidationData(typeValidation);
             if (!categoryNames.isEmpty()) {

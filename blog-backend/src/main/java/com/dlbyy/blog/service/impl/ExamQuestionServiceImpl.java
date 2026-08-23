@@ -44,6 +44,28 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
 
     private static final Set<String> VALID_DIFFICULTIES = Set.of("简单", "中等", "困难");
 
+    private static final Map<String, Integer> TYPE_NAME_MAP = Map.ofEntries(
+            Map.entry("单选题", 1), Map.entry("单选", 1),
+            Map.entry("多选题", 2), Map.entry("多选", 2),
+            Map.entry("判断题", 3), Map.entry("判断", 3),
+            Map.entry("填空题", 4), Map.entry("填空", 4),
+            Map.entry("简答题", 5), Map.entry("简答", 5),
+            Map.entry("编程题", 6), Map.entry("编程", 6));
+
+    /**
+     * 解析题型：支持 1-6 数字或题型名称（忽略大小写），无效返回 null
+     */
+    private static Integer resolveType(String typeText) {
+        if (!StringUtils.hasText(typeText)) {
+            return null;
+        }
+        String text = typeText.trim();
+        if (text.matches("[1-6]")) {
+            return Integer.valueOf(text);
+        }
+        return TYPE_NAME_MAP.get(text.toLowerCase());
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ImportResult importFromExcel(MultipartFile file) {
@@ -76,7 +98,8 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
                     continue; // 跳过整行空白
                 }
 
-                String error = validateRow(stem, typeText, difficulty, options, correct, scoreText, objectMapper);
+                Integer type = resolveType(typeText);
+                String error = validateRow(stem, type, difficulty, options, correct, scoreText, objectMapper);
                 if (error == null && !StringUtils.hasText(category)) {
                     error = "分类必须为分类管理中已有的分类";
                 }
@@ -90,7 +113,7 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
 
                 ExamQuestion q = new ExamQuestion();
                 q.setStem(stem);
-                q.setType(Integer.parseInt(typeText.trim()));
+                q.setType(type);
                 q.setCategory(category);
                 q.setDifficulty(StringUtils.hasText(difficulty) ? difficulty : "中等");
                 q.setOptions(StringUtils.hasText(options) ? options.trim() : null);
@@ -115,19 +138,13 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
     /**
      * 校验单行数据，返回错误原因；返回 null 表示合法
      */
-    private String validateRow(String stem, String typeText, String difficulty, String options,
+    private String validateRow(String stem, Integer type, String difficulty, String options,
                                String correct, String scoreText, ObjectMapper mapper) {
         if (!StringUtils.hasText(stem)) {
             return "题干不能为空";
         }
-        int type;
-        try {
-            type = Integer.parseInt(typeText.trim());
-        } catch (Exception e) {
-            return "题型必须为整数（1单选/2多选/3判断/4填空/5简答/6编程）";
-        }
-        if (type < 1 || type > 6) {
-            return "题型必须为 1-6（1单选/2多选/3判断/4填空/5简答/6编程）";
+        if (type == null) {
+            return "题型必须为：单选题/多选题/判断题/填空题/简答题/编程题（或 1-6）";
         }
         if (StringUtils.hasText(difficulty) && !VALID_DIFFICULTIES.contains(difficulty.trim())) {
             return "难度必须为：简单/中等/困难";
