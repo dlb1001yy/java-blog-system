@@ -302,6 +302,7 @@ const handleSave = async (isPublish) => {
     form.isPublish = isPublish
     
     try {
+    console.log(form.content)
       if (isEdit.value) {
         await articleApi.update(form)
       } else {
