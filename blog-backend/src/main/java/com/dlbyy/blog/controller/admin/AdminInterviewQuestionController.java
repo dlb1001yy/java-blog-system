@@ -8,7 +8,13 @@ import com.dlbyy.blog.service.InterviewQuestionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 后台面试题管理
@@ -44,6 +50,42 @@ public class AdminInterviewQuestionController {
     @Operation(summary = "新增/更新面试题")
     public Result<Long> save(@RequestBody InterviewQuestion question) {
         return Result.success("保存成功", interviewQuestionService.adminSave(question));
+    }
+
+    @PostMapping("/import")
+    @Admin("批量导入面试题")
+    @Operation(summary = "JSON 批量导入面试题（全量校验通过才落库）")
+    public Result<Map<String, Object>> importQuestions(@RequestBody List<InterviewQuestion> questions) {
+        if (questions == null || questions.isEmpty()) {
+            return Result.error("导入列表不能为空");
+        }
+        List<String> errors = new ArrayList<>();
+        for (int i = 0; i < questions.size(); i++) {
+            InterviewQuestion question = questions.get(i);
+            List<String> missing = new ArrayList<>();
+            if (!StringUtils.hasText(question.getTitle())) {
+                missing.add("title");
+            }
+            if (!StringUtils.hasText(question.getCategory())) {
+                missing.add("category");
+            }
+            if (!StringUtils.hasText(question.getDifficulty())) {
+                missing.add("difficulty");
+            }
+            if (!missing.isEmpty()) {
+                errors.add("第" + (i + 1) + "题：缺少" + String.join("、", missing));
+            }
+        }
+        Map<String, Object> data = new HashMap<>();
+        data.put("count", errors.isEmpty() ? questions.size() : 0);
+        data.put("errors", errors);
+        if (!errors.isEmpty()) {
+            return Result.success("导入失败，共 " + errors.size() + " 条错误", data);
+        }
+        for (InterviewQuestion question : questions) {
+            interviewQuestionService.adminSave(question);
+        }
+        return Result.success("导入成功", data);
     }
 
     @DeleteMapping("/{id}")

@@ -16,6 +16,11 @@ export default {
     return request.post('/admin/interview-questions', data)
   },
 
+  // 批量导入
+  importQuestions(data) {
+    return request.post('/admin/interview-questions/import', data)
+  },
+
   // 删除
   delete(id) {
     return request.delete(`/admin/interview-questions/${id}`)

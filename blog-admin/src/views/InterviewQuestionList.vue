@@ -2,7 +2,16 @@
   <PageContainer title="面试题管理" description="面试题库维护">
     <template #action>
       <el-button type="primary" :icon="Plus" @click="handleAdd">新增面试题</el-button>
+      <el-button :icon="Upload" @click="triggerImport">导入面试题</el-button>
+      <el-button :icon="Download" @click="downloadTemplate">下载模板</el-button>
     </template>
+    <input
+      ref="fileInputRef"
+      type="file"
+      accept=".md,.markdown"
+      style="display: none"
+      @change="handleFileChange"
+    />
 
     <!-- 筛选栏 -->
     <div class="search-card">
@@ -198,7 +207,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Upload, Download } from '@element-plus/icons-vue'
 import MarkdownIt from 'markdown-it'
 import 'github-markdown-css'
 import interviewQuestionApi from '@/api/interviewQuestion'
@@ -355,6 +364,136 @@ const handleDelete = (row) => {
       ElMessage.success('删除成功')
       fetchData()
     }).catch(() => {})
+}
+
+// ============ Markdown 批量导入 ============
+const fileInputRef = ref()
+const importing = ref(false)
+
+// 字段标记行：如 **题干**： / **解题思路**: （兼容中英文冒号与尾随空格）
+const FIELD_LINE = /^\*\*(题干|技术方向|难度|标签|解题思路|参考答案)\*\*\s*[:：]\s*(.*)$/
+
+const parseQuestionsMd = (text) => {
+  const lines = text.replace(/\r\n/g, '\n').split('\n')
+  const questions = []
+  const errors = []
+  let current = null
+
+  const finishBlock = () => {
+    if (!current) return
+    const no = questions.length + 1
+    const missing = []
+    if (!current.title.trim()) missing.push('题干')
+    if (!current.category) missing.push('技术方向')
+    if (!current.difficulty) missing.push('难度')
+    if (missing.length) errors.push(`第${no}题：缺少${missing.join('/')}`)
+    else questions.push({
+      title: current.title.trim(),
+      category: current.category,
+      difficulty: current.difficulty,
+      tags: current.tags,
+      tips: current.tips.trim(),
+      answer: current.answer.trim(),
+      status: 1
+    })
+  }
+
+  for (const line of lines) {
+    const m = line.match(FIELD_LINE)
+    if (m && m[1] === '题干') {
+      finishBlock()
+      current = { title: m[2].replace(/\s+$/, ''), category: '', difficulty: '', tags: '', tips: '', answer: '', _field: 'title' }
+      continue
+    }
+    if (!current) continue
+    if (m) {
+      current._field = m[1]
+      const value = m[2].replace(/\s+$/, '')
+      if (m[1] === '技术方向') current.category = value.trim()
+      else if (m[1] === '难度') current.difficulty = value.trim()
+      else if (m[1] === '标签') {
+        current.tags = value.replace(/`/g, '').split(/\s+/).map(t => t.trim()).filter(Boolean).join(',')
+      }
+      // 题干/解题思路/参考答案为多行文本，标记行本身无内容
+      continue
+    }
+    current[current._field] += (current[current._field] ? '\n' : '') + line
+  }
+  finishBlock()
+  return { questions, errors }
+}
+
+const triggerImport = () => fileInputRef.value.click()
+
+const handleFileChange = async (e) => {
+  const file = e.target.files[0]
+  e.target.value = ''
+  if (!file) return
+  try {
+    const text = await file.text()
+    const { questions, errors } = parseQuestionsMd(text)
+    if (!questions.length) {
+      ElMessage.warning('未解析到有效面试题，请检查文件格式是否符合模板要求')
+      return
+    }
+    const errorHtml = errors.length
+      ? `<div style="margin-top:8px;color:var(--el-color-danger);font-size:13px;white-space:pre-line;">${errors.join('\n')}</div>`
+      : ''
+    await ElMessageBox.confirm(
+      `<div>共解析出 <b>${questions.length}</b> 道面试题${errors.length ? `，<b>${errors.length}</b> 道题因校验失败将被跳过` : ''}，是否确认导入？${errorHtml}</div>`,
+      '导入确认',
+      { dangerouslyUseHTMLString: true, confirmButtonText: '确认导入', cancelButtonText: '取消', type: 'info' }
+    )
+    importing.value = true
+    await interviewQuestionApi.importQuestions(questions)
+    ElMessage.success(`成功导入 ${questions.length} 道面试题`)
+    fetchData()
+  } catch (err) {
+    if (err !== 'cancel' && err?.message !== 'cancel') {
+      // 请求错误由拦截器统一提示
+    }
+  } finally {
+    importing.value = false
+  }
+}
+
+const downloadTemplate = () => {
+  const template = [
+    '# 面试题导入模板',
+    '',
+    '每个字段以 `**字段名**：` 开头，题目之间用 `**题干**：` 分隔。',
+    '',
+    '**题干**：',
+    '请描述面试题的题干内容，支持多行。',
+    '',
+    '**技术方向**：后端  ',
+    '**难度**：中等',
+    '**标签**：`Java` `并发`',
+    '',
+    '**解题思路**：',
+    '1. 先说明 HashMap 的底层数据结构；',
+    '2. 分析链表转红黑树的阈值；',
+    '3. 结合源码给出结论。',
+    '',
+    '- 数组 + 链表 + 红黑树',
+    '- 链表长度超过 8 且数组长度 >= 64 时树化',
+    '',
+    '**参考答案**：',
+    'HashMap 在 JDK 1.8 中采用数组 + 链表 + 红黑树结构：',
+    '',
+    '```java',
+    'int threshold = 8; // 链表树化阈值',
+    '```',
+    '',
+    '> 注意：本题答案保留 Markdown 原文格式。'
+  ].join('\n')
+  const blob = new Blob([template], { type: 'text/markdown;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = '面试题导入模板.md'
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 onMounted(() => fetchData())
