@@ -201,6 +201,36 @@
         <el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 导入预览对话框 -->
+    <el-dialog v-model="importPreviewVisible" title="导入预览" width="800px" top="6vh">
+      <div class="import-preview-body">
+        <div class="import-summary">
+          共解析出 <b>{{ importQuestionsList.length }}</b> 道题<template v-if="importErrors.length">，<span class="import-error-text">{{ importErrors.length }} 道题校验失败将被跳过</span></template>
+        </div>
+        <div v-for="(err, i) in importErrors" :key="'err-' + i" class="import-error-item">{{ err }}</div>
+        <div v-for="(q, idx) in importQuestionsList" :key="idx" class="import-question-card">
+          <div class="q-title">{{ q.title }}</div>
+          <div class="q-meta">
+            <span>技术方向：{{ q.category }}</span>
+            <span>难度：{{ q.difficulty }}</span>
+            <span v-if="q.tags">标签：{{ q.tags }}</span>
+          </div>
+          <div class="q-section-label">解题思路</div>
+          <div v-if="q.tips" class="markdown-body q-md" v-html="md.render(q.tips)"></div>
+          <div v-else class="q-empty">（空）</div>
+          <div class="q-section-label">参考答案</div>
+          <div v-if="q.answer" class="markdown-body q-md" v-html="md.render(q.answer)"></div>
+          <div v-else class="q-empty">（空）</div>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="importPreviewVisible = false">取消</el-button>
+        <el-button type="primary" :loading="importing" @click="confirmImport">
+          确认导入 {{ importQuestionsList.length }} 道题
+        </el-button>
+      </template>
+    </el-dialog>
   </PageContainer>
 </template>
 
@@ -369,9 +399,22 @@ const handleDelete = (row) => {
 // ============ Markdown 批量导入 ============
 const fileInputRef = ref()
 const importing = ref(false)
+const importPreviewVisible = ref(false)
+const importQuestionsList = ref([])
+const importErrors = ref([])
 
 // 字段标记行：如 **题干**： / **解题思路**: （兼容中英文冒号与尾随空格）
 const FIELD_LINE = /^\*\*(题干|技术方向|难度|标签|解题思路|参考答案)\*\*\s*[:：]\s*(.*)$/
+
+// 中文标记 -> 英文属性键
+const FIELD_KEY = {
+  题干: 'title',
+  技术方向: 'category',
+  难度: 'difficulty',
+  标签: 'tags',
+  解题思路: 'tips',
+  参考答案: 'answer'
+}
 
 const parseQuestionsMd = (text) => {
   const lines = text.replace(/\r\n/g, '\n').split('\n')
@@ -402,12 +445,12 @@ const parseQuestionsMd = (text) => {
     const m = line.match(FIELD_LINE)
     if (m && m[1] === '题干') {
       finishBlock()
-      current = { title: m[2].replace(/\s+$/, ''), category: '', difficulty: '', tags: '', tips: '', answer: '', _field: 'title' }
+      current = { title: m[2].replace(/\s+$/, ''), category: '', difficulty: '', tags: '', tips: '', answer: '', _field: FIELD_KEY[m[1]] }
       continue
     }
     if (!current) continue
     if (m) {
-      current._field = m[1]
+      current._field = FIELD_KEY[m[1]]
       const value = m[2].replace(/\s+$/, '')
       if (m[1] === '技术方向') current.category = value.trim()
       else if (m[1] === '难度') current.difficulty = value.trim()
@@ -429,29 +472,24 @@ const handleFileChange = async (e) => {
   const file = e.target.files[0]
   e.target.value = ''
   if (!file) return
+  const text = await file.text()
+  const { questions, errors } = parseQuestionsMd(text)
+  if (!questions.length) {
+    ElMessage.warning('未解析到有效面试题，请检查文件格式是否符合模板要求')
+    return
+  }
+  importQuestionsList.value = questions
+  importErrors.value = errors
+  importPreviewVisible.value = true
+}
+
+const confirmImport = async () => {
+  importing.value = true
   try {
-    const text = await file.text()
-    const { questions, errors } = parseQuestionsMd(text)
-    if (!questions.length) {
-      ElMessage.warning('未解析到有效面试题，请检查文件格式是否符合模板要求')
-      return
-    }
-    const errorHtml = errors.length
-      ? `<div style="margin-top:8px;color:var(--el-color-danger);font-size:13px;white-space:pre-line;">${errors.join('\n')}</div>`
-      : ''
-    await ElMessageBox.confirm(
-      `<div>共解析出 <b>${questions.length}</b> 道面试题${errors.length ? `，<b>${errors.length}</b> 道题因校验失败将被跳过` : ''}，是否确认导入？${errorHtml}</div>`,
-      '导入确认',
-      { dangerouslyUseHTMLString: true, confirmButtonText: '确认导入', cancelButtonText: '取消', type: 'info' }
-    )
-    importing.value = true
-    await interviewQuestionApi.importQuestions(questions)
-    ElMessage.success(`成功导入 ${questions.length} 道面试题`)
+    await interviewQuestionApi.importQuestions(importQuestionsList.value)
+    ElMessage.success(`成功导入 ${importQuestionsList.value.length} 道面试题`)
+    importPreviewVisible.value = false
     fetchData()
-  } catch (err) {
-    if (err !== 'cancel' && err?.message !== 'cancel') {
-      // 请求错误由拦截器统一提示
-    }
   } finally {
     importing.value = false
   }
@@ -589,5 +627,57 @@ onMounted(() => fetchData())
 :deep(.el-dialog__footer) {
   padding: var(--space-4) var(--space-5);
   border-top: 1px solid var(--border-color);
+}
+.import-preview-body {
+  max-height: 60vh;
+  overflow: auto;
+}
+.import-summary {
+  font-size: 14px;
+  color: var(--text-regular);
+  margin-bottom: var(--space-3);
+}
+.import-error-text,
+.import-error-item {
+  color: var(--el-color-danger);
+}
+.import-error-item {
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.import-question-card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.q-title {
+  font-weight: 600;
+  white-space: pre-wrap;
+  margin-bottom: var(--space-2);
+}
+.q-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text-regular);
+  margin-bottom: var(--space-3);
+}
+.q-section-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-regular);
+  margin: var(--space-3) 0 var(--space-1);
+}
+.q-md {
+  font-size: 14px;
+}
+.q-md :deep(pre) {
+  white-space: pre-wrap;
+}
+.q-empty {
+  font-size: 13px;
+  color: var(--el-text-info, #909399);
 }
 </style>
