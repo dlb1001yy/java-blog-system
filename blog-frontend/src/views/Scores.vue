@@ -179,12 +179,12 @@
               <span class="answer-value">{{ formatAnswer(item.myAnswer) || '未作答' }}</span>
             </div>
             <div class="answer-line" v-if="item.type <= 4 || detail.status === 1">
-              <span class="answer-label">{{ item.type <= 4 ? '正确答案' : '参考答案' }}</span>
-              <span class="answer-value correct">{{ formatAnswer(item.type <= 4 ? item.correctAnswer : item.referenceAnswer) }}</span>
+              <span class="answer-label">正确答案</span>
+              <div class="answer-value markdown-body correct" v-html="renderMd(formatAnswer(item.type <= 4 ? item.correctAnswer : item.referenceAnswer))"></div>
             </div>
             <div class="answer-line" v-if="item.type <= 4 || detail.status === 1">
               <span class="answer-label">解析</span>
-              <div class="answer-value markdown-body" v-html="renderMd(item.type <= 4 ? item.referenceAnswer : item.referenceAnswer)"></div>
+              <div class="answer-value markdown-body" v-html="renderMd(item.referenceAnswer)"></div>
             </div>
             <div class="answer-line" v-if="item.comment">
               <span class="answer-label">评语</span>

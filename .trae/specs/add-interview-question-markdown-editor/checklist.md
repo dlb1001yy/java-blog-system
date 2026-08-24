@@ -1,0 +1,6 @@
+- [x] blog-admin 面试题新增/编辑对话框中"解题思路"与"参考答案"均使用 Markdown 编辑器（工具栏 + 预览）
+- [x] 编辑器插入语法与预览渲染正常（标题、粗斜体、代码、代码块、列表、引用、链接）
+- [x] 表单字段名与提交数据结构不变，后端接口无需改动
+- [x] blog-frontend Interview.vue 展开题目时解题思路/参考答案以 Markdown 渲染
+- [x] blog-frontend Scores.vue 解析/参考答案以 Markdown 渲染（含修复的正确答案行）
+- [x] 两项目均可正常构建（blog-admin vite build 通过，blog-frontend vite build 通过）

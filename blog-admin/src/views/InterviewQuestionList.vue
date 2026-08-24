@@ -104,21 +104,84 @@
           <el-input v-model="form.tags" placeholder="多个标签用英文逗号分隔，如：Java,并发,JVM" />
         </el-form-item>
         <el-form-item label="解题思路" prop="tips">
-          <el-input
-            v-model="form.tips"
-            type="textarea"
-            :rows="4"
-            placeholder="请输入解题思路/分析要点（可选）"
-          />
+          <div class="editor-wrapper">
+            <div class="editor-toolbar">
+              <el-button-group>
+                <el-button size="small" @click="insertText('tips', '# ', '标题')">H1</el-button>
+                <el-button size="small" @click="insertText('tips', '## ', '标题')">H2</el-button>
+                <el-button size="small" @click="insertText('tips', '### ', '标题')">H3</el-button>
+              </el-button-group>
+              <el-button-group style="margin-left: 8px;">
+                <el-button size="small" @click="insertText('tips', '**', '**', '粗体')">B</el-button>
+                <el-button size="small" @click="insertText('tips', '*', '*', '斜体')">I</el-button>
+                <el-button size="small" @click="insertText('tips', '`', '`', '代码')">&lt;/&gt;</el-button>
+              </el-button-group>
+              <el-button-group style="margin-left: 8px;">
+                <el-button size="small" @click="insertText('tips', '- ', '', '列表项')">列表</el-button>
+                <el-button size="small" @click="insertText('tips', '> ', '', '引用')">引用</el-button>
+                <el-button size="small" @click="insertText('tips', '\n```\n', '\n```\n', '代码块')">代码块</el-button>
+              </el-button-group>
+              <el-button-group style="margin-left: 8px;">
+                <el-button size="small" @click="insertText('tips', '[', '](url)', '链接')">链接</el-button>
+                <el-button size="small" @click="insertText('tips', '![', '](url)', '图片')">图片</el-button>
+              </el-button-group>
+              <el-button size="small" style="margin-left: 8px;" @click="tipsPreview = !tipsPreview">
+                {{ tipsPreview ? '编辑' : '预览' }}
+              </el-button>
+            </div>
+            <div class="editor-content editor-content-sm">
+              <el-input
+                v-show="!tipsPreview"
+                v-model="form.tips"
+                type="textarea"
+                :rows="4"
+                placeholder="请输入解题思路/分析要点（可选，支持 Markdown）"
+                class="md-editor-tips"
+                :input-style="{ fontFamily: 'monospace', fontSize: '13px' }"
+              />
+              <div v-show="tipsPreview" class="markdown-body preview preview-sm" v-html="renderedTips"></div>
+            </div>
+          </div>
         </el-form-item>
         <el-form-item label="参考答案" prop="answer">
-          <el-input
-            v-model="form.answer"
-            type="textarea"
-            :rows="10"
-            class="mono-textarea"
-            placeholder="支持 Markdown 语法，代码块请使用 ``` 包裹"
-          />
+          <div class="editor-wrapper">
+            <div class="editor-toolbar">
+              <el-button-group>
+                <el-button size="small" @click="insertText('answer', '# ', '标题')">H1</el-button>
+                <el-button size="small" @click="insertText('answer', '## ', '标题')">H2</el-button>
+                <el-button size="small" @click="insertText('answer', '### ', '标题')">H3</el-button>
+              </el-button-group>
+              <el-button-group style="margin-left: 8px;">
+                <el-button size="small" @click="insertText('answer', '**', '**', '粗体')">B</el-button>
+                <el-button size="small" @click="insertText('answer', '*', '*', '斜体')">I</el-button>
+                <el-button size="small" @click="insertText('answer', '`', '`', '代码')">&lt;/&gt;</el-button>
+              </el-button-group>
+              <el-button-group style="margin-left: 8px;">
+                <el-button size="small" @click="insertText('answer', '- ', '', '列表项')">列表</el-button>
+                <el-button size="small" @click="insertText('answer', '> ', '', '引用')">引用</el-button>
+                <el-button size="small" @click="insertText('answer', '\n```\n', '\n```\n', '代码块')">代码块</el-button>
+              </el-button-group>
+              <el-button-group style="margin-left: 8px;">
+                <el-button size="small" @click="insertText('answer', '[', '](url)', '链接')">链接</el-button>
+                <el-button size="small" @click="insertText('answer', '![', '](url)', '图片')">图片</el-button>
+              </el-button-group>
+              <el-button size="small" style="margin-left: 8px;" @click="answerPreview = !answerPreview">
+                {{ answerPreview ? '编辑' : '预览' }}
+              </el-button>
+            </div>
+            <div class="editor-content">
+              <el-input
+                v-show="!answerPreview"
+                v-model="form.answer"
+                type="textarea"
+                :rows="10"
+                placeholder="支持 Markdown 语法，代码块请使用 ``` 包裹"
+                class="md-editor-answer"
+                :input-style="{ fontFamily: 'monospace', fontSize: '13px' }"
+              />
+              <div v-show="answerPreview" class="markdown-body preview" v-html="renderedAnswer"></div>
+            </div>
+          </div>
         </el-form-item>
         <el-form-item label="状态">
           <el-switch v-model="form.status" :active-value="1" :inactive-value="0" active-text="启用" inactive-text="停用" />
@@ -133,9 +196,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
+import MarkdownIt from 'markdown-it'
+import 'github-markdown-css'
 import interviewQuestionApi from '@/api/interviewQuestion'
 import PageContainer from '@/components/PageContainer.vue'
 
@@ -173,6 +238,38 @@ const rules = {
 }
 
 const splitTags = (tags) => (tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [])
+
+const tipsPreview = ref(false)
+const answerPreview = ref(false)
+
+const md = new MarkdownIt({
+  html: true,
+  linkify: true
+})
+
+const renderedTips = computed(() => md.render(form.tips || ''))
+const renderedAnswer = computed(() => md.render(form.answer || ''))
+
+const insertText = (field, before, after = '', placeholder = '') => {
+  const textarea = document.querySelector(
+    field === 'tips' ? '.md-editor-tips textarea' : '.md-editor-answer textarea'
+  )
+  if (!textarea) return
+
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const selected = form[field].substring(start, end) || placeholder
+
+  form[field] =
+    form[field].substring(0, start) +
+    before + selected + after +
+    form[field].substring(end)
+
+  nextTick(() => {
+    textarea.focus()
+    textarea.setSelectionRange(start + before.length, start + before.length + selected.length)
+  })
+}
 
 const fetchData = async () => {
   loading.value = true
@@ -213,6 +310,8 @@ const handleCurrentChange = () => fetchData()
 const handleAdd = () => {
   dialogTitle.value = '新增面试题'
   Object.assign(form, { id: null, title: '', category: '', difficulty: '', tags: '', tips: '', answer: '', status: 1 })
+  tipsPreview.value = false
+  answerPreview.value = false
   dialogVisible.value = true
 }
 
@@ -229,6 +328,8 @@ const handleEdit = async (row) => {
     answer: res.data.answer || '',
     status: res.data.status ?? 1
   })
+  tipsPreview.value = false
+  answerPreview.value = false
   dialogVisible.value = true
 }
 
@@ -283,10 +384,36 @@ onMounted(() => fetchData())
 .tag-item {
   margin-right: 4px;
 }
-.mono-textarea :deep(textarea) {
-  font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
-  font-size: 13px;
-  line-height: 1.6;
+.editor-wrapper {
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-subtle);
+}
+.editor-content :deep(.el-textarea__inner) {
+  border: none;
+  border-radius: 0;
+  resize: vertical;
+}
+.preview {
+  padding: var(--space-4);
+  min-height: 240px;
+  max-height: 420px;
+  overflow: auto;
+  font-size: 14px;
+}
+.editor-content-sm .preview,
+.preview-sm {
+  min-height: 120px;
+  max-height: 260px;
 }
 :deep(.el-table) {
   border-radius: var(--radius-md);
