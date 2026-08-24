@@ -110,7 +110,17 @@
           </el-select>
         </el-form-item>
         <el-form-item label="标签" prop="tags">
-          <el-input v-model="form.tags" placeholder="多个标签用英文逗号分隔，如：Java,并发,JVM" />
+          <el-select
+            v-model="form.tags"
+            multiple
+            filterable
+            allow-create
+            default-first-option
+            placeholder="选择或输入标签，如：Java/并发/JVM"
+            style="width: 100%"
+          >
+            <el-option v-for="t in tagOptions" :key="t" :label="t" :value="t" />
+          </el-select>
         </el-form-item>
         <el-form-item label="解题思路" prop="tips">
           <div class="editor-wrapper">
@@ -241,6 +251,8 @@ import { Plus, Upload, Download } from '@element-plus/icons-vue'
 import MarkdownIt from 'markdown-it'
 import 'github-markdown-css'
 import interviewQuestionApi from '@/api/interviewQuestion'
+import categoryApi from '@/api/category'
+import tagApi from '@/api/tag'
 import PageContainer from '@/components/PageContainer.vue'
 
 const loading = ref(false)
@@ -250,7 +262,8 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 
-const categoryOptions = ['后端', '前端', '数据库', 'DevOps', '算法']
+const categoryOptions = ref([])
+const tagOptions = ref([])
 const difficultyOptions = ['简单', '中等', '困难']
 const difficultyTypeMap = { 简单: 'success', 中等: 'warning', 困难: 'danger' }
 
@@ -264,7 +277,7 @@ const form = reactive({
   title: '',
   category: '',
   difficulty: '',
-  tags: '',
+  tags: [],
   tips: '',
   answer: '',
   status: 1
@@ -348,7 +361,7 @@ const handleCurrentChange = () => fetchData()
 
 const handleAdd = () => {
   dialogTitle.value = '新增面试题'
-  Object.assign(form, { id: null, title: '', category: '', difficulty: '', tags: '', tips: '', answer: '', status: 1 })
+  Object.assign(form, { id: null, title: '', category: '', difficulty: '', tags: [], tips: '', answer: '', status: 1 })
   tipsPreview.value = false
   answerPreview.value = false
   dialogVisible.value = true
@@ -362,7 +375,7 @@ const handleEdit = async (row) => {
     title: res.data.title,
     category: res.data.category,
     difficulty: res.data.difficulty,
-    tags: res.data.tags || '',
+    tags: splitTags(res.data.tags),
     tips: res.data.tips || '',
     answer: res.data.answer || '',
     status: res.data.status ?? 1
@@ -377,7 +390,8 @@ const handleSubmit = async () => {
     if (!valid) return
     submitting.value = true
     try {
-      await interviewQuestionApi.save({ ...form })
+      const data = { ...form, tags: (form.tags || []).join(',') }
+      await interviewQuestionApi.save(data)
       ElMessage.success(form.id ? '更新成功' : '创建成功')
       dialogVisible.value = false
       fetchData()
@@ -534,7 +548,20 @@ const downloadTemplate = () => {
   URL.revokeObjectURL(url)
 }
 
-onMounted(() => fetchData())
+const fetchOptions = async () => {
+  try {
+    const [catRes, tagRes] = await Promise.all([categoryApi.getAll(), tagApi.getAll()])
+    categoryOptions.value = (catRes.data || []).map(c => c.name)
+    tagOptions.value = (tagRes.data || []).map(t => t.name)
+  } catch (e) {
+    // 选项加载失败不影响主流程
+  }
+}
+
+onMounted(() => {
+  fetchData()
+  fetchOptions()
+})
 </script>
 
 <style scoped>

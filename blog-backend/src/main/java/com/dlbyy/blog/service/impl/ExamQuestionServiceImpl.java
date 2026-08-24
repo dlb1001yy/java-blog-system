@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dlbyy.blog.common.PageResult;
-import com.dlbyy.blog.entity.Category;
 import com.dlbyy.blog.entity.ExamQuestion;
 import com.dlbyy.blog.mapper.ExamQuestionMapper;
 import com.dlbyy.blog.service.CategoryService;
@@ -72,10 +71,6 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
         List<ExamQuestion> questions = new ArrayList<>();
         List<String> errors = new ArrayList<>();
         DataFormatter formatter = new DataFormatter();
-        Set<String> categoryNames = categoryService.list().stream()
-                .map(Category::getName)
-                .filter(StringUtils::hasText)
-                .collect(Collectors.toSet());
         try (InputStream in = file.getInputStream(); XSSFWorkbook workbook = new XSSFWorkbook(in)) {
             var sheet = workbook.getSheetAt(0);
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
@@ -113,10 +108,10 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
                     parsedCorrect = correctResult.value();
                 }
                 if (error == null && !StringUtils.hasText(category)) {
-                    error = "分类必须为分类管理中已有的分类";
+                    error = "分类不能为空";
                 }
-                if (error == null && !categoryNames.contains(category.trim())) {
-                    error = "分类必须为分类管理中已有的分类";
+                if (error == null) {
+                    categoryService.getOrCreateByName(category.trim());
                 }
                 if (error != null) {
                     errors.add("第" + (i + 1) + "行: " + error);
@@ -366,6 +361,9 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
 
     @Override
     public Long adminSave(ExamQuestion question) {
+        if (StringUtils.hasText(question.getCategory())) {
+            categoryService.getOrCreateByName(question.getCategory().trim());
+        }
         if (question.getId() == null) {
             this.save(question);
         } else {

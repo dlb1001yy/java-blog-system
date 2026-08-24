@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dlbyy.blog.entity.*;
 import com.dlbyy.blog.mapper.*;
 import com.dlbyy.blog.service.ArticleService;
+import com.dlbyy.blog.service.TagService;
 import com.dlbyy.blog.utils.RedisUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -25,6 +26,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     private final CategoryMapper categoryMapper;
     private final TagMapper tagMapper;
     private final ArticleTagMapper articleTagMapper;
+    private final TagService tagService;
     private final UserMapper userMapper;
 //    private final RedisTemplate<String, Object> redisTemplate;
     private final RedisUtils redisUtils;
@@ -103,21 +105,51 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long saveArticleWithTags(Article article, List<Long> tagIds) {
+    public Long saveArticleWithTags(Article article, List<String> tagIds) {
         this.save(article);
-        if (tagIds != null && !tagIds.isEmpty()) {
-            saveArticleTags(article.getId(), tagIds);
+        List<Long> resolvedTagIds = resolveTagIds(tagIds);
+        if (!resolvedTagIds.isEmpty()) {
+            saveArticleTags(article.getId(), resolvedTagIds);
         }
         return article.getId();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateArticleWithTags(Article article, List<Long> tagIds) {
+    public void updateArticleWithTags(Article article, List<String> tagIds) {
         this.updateById(article);
         if (tagIds != null) {
-            updateArticleTags(article.getId(), tagIds);
+            updateArticleTags(article.getId(), resolveTagIds(tagIds));
         }
+    }
+
+    /**
+     * tagIds 允许混入 allow-create 的新建标签名称（字符串而非数字 id），
+     * 非数字项通过 getOrCreateByName 换取 id 后替换，数字项直接解析
+     */
+    private List<Long> resolveTagIds(List<String> tagIds) {
+        if (tagIds == null || tagIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Long> resolved = new ArrayList<>();
+        for (String raw : tagIds) {
+            if (raw == null) {
+                continue;
+            }
+            String item = raw.trim();
+            if (item.isEmpty()) {
+                continue;
+            }
+            if (item.matches("\\d+")) {
+                resolved.add(Long.parseLong(item));
+            } else {
+                Tag tag = tagService.getOrCreateByName(item);
+                if (tag != null) {
+                    resolved.add(tag.getId());
+                }
+            }
+        }
+        return resolved;
     }
 
     @Override

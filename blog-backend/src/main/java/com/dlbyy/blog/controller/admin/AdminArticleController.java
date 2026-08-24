@@ -203,6 +203,7 @@ public class AdminArticleController {
         private String sourceName;
         private Integer isTop;
         private Integer isPublish;
-        private List<Long> tagIds;
+        // allow-create：tagIds 中非数字项为新建标签名称，由 Service 解析为 id
+        private List<String> tagIds;
     }
 }

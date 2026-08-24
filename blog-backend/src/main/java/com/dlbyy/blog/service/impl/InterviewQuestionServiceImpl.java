@@ -6,16 +6,27 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dlbyy.blog.common.PageResult;
 import com.dlbyy.blog.entity.InterviewQuestion;
 import com.dlbyy.blog.mapper.InterviewQuestionMapper;
+import com.dlbyy.blog.service.CategoryService;
 import com.dlbyy.blog.service.InterviewQuestionService;
+import com.dlbyy.blog.service.TagService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.stream.Collectors;
 
 /**
  * 面试题服务实现
  */
 @Service
+@RequiredArgsConstructor
 public class InterviewQuestionServiceImpl extends ServiceImpl<InterviewQuestionMapper, InterviewQuestion>
         implements InterviewQuestionService {
+
+    private final CategoryService categoryService;
+    private final TagService tagService;
 
     @Override
     public PageResult<InterviewQuestion> pageQuery(int page, int size, String category, String difficulty, String keyword) {
@@ -45,6 +56,17 @@ public class InterviewQuestionServiceImpl extends ServiceImpl<InterviewQuestionM
 
     @Override
     public Long adminSave(InterviewQuestion question) {
+        if (StringUtils.hasText(question.getCategory())) {
+            categoryService.getOrCreateByName(question.getCategory().trim());
+        }
+        if (StringUtils.hasText(question.getTags())) {
+            LinkedHashSet<String> tagSet = Arrays.stream(question.getTags().split("[,，]"))
+                    .map(String::trim)
+                    .filter(StringUtils::hasText)
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+            tagSet.forEach(tagService::getOrCreateByName);
+            question.setTags(String.join(",", tagSet));
+        }
         if (question.getId() == null) {
             this.save(question);
         } else {
