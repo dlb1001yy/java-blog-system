@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.Result;
+import com.dlbyy.blog.dto.BatchIds;
 import com.dlbyy.blog.entity.Comment;
 import com.dlbyy.blog.service.CommentService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -57,7 +58,8 @@ public class AdminCommentController {
 
     @PutMapping("/batch-approve")
     @Admin("批量审核评论")
-    public Result<?> batchApprove(@RequestBody List<Long> ids) {
+    public Result<?> batchApprove(@RequestBody BatchIds batchIds) {
+        List<Long> ids = batchIds.getIds();
         if (ids == null || ids.isEmpty()) {
             return Result.success("批量审核成功", null);
         }
@@ -82,7 +84,8 @@ public class AdminCommentController {
 
     @DeleteMapping("/batch")
     @Admin("批量删除评论")
-    public Result<?> batchDelete(@RequestBody List<Long> ids) {
+    public Result<?> batchDelete(@RequestBody BatchIds batchIds) {
+        List<Long> ids = batchIds.getIds();
         if (ids == null || ids.isEmpty()) {
             return Result.success("批量删除成功", null);
         }
