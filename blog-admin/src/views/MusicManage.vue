@@ -14,7 +14,10 @@
       <el-tab-pane label="歌曲管理" name="songs">
         <div class="table-card">
           <div class="toolbar">
-            <el-button type="primary" :icon="UploadIcon" @click="openUploadDialog">上传音乐</el-button>
+            <div>
+              <el-button type="primary" :icon="UploadIcon" @click="openUploadDialog">上传音乐</el-button>
+              <el-button type="danger" :disabled="!selectedSongRows.length" @click="handleSongBatchDelete">批量删除</el-button>
+            </div>
             <el-input
               v-model="songKeyword"
               placeholder="搜索歌名/歌手/专辑"
@@ -49,7 +52,8 @@
             </div>
           </div>
 
-          <el-table :data="songList" v-loading="songLoading" :border="false" stripe>
+          <el-table :data="songList" v-loading="songLoading" :border="false" stripe @selection-change="handleSongSelectionChange">
+            <el-table-column type="selection" width="55" />
             <el-table-column label="歌曲" min-width="220">
               <template #default="{ row }">
                 <div class="song-cell">
@@ -112,7 +116,10 @@
       <el-tab-pane label="歌单管理" name="playlists">
         <div class="table-card">
           <div class="toolbar">
-            <el-button type="primary" :icon="Plus" @click="openPlaylistEdit(null)">新建歌单</el-button>
+            <div>
+              <el-button type="primary" :icon="Plus" @click="openPlaylistEdit(null)">新建歌单</el-button>
+              <el-button type="danger" :disabled="!selectedPlaylistRows.length" @click="handlePlaylistBatchDelete">批量删除</el-button>
+            </div>
             <el-input
               v-model="playlistKeyword"
               placeholder="搜索歌单名"
@@ -127,7 +134,8 @@
             </el-input>
           </div>
 
-          <el-table :data="playlistList" v-loading="playlistLoading" :border="false" stripe>
+          <el-table :data="playlistList" v-loading="playlistLoading" :border="false" stripe @selection-change="handlePlaylistSelectionChange">
+            <el-table-column type="selection" width="55" />
             <el-table-column prop="id" label="ID" width="70" />
             <el-table-column label="歌单名" min-width="180">
               <template #default="{ row }">
@@ -355,6 +363,7 @@ const songPage = ref(1)
 const songSize = ref(10)
 const songTotal = ref(0)
 const songKeyword = ref('')
+const selectedSongRows = ref([])
 const stats = reactive({ totalSongs: 0, totalDuration: 0, totalSize: 0, totalPlayCount: 0 })
 
 const fetchSongs = async () => {
@@ -547,6 +556,20 @@ const handleSongDelete = (row) => {
     }).catch(() => {})
 }
 
+const handleSongSelectionChange = (rows) => {
+  selectedSongRows.value = rows
+}
+
+const handleSongBatchDelete = () => {
+  ElMessageBox.confirm(`确定要删除选中的 ${selectedSongRows.value.length} 首歌曲吗？`, '提示', { type: 'warning' })
+    .then(async () => {
+      await musicApi.batchDeleteSongs(selectedSongRows.value.map(row => row.id))
+      ElMessage.success('批量删除成功')
+      fetchSongs()
+      fetchStats()
+    }).catch(() => {})
+}
+
 // ---------------- 歌单 ----------------
 const playlistLoading = ref(false)
 const playlistList = ref([])
@@ -554,6 +577,7 @@ const playlistPage = ref(1)
 const playlistSize = ref(10)
 const playlistTotal = ref(0)
 const playlistKeyword = ref('')
+const selectedPlaylistRows = ref([])
 
 const fetchPlaylists = async () => {
   playlistLoading.value = true
@@ -619,6 +643,19 @@ const handlePlaylistDelete = (row) => {
     .then(async () => {
       await musicApi.deletePlaylist(row.id)
       ElMessage.success('删除成功')
+      fetchPlaylists()
+    }).catch(() => {})
+}
+
+const handlePlaylistSelectionChange = (rows) => {
+  selectedPlaylistRows.value = rows
+}
+
+const handlePlaylistBatchDelete = () => {
+  ElMessageBox.confirm(`确定要删除选中的 ${selectedPlaylistRows.value.length} 个歌单吗？歌单内歌曲关联将一并删除。`, '提示', { type: 'warning' })
+    .then(async () => {
+      await musicApi.batchDeletePlaylists(selectedPlaylistRows.value.map(row => row.id))
+      ElMessage.success('批量删除成功')
       fetchPlaylists()
     }).catch(() => {})
 }

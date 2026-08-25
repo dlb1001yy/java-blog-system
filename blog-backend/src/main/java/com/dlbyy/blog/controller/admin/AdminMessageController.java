@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.Result;
+import com.dlbyy.blog.dto.BatchIds;
 import com.dlbyy.blog.entity.Message;
 import com.dlbyy.blog.service.MessageService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -46,5 +47,12 @@ public class AdminMessageController {
     public Result<?> delete(@PathVariable Long id) {
         messageService.removeById(id);
         return Result.success("删除成功", null);
+    }
+
+    @DeleteMapping("/batch")
+    @Admin("批量删除留言")
+    public Result<?> batchDelete(@RequestBody BatchIds batchIds) {
+        messageService.removeByIds(batchIds.getIds());
+        return Result.success("批量删除成功", null);
     }
 }

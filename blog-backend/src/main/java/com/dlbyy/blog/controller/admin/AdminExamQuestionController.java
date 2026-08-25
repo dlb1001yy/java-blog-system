@@ -3,6 +3,7 @@ package com.dlbyy.blog.controller.admin;
 import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.PageResult;
 import com.dlbyy.blog.common.Result;
+import com.dlbyy.blog.dto.BatchIds;
 import com.dlbyy.blog.entity.Category;
 import com.dlbyy.blog.entity.ExamQuestion;
 import com.dlbyy.blog.service.CategoryService;
@@ -78,6 +79,16 @@ public class AdminExamQuestionController {
     public Result<?> delete(@PathVariable Long id) {
         examQuestionService.adminDelete(id);
         return Result.success("删除成功", null);
+    }
+
+    @DeleteMapping("/batch")
+    @Admin("批量删除考试题目")
+    @Operation(summary = "批量删除题目")
+    public Result<?> batchDelete(@RequestBody BatchIds batchIds) {
+        for (Long id : batchIds.getIds()) {
+            examQuestionService.adminDelete(id);
+        }
+        return Result.success("批量删除成功", null);
     }
 
     @PostMapping("/import")

@@ -6,6 +6,7 @@ import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.annotation.RateLimit;
 import com.dlbyy.blog.common.Result;
 import com.dlbyy.blog.common.exception.BusinessException;
+import com.dlbyy.blog.dto.BatchIds;
 import com.dlbyy.blog.entity.Article;
 import com.dlbyy.blog.event.ArticlePublishedEvent;
 import com.dlbyy.blog.service.ArticleService;
@@ -141,6 +142,18 @@ public class AdminArticleController {
         eventPublisher.publishEvent(new ArticlePublishedEvent(this, id, ArticlePublishedEvent.EventType.DELETED));
 
         return Result.success("删除成功", null);
+    }
+
+    @DeleteMapping("/batch")
+    @Admin("批量删除文章")
+    @Operation(summary = "批量删除文章")
+    public Result<?> batchDelete(@RequestBody BatchIds batchIds) {
+        for (Long id : batchIds.getIds()) {
+            articleService.removeById(id);
+            // 发布文章删除事件，异步删除 Elasticsearch 中的对应文档
+            eventPublisher.publishEvent(new ArticlePublishedEvent(this, id, ArticlePublishedEvent.EventType.DELETED));
+        }
+        return Result.success("批量删除成功", null);
     }
 
     @PutMapping("/{id}/publish")

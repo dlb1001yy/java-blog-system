@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.PageResult;
 import com.dlbyy.blog.common.Result;
+import com.dlbyy.blog.dto.BatchIds;
 import com.dlbyy.blog.entity.ExamPaperQuestion;
 import com.dlbyy.blog.entity.ExamPaper;
 import com.dlbyy.blog.mapper.ExamPaperQuestionMapper;
@@ -87,6 +88,16 @@ public class AdminExamPaperController {
     public Result<?> delete(@PathVariable Long id) {
         examPaperService.adminDelete(id);
         return Result.success("删除成功", null);
+    }
+
+    @DeleteMapping("/batch")
+    @Admin("批量删除试卷")
+    @Operation(summary = "批量删除试卷")
+    public Result<?> batchDelete(@RequestBody BatchIds batchIds) {
+        for (Long id : batchIds.getIds()) {
+            examPaperService.adminDelete(id);
+        }
+        return Result.success("批量删除成功", null);
     }
 
     @Data

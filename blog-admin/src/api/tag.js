@@ -29,5 +29,10 @@ export default {
   // 删除
   delete(id) {
     return request.delete(`/admin/tags/${id}`)
+  },
+
+  // 批量删除
+  batchDelete(ids) {
+    return request.delete('/admin/tags/batch', { data: { ids } })
   }
 }

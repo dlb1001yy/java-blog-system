@@ -1,11 +1,13 @@
 <template>
   <PageContainer title="友情链接" description="管理友链交换">
     <template #action>
+      <el-button type="danger" :disabled="!selectedRows.length" @click="handleBatchDelete">批量删除</el-button>
       <el-button type="primary" :icon="Plus" @click="handleAdd">新增链接</el-button>
     </template>
 
     <div class="table-card">
-      <el-table :data="tableData" v-loading="loading" :border="false" stripe>
+      <el-table :data="tableData" v-loading="loading" :border="false" stripe @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" />
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="name" label="网站名称" />
         <el-table-column prop="url" label="网站地址" show-overflow-tooltip />
@@ -65,6 +67,7 @@ import PageContainer from '@/components/PageContainer.vue'
 
 const loading = ref(false)
 const tableData = ref([])
+const selectedRows = ref([])
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const formRef = ref()
@@ -117,6 +120,19 @@ const handleDelete = (row) => {
     .then(async () => {
       await linkApi.delete(row.id)
       ElMessage.success('删除成功')
+      fetchData()
+    }).catch(() => {})
+}
+
+const handleSelectionChange = (rows) => {
+  selectedRows.value = rows
+}
+
+const handleBatchDelete = () => {
+  ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 个链接吗？`, '提示', { type: 'warning' })
+    .then(async () => {
+      await linkApi.batchDelete(selectedRows.value.map(row => row.id))
+      ElMessage.success('批量删除成功')
       fetchData()
     }).catch(() => {})
 }

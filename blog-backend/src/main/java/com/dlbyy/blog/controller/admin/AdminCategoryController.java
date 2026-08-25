@@ -2,6 +2,7 @@ package com.dlbyy.blog.controller.admin;
 
 import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.Result;
+import com.dlbyy.blog.dto.BatchIds;
 import com.dlbyy.blog.entity.Category;
 import com.dlbyy.blog.service.CategoryService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,5 +43,12 @@ public class AdminCategoryController {
     public Result<?> delete(@PathVariable Long id) {
         categoryService.removeById(id);
         return Result.success("删除成功", null);
+    }
+
+    @DeleteMapping("/batch")
+    @Admin("批量删除分类")
+    public Result<?> batchDelete(@RequestBody BatchIds batchIds) {
+        categoryService.removeByIds(batchIds.getIds());
+        return Result.success("批量删除成功", null);
     }
 }

@@ -39,5 +39,10 @@ export default {
   // 删除题目
   delete(id) {
     return request.delete(`/admin/exam-questions/${id}`)
+  },
+
+  // 批量删除
+  batchDelete(ids) {
+    return request.delete('/admin/exam-questions/batch', { data: { ids } })
   }
 }

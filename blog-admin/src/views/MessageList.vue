@@ -11,12 +11,14 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">查询</el-button>
+          <el-button type="danger" :disabled="!selectedRows.length" @click="handleBatchDelete">批量删除</el-button>
         </el-form-item>
       </el-form>
     </div>
 
     <div class="table-card">
-      <el-table :data="tableData" v-loading="loading" :border="false" stripe>
+      <el-table :data="tableData" v-loading="loading" :border="false" stripe @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" />
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="nickname" label="昵称" width="120" />
         <el-table-column prop="email" label="邮箱" width="200" show-overflow-tooltip />
@@ -57,6 +59,7 @@ import PageContainer from '@/components/PageContainer.vue'
 
 const loading = ref(false)
 const tableData = ref([])
+const selectedRows = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
@@ -103,6 +106,19 @@ const handleDelete = (row) => {
     .then(async () => {
       await messageApi.delete(row.id)
       ElMessage.success('删除成功')
+      fetchData()
+    }).catch(() => {})
+}
+
+const handleSelectionChange = (rows) => {
+  selectedRows.value = rows
+}
+
+const handleBatchDelete = () => {
+  ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 条留言吗？`, '提示', { type: 'warning' })
+    .then(async () => {
+      await messageApi.batchDelete(selectedRows.value.map(row => row.id))
+      ElMessage.success('批量删除成功')
       fetchData()
     }).catch(() => {})
 }

@@ -1,0 +1,11 @@
+# Checklist
+- [x] 后端各实体批量删除接口已实现且带 @Admin 权限注解
+- [x] 文章批量删除复用单条删除的业务清理逻辑（标签关联、ES 同步等）
+- [x] 歌单批量删除清理歌曲关联
+- [x] 前端各 api 模块 batchDelete 路径与后端一致（含补齐的 comments/batch）
+- [x] CategoryList / TagList / LinkList / MessageList 均有多选列与批量删除按钮
+- [x] InterviewQuestionList / ExamQuestionList / ExamPaperList 均有多选列与批量删除按钮
+- [x] MusicManage 歌曲表格与歌单表格均支持批量删除
+- [x] 批量删除按钮在未选中时禁用，操作前有二次确认
+- [x] 删除成功后提示并刷新列表
+- [ ] 后端编译、前端构建由用户手动执行并确认通过

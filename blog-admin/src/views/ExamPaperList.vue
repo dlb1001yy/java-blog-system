@@ -1,6 +1,7 @@
 <template>
   <PageContainer title="试卷管理" description="试卷维护：组卷、发布与停用">
     <template #action>
+      <el-button type="danger" :disabled="!selectedRows.length" @click="handleBatchDelete">批量删除</el-button>
       <el-button type="primary" :icon="Plus" @click="handleCreate">新增试卷</el-button>
     </template>
 
@@ -26,7 +27,8 @@
 
     <!-- 表格卡 -->
     <div class="table-card">
-      <el-table :data="tableData" v-loading="loading" :border="false" stripe>
+      <el-table :data="tableData" v-loading="loading" :border="false" stripe @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" />
         <el-table-column prop="id" label="ID" width="70" />
         <el-table-column prop="title" label="试卷名" min-width="200" show-overflow-tooltip />
         <el-table-column prop="description" label="描述" min-width="180" show-overflow-tooltip />
@@ -179,6 +181,7 @@ import categoryApi from '@/api/category'
 const loading = ref(false)
 const saving = ref(false)
 const tableData = ref([])
+const selectedRows = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
@@ -401,6 +404,19 @@ const handleDelete = (row) => {
     .then(async () => {
       await examPaperApi.delete(row.id)
       ElMessage.success('删除成功')
+      fetchData()
+    }).catch(() => {})
+}
+
+const handleSelectionChange = (rows) => {
+  selectedRows.value = rows
+}
+
+const handleBatchDelete = () => {
+  ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 份试卷吗？删除后不可恢复`, '提示', { type: 'warning' })
+    .then(async () => {
+      await examPaperApi.batchDelete(selectedRows.value.map(row => row.id))
+      ElMessage.success('批量删除成功')
       fetchData()
     }).catch(() => {})
 }

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.Result;
+import com.dlbyy.blog.dto.BatchIds;
 import com.dlbyy.blog.entity.MusicPlaylist;
 import com.dlbyy.blog.entity.MusicSong;
 import com.dlbyy.blog.service.MusicPlaylistService;
@@ -154,6 +155,16 @@ public class AdminMusicController {
         return Result.success("删除成功", null);
     }
 
+    @DeleteMapping("/songs/batch")
+    @Admin("批量删除歌曲")
+    @Operation(summary = "批量删除歌曲（含歌单关联与存储文件清理）")
+    public Result<?> batchDeleteSongs(@RequestBody BatchIds batchIds) {
+        for (Long id : batchIds.getIds()) {
+            musicSongService.adminDelete(id);
+        }
+        return Result.success("批量删除成功", null);
+    }
+
     // ---------------- 歌单 ----------------
 
     @GetMapping("/playlists")
@@ -193,6 +204,16 @@ public class AdminMusicController {
     public Result<?> deletePlaylist(@PathVariable Long id) {
         musicPlaylistService.adminDelete(id);
         return Result.success("删除成功", null);
+    }
+
+    @DeleteMapping("/playlists/batch")
+    @Admin("批量删除歌单")
+    @Operation(summary = "批量删除歌单（含歌曲关联清理）")
+    public Result<?> batchDeletePlaylists(@RequestBody BatchIds batchIds) {
+        for (Long id : batchIds.getIds()) {
+            musicPlaylistService.adminDelete(id);
+        }
+        return Result.success("批量删除成功", null);
     }
 
     @PostMapping("/playlists/{id}/songs")

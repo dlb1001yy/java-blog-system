@@ -55,6 +55,11 @@ export default {
     return request.delete(`/admin/music/songs/${id}`)
   },
 
+  // 批量删除歌曲
+  batchDeleteSongs(ids) {
+    return request.delete('/admin/music/songs/batch', { data: { ids } })
+  },
+
   // ---------------- 歌单 ----------------
 
   // 歌单分页
@@ -80,6 +85,11 @@ export default {
   // 删除歌单
   deletePlaylist(id) {
     return request.delete(`/admin/music/playlists/${id}`)
+  },
+
+  // 批量删除歌单
+  batchDeletePlaylists(ids) {
+    return request.delete('/admin/music/playlists/batch', { data: { ids } })
   },
 
   // 设置歌单歌曲（songIds 全量替换）

@@ -1,10 +1,12 @@
 <template>
   <PageContainer title="分类管理" description="管理文章分类与排序">
     <template #action>
+      <el-button type="danger" :disabled="!selectedRows.length" @click="handleBatchDelete">批量删除</el-button>
       <el-button type="primary" :icon="Plus" @click="handleAdd">新增分类</el-button>
     </template>
     <div class="table-card">
-      <el-table :data="tableData" v-loading="loading" :border="false" stripe>
+      <el-table :data="tableData" v-loading="loading" :border="false" stripe @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" />
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="name" label="分类名称" />
         <el-table-column prop="sort" label="排序" width="100" />
@@ -44,6 +46,7 @@ import PageContainer from '@/components/PageContainer.vue'
 
 const loading = ref(false)
 const tableData = ref([])
+const selectedRows = ref([])
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const formRef = ref()
@@ -102,6 +105,19 @@ const handleDelete = (row) => {
     .then(async () => {
       await categoryApi.delete(row.id)
       ElMessage.success('删除成功')
+      fetchData()
+    }).catch(() => {})
+}
+
+const handleSelectionChange = (rows) => {
+  selectedRows.value = rows
+}
+
+const handleBatchDelete = () => {
+  ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 个分类吗？`, '提示', { type: 'warning' })
+    .then(async () => {
+      await categoryApi.batchDelete(selectedRows.value.map(row => row.id))
+      ElMessage.success('批量删除成功')
       fetchData()
     }).catch(() => {})
 }

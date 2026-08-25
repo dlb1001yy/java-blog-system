@@ -79,4 +79,14 @@ public class AdminCommentController {
         commentService.removeById(id);
         return Result.success("删除成功", null);
     }
+
+    @DeleteMapping("/batch")
+    @Admin("批量删除评论")
+    public Result<?> batchDelete(@RequestBody List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Result.success("批量删除成功", null);
+        }
+        commentService.removeByIds(ids);
+        return Result.success("批量删除成功", null);
+    }
 }

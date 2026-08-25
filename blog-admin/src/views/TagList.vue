@@ -1,10 +1,12 @@
 <template>
   <PageContainer title="标签管理" description="管理文章标签">
     <template #action>
+      <el-button type="danger" :disabled="!selectedRows.length" @click="handleBatchDelete">批量删除</el-button>
       <el-button type="primary" :icon="Plus" @click="handleAdd">新增标签</el-button>
     </template>
     <div class="table-card">
-      <el-table :data="tableData" v-loading="loading" :border="false" stripe>
+      <el-table :data="tableData" v-loading="loading" :border="false" stripe @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" />
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="name" label="标签名称" />
         <el-table-column prop="createTime" label="创建时间" width="180" />
@@ -39,6 +41,7 @@ import PageContainer from '@/components/PageContainer.vue'
 
 const loading = ref(false)
 const tableData = ref([])
+const selectedRows = ref([])
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const formRef = ref()
@@ -89,6 +92,19 @@ const handleDelete = (row) => {
     .then(async () => {
       await tagApi.delete(row.id)
       ElMessage.success('删除成功')
+      fetchData()
+    }).catch(() => {})
+}
+
+const handleSelectionChange = (rows) => {
+  selectedRows.value = rows
+}
+
+const handleBatchDelete = () => {
+  ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 个标签吗？`, '提示', { type: 'warning' })
+    .then(async () => {
+      await tagApi.batchDelete(selectedRows.value.map(row => row.id))
+      ElMessage.success('批量删除成功')
       fetchData()
     }).catch(() => {})
 }

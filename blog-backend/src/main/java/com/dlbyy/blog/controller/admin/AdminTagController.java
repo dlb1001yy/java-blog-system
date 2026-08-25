@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.Result;
+import com.dlbyy.blog.dto.BatchIds;
 import com.dlbyy.blog.entity.Tag;
 import com.dlbyy.blog.service.TagService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -74,5 +75,13 @@ public class AdminTagController {
     public Result<?> delete(@PathVariable Long id) {
         tagService.removeById(id);
         return Result.success("删除成功", null);
+    }
+
+    @DeleteMapping("/batch")
+    @Admin("批量删除标签")
+    @Operation(summary = "批量删除标签")
+    public Result<?> batchDelete(@RequestBody BatchIds batchIds) {
+        tagService.removeByIds(batchIds.getIds());
+        return Result.success("批量删除成功", null);
     }
 }

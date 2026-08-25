@@ -29,5 +29,10 @@ export default {
   // 删除试卷
   delete(id) {
     return request.delete(`/admin/exam-papers/${id}`)
+  },
+
+  // 批量删除
+  batchDelete(ids) {
+    return request.delete('/admin/exam-papers/batch', { data: { ids } })
   }
 }

@@ -24,5 +24,10 @@ export default {
   // 删除
   delete(id) {
     return request.delete(`/admin/interview-questions/${id}`)
+  },
+
+  // 批量删除
+  batchDelete(ids) {
+    return request.delete('/admin/interview-questions/batch', { data: { ids } })
   }
 }

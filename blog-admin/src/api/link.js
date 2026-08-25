@@ -15,5 +15,10 @@ export default {
   },
   delete(id) {
     return request.delete(`/admin/links/${id}`)
+  },
+
+  // 批量删除
+  batchDelete(ids) {
+    return request.delete('/admin/links/batch', { data: { ids } })
   }
 }

@@ -3,6 +3,7 @@ package com.dlbyy.blog.controller.admin;
 import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.PageResult;
 import com.dlbyy.blog.common.Result;
+import com.dlbyy.blog.dto.BatchIds;
 import com.dlbyy.blog.entity.InterviewQuestion;
 import com.dlbyy.blog.service.InterviewQuestionService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -94,5 +95,15 @@ public class AdminInterviewQuestionController {
     public Result<?> delete(@PathVariable Long id) {
         interviewQuestionService.adminDelete(id);
         return Result.success("删除成功", null);
+    }
+
+    @DeleteMapping("/batch")
+    @Admin("批量删除面试题")
+    @Operation(summary = "批量删除面试题")
+    public Result<?> batchDelete(@RequestBody BatchIds batchIds) {
+        for (Long id : batchIds.getIds()) {
+            interviewQuestionService.adminDelete(id);
+        }
+        return Result.success("批量删除成功", null);
     }
 }

@@ -1,6 +1,7 @@
 <template>
   <PageContainer title="面试题管理" description="面试题库维护">
     <template #action>
+      <el-button type="danger" :disabled="!selectedRows.length" @click="handleBatchDelete">批量删除</el-button>
       <el-button type="primary" :icon="Plus" @click="handleAdd">新增面试题</el-button>
       <el-button :icon="Upload" @click="triggerImport">导入面试题</el-button>
       <el-button :icon="Download" @click="downloadTemplate">下载模板</el-button>
@@ -258,6 +259,7 @@ import PageContainer from '@/components/PageContainer.vue'
 const loading = ref(false)
 const submitting = ref(false)
 const tableData = ref([])
+const selectedRows = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
@@ -406,6 +408,19 @@ const handleDelete = (row) => {
     .then(async () => {
       await interviewQuestionApi.delete(row.id)
       ElMessage.success('删除成功')
+      fetchData()
+    }).catch(() => {})
+}
+
+const handleSelectionChange = (rows) => {
+  selectedRows.value = rows
+}
+
+const handleBatchDelete = () => {
+  ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 道面试题吗？`, '提示', { type: 'warning' })
+    .then(async () => {
+      await interviewQuestionApi.batchDelete(selectedRows.value.map(row => row.id))
+      ElMessage.success('批量删除成功')
       fetchData()
     }).catch(() => {})
 }
