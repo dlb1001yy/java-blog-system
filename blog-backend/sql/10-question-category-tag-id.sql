@@ -125,101 +125,126 @@ DELIMITER ;
 CALL `add_idx_eq_category`();
 
 -- ------------------------------------------------------------
--- 3. interview_question 分类迁移
---    先按 blog_category.name 匹配回填，未匹配的名称插入 blog_category 后再回填
--- ------------------------------------------------------------
--- 3.1 已匹配的回填
-UPDATE `interview_question` q
-JOIN `blog_category` c ON c.`name` = q.`category`
-SET q.`category_id` = c.`id`
-WHERE q.`category_id` IS NULL AND q.`category` IS NOT NULL;
-
--- 3.2 未匹配的分类插入 blog_category（按名称去重，幂等）
-INSERT INTO `blog_category` (`name`, `sort`)
-SELECT DISTINCT q.`category`, 99
-FROM `interview_question` q
-WHERE q.`category` IS NOT NULL
-  AND q.`category_id` IS NULL
-  AND NOT EXISTS (SELECT 1 FROM `blog_category` c WHERE c.`name` = q.`category`);
-
--- 3.3 回填剩余（包含 exam_question 迁移前需要的新分类见第 5 节）
-UPDATE `interview_question` q
-JOIN `blog_category` c ON c.`name` = q.`category`
-SET q.`category_id` = c.`id`
-WHERE q.`category_id` IS NULL AND q.`category` IS NOT NULL;
-
--- ------------------------------------------------------------
--- 4. interview_question_tag 关联表 + 标签迁移（从 tags 逗号串拆分）
+-- 4. interview_question_tag 关联表（标签迁移语句已并入下方守卫存储过程）
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `interview_question_tag` (
     `id`          bigint   NOT NULL AUTO_INCREMENT,
     `question_id` bigint   NOT NULL COMMENT '面试题ID',
-    `tag_id`      bigint   NOT NULL COMMENT '标签ID(关联 blog_tag)',
+    `tag_id`      bigint   NOT NULL COMMENT '标签ID(关联blog_tag)',
     `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_question_tag` (`question_id`, `tag_id`),
     INDEX `idx_tag` (`tag_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='面试题-标签关联表';
 
--- 4.1 未匹配的标签插入 blog_tag（利用递归 CTE 拆分逗号串，幂等）
-INSERT INTO `blog_tag` (`name`)
-SELECT DISTINCT t.`tag_name`
-FROM (
-    WITH RECURSIVE seq AS (
-        SELECT 1 AS n
-        UNION ALL
-        SELECT n + 1 FROM seq WHERE n < 50
-    )
-    SELECT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(q.`tags`, ',', s.n), ',', -1)) AS `tag_name`
-    FROM `interview_question` q
-    CROSS JOIN seq s
-    WHERE q.`tags` IS NOT NULL
-      AND q.`tags` <> ''
-      AND s.n <= 1 + LENGTH(q.`tags`) - LENGTH(REPLACE(q.`tags`, ',', ''))
-) t
-WHERE t.`tag_name` <> ''
-  AND NOT EXISTS (SELECT 1 FROM `blog_tag` g WHERE g.`name` = t.`tag_name`);
-
--- 4.2 写入关联表（唯一索引 + NOT EXISTS 双重幂等）
-INSERT INTO `interview_question_tag` (`question_id`, `tag_id`)
-SELECT DISTINCT q.`id`, g.`id`
-FROM (
-    WITH RECURSIVE seq AS (
-        SELECT 1 AS n
-        UNION ALL
-        SELECT n + 1 FROM seq WHERE n < 50
-    )
-    SELECT q.`id` AS question_id,
-           TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(q.`tags`, ',', s.n), ',', -1)) AS `tag_name`
-    FROM `interview_question` q
-    CROSS JOIN seq s
-    WHERE q.`tags` IS NOT NULL
-      AND q.`tags` <> ''
-      AND s.n <= 1 + LENGTH(q.`tags`) - LENGTH(REPLACE(q.`tags`, ',', ''))
-) q
-JOIN `blog_tag` g ON g.`name` = q.`tag_name`
-WHERE q.`tag_name` <> ''
-  AND NOT EXISTS (
-      SELECT 1 FROM `interview_question_tag` qt
-      WHERE qt.`question_id` = q.`question_id` AND qt.`tag_id` = g.`id`
-  );
-
 -- ------------------------------------------------------------
--- 5. exam_question 分类迁移
+-- 3. interview_question 分类迁移
+--    先按 blog_category.name 匹配回填，未匹配的名称插入 blog_category 后再回填
+-- 3/4/5 节均引用旧列 category/tags，若 03-multi_modules.sql 已升级过（旧列已删），
+-- 直接执行会报 1054，故统一包进守卫存储过程：检测到任一旧列存在才执行整段迁移。
 -- ------------------------------------------------------------
--- 5.1 未匹配的分类插入 blog_category（幂等）
-INSERT INTO `blog_category` (`name`, `sort`)
-SELECT DISTINCT eq.`category`, 99
-FROM `exam_question` eq
-WHERE eq.`category` IS NOT NULL
-  AND eq.`category_id` IS NULL
-  AND NOT EXISTS (SELECT 1 FROM `blog_category` c WHERE c.`name` = eq.`category`);
+DROP PROCEDURE IF EXISTS `migrate_legacy_question_data`;
+DELIMITER $$
+CREATE PROCEDURE `migrate_legacy_question_data`()
+BEGIN
+    -- 守卫：三处旧列均不存在（03 已升级）则整段跳过
+    IF EXISTS (SELECT 1 FROM information_schema.COLUMNS
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'category')
+    OR EXISTS (SELECT 1 FROM information_schema.COLUMNS
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'tags')
+    OR EXISTS (SELECT 1 FROM information_schema.COLUMNS
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'exam_question' AND COLUMN_NAME = 'category')
+    THEN
 
--- 5.2 回填
-UPDATE `exam_question` eq
-JOIN `blog_category` c ON c.`name` = eq.`category`
-SET eq.`category_id` = c.`id`
-WHERE eq.`category_id` IS NULL AND eq.`category` IS NOT NULL;
+    -- 3.1 已匹配的回填（显式 COLLATE 避免两表排序规则不一致报 1267）
+    UPDATE `interview_question` q
+    JOIN `blog_category` c ON c.`name` COLLATE utf8mb4_unicode_ci = q.`category`
+    SET q.`category_id` = c.`id`
+    WHERE q.`category_id` IS NULL AND q.`category` IS NOT NULL;
+
+    -- 3.2 未匹配的分类插入 blog_category（按名称去重，幂等）
+    INSERT INTO `blog_category` (`name`, `sort`)
+    SELECT DISTINCT q.`category`, 99
+    FROM `interview_question` q
+    WHERE q.`category` IS NOT NULL
+      AND q.`category_id` IS NULL
+      AND NOT EXISTS (SELECT 1 FROM `blog_category` c WHERE c.`name` COLLATE utf8mb4_unicode_ci = q.`category`);
+
+    -- 3.3 回填剩余（包含 exam_question 迁移前需要的新分类见第 5 节）
+    UPDATE `interview_question` q
+    JOIN `blog_category` c ON c.`name` COLLATE utf8mb4_unicode_ci = q.`category`
+    SET q.`category_id` = c.`id`
+    WHERE q.`category_id` IS NULL AND q.`category` IS NOT NULL;
+
+    -- ------------------------------------------------------------
+    -- 4.1 未匹配的标签插入 blog_tag（利用递归 CTE 拆分逗号串，幂等）
+    -- ------------------------------------------------------------
+    INSERT INTO `blog_tag` (`name`)
+    SELECT DISTINCT t.`tag_name`
+    FROM (
+        WITH RECURSIVE seq AS (
+            SELECT 1 AS n
+            UNION ALL
+            SELECT n + 1 FROM seq WHERE n < 50
+        )
+        SELECT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(q.`tags`, ',', s.n), ',', -1)) AS `tag_name`
+        FROM `interview_question` q
+        CROSS JOIN seq s
+        WHERE q.`tags` IS NOT NULL
+          AND q.`tags` <> ''
+          AND s.n <= 1 + LENGTH(q.`tags`) - LENGTH(REPLACE(q.`tags`, ',', ''))
+    ) t
+    WHERE t.`tag_name` <> ''
+      AND NOT EXISTS (SELECT 1 FROM `blog_tag` g WHERE g.`name` COLLATE utf8mb4_unicode_ci = t.`tag_name`);
+
+    -- 4.2 写入关联表（唯一索引 + NOT EXISTS 双重幂等）
+    INSERT INTO `interview_question_tag` (`question_id`, `tag_id`)
+    SELECT DISTINCT q.`question_id`, g.`id`
+    FROM (
+        WITH RECURSIVE seq AS (
+            SELECT 1 AS n
+            UNION ALL
+            SELECT n + 1 FROM seq WHERE n < 50
+        )
+        SELECT q.`id` AS question_id,
+               TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(q.`tags`, ',', s.n), ',', -1)) AS `tag_name`
+        FROM `interview_question` q
+        CROSS JOIN seq s
+        WHERE q.`tags` IS NOT NULL
+          AND q.`tags` <> ''
+          AND s.n <= 1 + LENGTH(q.`tags`) - LENGTH(REPLACE(q.`tags`, ',', ''))
+    ) q
+    JOIN `blog_tag` g ON g.`name` COLLATE utf8mb4_unicode_ci = q.`tag_name`
+    WHERE q.`tag_name` <> ''
+      AND NOT EXISTS (
+          SELECT 1 FROM `interview_question_tag` qt
+          WHERE qt.`question_id` = q.`question_id` AND qt.`tag_id` = g.`id`
+      );
+
+    -- ------------------------------------------------------------
+    -- 5. exam_question 分类迁移
+    -- ------------------------------------------------------------
+    -- 5.1 未匹配的分类插入 blog_category（幂等）
+    INSERT INTO `blog_category` (`name`, `sort`)
+    SELECT DISTINCT eq.`category`, 99
+    FROM `exam_question` eq
+    WHERE eq.`category` IS NOT NULL
+      AND eq.`category_id` IS NULL
+      AND NOT EXISTS (SELECT 1 FROM `blog_category` c WHERE c.`name` COLLATE utf8mb4_unicode_ci = eq.`category`);
+
+    -- 5.2 回填
+    UPDATE `exam_question` eq
+    JOIN `blog_category` c ON c.`name` COLLATE utf8mb4_unicode_ci = eq.`category`
+    SET eq.`category_id` = c.`id`
+    WHERE eq.`category_id` IS NULL AND eq.`category` IS NOT NULL;
+
+    END IF;
+END$$
+DELIMITER ;
+CALL `migrate_legacy_question_data`();
+
+-- 4.1/4.2 标签迁移与第 5 节 exam_question 分类迁移语句已一并移入
+-- 上方 `migrate_legacy_question_data` 守卫存储过程中执行
 
 -- ------------------------------------------------------------
 -- 6. 迁移完成后删除旧列与旧索引
@@ -268,3 +293,4 @@ DROP PROCEDURE IF EXISTS `drop_index_if_exists`;
 DROP PROCEDURE IF EXISTS `add_idx_iq_category`;
 DROP PROCEDURE IF EXISTS `add_idx_eq_category`;
 DROP PROCEDURE IF EXISTS `drop_legacy_columns`;
+DROP PROCEDURE IF EXISTS `migrate_legacy_question_data`;

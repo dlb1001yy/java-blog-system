@@ -179,6 +179,229 @@ CREATE TABLE IF NOT EXISTS `music_playlist_song` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='歌单-歌曲关联表';
 
 -- ------------------------------------------------------------
+-- 3.5 存量表升级（幂等，写法与 10-question-category-tag-id.sql 一致）
+--     背景：老库的 interview_question / exam_question 使用
+--     category(varchar) + tags(逗号串) 字段，本段将其迁移为
+--     category_id(bigint) + interview_question_tag 关联表。
+--     新表环境（无旧列）或已执行过 10 号脚本的库：本段全部跳过，无任何变更。
+-- ------------------------------------------------------------
+
+-- 通用辅助存储过程：为表添加列（表不存在或列已存在则跳过）
+DROP PROCEDURE IF EXISTS `add_column_if_not_exists`;
+DELIMITER $$
+CREATE PROCEDURE `add_column_if_not_exists`(
+    IN p_table VARCHAR(64),
+    IN p_column VARCHAR(64),
+    IN p_definition VARCHAR(500)
+)
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.TABLES
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = p_table
+    ) AND NOT EXISTS (
+        SELECT 1 FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = p_table
+          AND COLUMN_NAME = p_column
+    ) THEN
+        SET @sql = CONCAT('ALTER TABLE `', p_table, '` ADD COLUMN `', p_column, '` ', p_definition);
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+DELIMITER ;
+
+-- 通用辅助存储过程：删除索引（不存在则跳过）
+DROP PROCEDURE IF EXISTS `drop_index_if_exists`;
+DELIMITER $$
+CREATE PROCEDURE `drop_index_if_exists`(
+    IN p_table VARCHAR(64),
+    IN p_index VARCHAR(64)
+)
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.STATISTICS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = p_table
+          AND INDEX_NAME = p_index
+    ) THEN
+        SET @sql = CONCAT('ALTER TABLE `', p_table, '` DROP INDEX `', p_index, '`');
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+DELIMITER ;
+
+-- 存量表升级主过程：仅在检测到旧列（category/tags）时执行迁移
+DROP PROCEDURE IF EXISTS `upgrade_legacy_question_tables`;
+DELIMITER $$
+CREATE PROCEDURE `upgrade_legacy_question_tables`()
+BEGIN
+    DECLARE v_iq_legacy BOOLEAN DEFAULT FALSE;
+    DECLARE v_eq_legacy BOOLEAN DEFAULT FALSE;
+
+    SELECT EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'category')
+        OR EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'tags')
+        INTO v_iq_legacy;
+
+    SELECT EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = 'exam_question' AND COLUMN_NAME = 'category')
+        INTO v_eq_legacy;
+
+    -- ============ 3.5.1 interview_question：category / tags 迁移 ============
+    IF v_iq_legacy THEN
+        -- 新增 category_id 列 + 索引
+        CALL `add_column_if_not_exists`('interview_question', 'category_id',
+            'bigint DEFAULT NULL COMMENT ''分类ID(关联 blog_category)'' AFTER `id`');
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.STATISTICS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'interview_question' AND INDEX_NAME = 'idx_category_id'
+        ) THEN
+            ALTER TABLE `interview_question` ADD INDEX `idx_category_id` (`category_id`);
+        END IF;
+
+        -- 分类按名称回填（显式 COLLATE utf8mb4_unicode_ci 避免两表排序规则不一致报 1267）
+        UPDATE `interview_question` q
+        JOIN `blog_category` c ON c.`name` COLLATE utf8mb4_unicode_ci = q.`category`
+        SET q.`category_id` = c.`id`
+        WHERE q.`category_id` IS NULL AND q.`category` IS NOT NULL;
+
+        -- 未匹配的分类插入 blog_category（sort=99，按名称去重，幂等）
+        INSERT INTO `blog_category` (`name`, `sort`)
+        SELECT DISTINCT q.`category`, 99
+        FROM `interview_question` q
+        WHERE q.`category` IS NOT NULL
+          AND q.`category_id` IS NULL
+          AND NOT EXISTS (SELECT 1 FROM `blog_category` c
+                          WHERE c.`name` COLLATE utf8mb4_unicode_ci = q.`category`);
+
+        -- 回填剩余
+        UPDATE `interview_question` q
+        JOIN `blog_category` c ON c.`name` COLLATE utf8mb4_unicode_ci = q.`category`
+        SET q.`category_id` = c.`id`
+        WHERE q.`category_id` IS NULL AND q.`category` IS NOT NULL;
+
+        -- tags 逗号串拆分（递归 CTE）：未匹配标签插入 blog_tag（幂等）
+        INSERT INTO `blog_tag` (`name`)
+        SELECT DISTINCT t.`tag_name`
+        FROM (
+            WITH RECURSIVE seq AS (
+                SELECT 1 AS n
+                UNION ALL
+                SELECT n + 1 FROM seq WHERE n < 50
+            )
+            SELECT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(q.`tags`, ',', s.n), ',', -1)) AS `tag_name`
+            FROM `interview_question` q
+            CROSS JOIN seq s
+            WHERE q.`tags` IS NOT NULL
+              AND q.`tags` <> ''
+              AND s.n <= 1 + LENGTH(q.`tags`) - LENGTH(REPLACE(q.`tags`, ',', ''))
+        ) t
+        WHERE t.`tag_name` <> ''
+          AND NOT EXISTS (SELECT 1 FROM `blog_tag` g
+                          WHERE g.`name` COLLATE utf8mb4_unicode_ci = t.`tag_name`);
+
+        -- 写入 interview_question_tag（NOT EXISTS 幂等，派生表列引用用 question_id）
+        INSERT INTO `interview_question_tag` (`question_id`, `tag_id`)
+        SELECT DISTINCT q.`question_id`, g.`id`
+        FROM (
+            WITH RECURSIVE seq AS (
+                SELECT 1 AS n
+                UNION ALL
+                SELECT n + 1 FROM seq WHERE n < 50
+            )
+            SELECT q.`id` AS question_id,
+                   TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(q.`tags`, ',', s.n), ',', -1)) AS `tag_name`
+            FROM `interview_question` q
+            CROSS JOIN seq s
+            WHERE q.`tags` IS NOT NULL
+              AND q.`tags` <> ''
+              AND s.n <= 1 + LENGTH(q.`tags`) - LENGTH(REPLACE(q.`tags`, ',', ''))
+        ) q
+        JOIN `blog_tag` g ON g.`name` COLLATE utf8mb4_unicode_ci = q.`tag_name`
+        WHERE q.`tag_name` <> ''
+          AND NOT EXISTS (
+              SELECT 1 FROM `interview_question_tag` qt
+              WHERE qt.`question_id` = q.`question_id` AND qt.`tag_id` = g.`id`
+          );
+
+        -- 回填完成后仅当无残留才删除旧列（保证不丢数据）
+        IF EXISTS (SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'category')
+           AND NOT EXISTS (SELECT 1 FROM `interview_question`
+                           WHERE `category` IS NOT NULL AND `category_id` IS NULL) THEN
+            ALTER TABLE `interview_question` DROP COLUMN `category`;
+        END IF;
+
+        IF EXISTS (SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'tags')
+           AND NOT EXISTS (SELECT 1 FROM `interview_question`
+                           WHERE `tags` IS NOT NULL AND `tags` <> '') THEN
+            ALTER TABLE `interview_question` DROP COLUMN `tags`;
+        END IF;
+
+        CALL `drop_index_if_exists`('interview_question', 'idx_category');
+    END IF;
+
+    -- ============ 3.5.2 exam_question：仅处理 category ============
+    IF v_eq_legacy THEN
+        CALL `add_column_if_not_exists`('exam_question', 'category_id',
+            'bigint DEFAULT NULL COMMENT ''分类ID(关联 blog_category)'' AFTER `id`');
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.STATISTICS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'exam_question' AND INDEX_NAME = 'idx_category_id'
+        ) THEN
+            ALTER TABLE `exam_question` ADD INDEX `idx_category_id` (`category_id`);
+        END IF;
+
+        -- 未匹配的分类插入 blog_category（幂等）
+        INSERT INTO `blog_category` (`name`, `sort`)
+        SELECT DISTINCT eq.`category`, 99
+        FROM `exam_question` eq
+        WHERE eq.`category` IS NOT NULL
+          AND eq.`category_id` IS NULL
+          AND NOT EXISTS (SELECT 1 FROM `blog_category` c
+                          WHERE c.`name` COLLATE utf8mb4_unicode_ci = eq.`category`);
+
+        -- 回填
+        UPDATE `exam_question` eq
+        JOIN `blog_category` c ON c.`name` COLLATE utf8mb4_unicode_ci = eq.`category`
+        SET eq.`category_id` = c.`id`
+        WHERE eq.`category_id` IS NULL AND eq.`category` IS NOT NULL;
+
+        -- 无残留才删除旧列
+        IF EXISTS (SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'exam_question' AND COLUMN_NAME = 'category')
+           AND NOT EXISTS (SELECT 1 FROM `exam_question`
+                           WHERE `category` IS NOT NULL AND `category_id` IS NULL) THEN
+            ALTER TABLE `exam_question` DROP COLUMN `category`;
+        END IF;
+
+        CALL `drop_index_if_exists`('exam_question', 'idx_category');
+    END IF;
+END$$
+DELIMITER ;
+
+CALL `upgrade_legacy_question_tables`();
+
+-- 清理临时存储过程
+DROP PROCEDURE IF EXISTS `add_column_if_not_exists`;
+DROP PROCEDURE IF EXISTS `drop_index_if_exists`;
+DROP PROCEDURE IF EXISTS `upgrade_legacy_question_tables`;
+
+-- ------------------------------------------------------------
 -- 4. 示例数据（可选，用于本地演示）
 -- ------------------------------------------------------------
 
@@ -193,7 +416,7 @@ SELECT c.`name`, c.`sort` FROM (
     SELECT 'Redis', 11 UNION ALL
     SELECT '计算机网络', 12
 ) c
-WHERE NOT EXISTS (SELECT 1 FROM `blog_category` bc WHERE bc.`name` = c.`name`);
+WHERE NOT EXISTS (SELECT 1 FROM `blog_category` bc WHERE bc.`name` COLLATE utf8mb4_unicode_ci = c.`name`);
 
 INSERT INTO `blog_tag` (`name`)
 SELECT t.`name` FROM (
@@ -207,7 +430,7 @@ SELECT t.`name` FROM (
     SELECT '算法' UNION ALL
     SELECT '设计'
 ) t
-WHERE NOT EXISTS (SELECT 1 FROM `blog_tag` g WHERE g.`name` = t.`name`);
+WHERE NOT EXISTS (SELECT 1 FROM `blog_tag` g WHERE g.`name` COLLATE utf8mb4_unicode_ci = t.`name`);
 
 INSERT INTO `interview_question` (`category_id`, `difficulty`, `title`, `answer`, `status`) VALUES
 ((SELECT id FROM `blog_category` WHERE `name` = '后端' LIMIT 1), '简单', '什么是 JVM 的自动装箱与拆箱？', '自动装箱是编译器将基本类型自动包装为对应包装类（int → Integer），拆箱则相反。频繁装箱可能引发性能问题，建议使用缓存池（-128~127）。', 1),
