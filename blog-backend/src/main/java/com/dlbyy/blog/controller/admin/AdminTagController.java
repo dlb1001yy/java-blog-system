@@ -73,6 +73,7 @@ public class AdminTagController {
     @Admin("删除标签")
     @Operation(summary = "删除标签")
     public Result<?> delete(@PathVariable Long id) {
+        tagService.checkBeforeDelete(List.of(id));
         tagService.removeById(id);
         return Result.success("删除成功", null);
     }
@@ -81,6 +82,7 @@ public class AdminTagController {
     @Admin("批量删除标签")
     @Operation(summary = "批量删除标签")
     public Result<?> batchDelete(@RequestBody BatchIds batchIds) {
+        tagService.checkBeforeDelete(batchIds.getIds());
         tagService.removeByIds(batchIds.getIds());
         return Result.success("批量删除成功", null);
     }

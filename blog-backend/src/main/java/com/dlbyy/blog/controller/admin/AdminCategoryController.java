@@ -41,14 +41,14 @@ public class AdminCategoryController {
     @DeleteMapping("/{id}")
     @Admin("删除分类")
     public Result<?> delete(@PathVariable Long id) {
-        categoryService.removeById(id);
+        categoryService.deleteWithCheck(id);
         return Result.success("删除成功", null);
     }
 
     @DeleteMapping("/batch")
     @Admin("批量删除分类")
     public Result<?> batchDelete(@RequestBody BatchIds batchIds) {
-        categoryService.removeByIds(batchIds.getIds());
+        categoryService.batchDeleteWithCheck(batchIds.getIds());
         return Result.success("批量删除成功", null);
     }
 }
