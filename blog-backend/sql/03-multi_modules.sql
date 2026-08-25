@@ -239,35 +239,54 @@ DROP PROCEDURE IF EXISTS `upgrade_legacy_question_tables`;
 DELIMITER $$
 CREATE PROCEDURE `upgrade_legacy_question_tables`()
 BEGIN
-    DECLARE v_iq_legacy BOOLEAN DEFAULT FALSE;
-    DECLARE v_eq_legacy BOOLEAN DEFAULT FALSE;
+    DECLARE v_iq_category BOOLEAN DEFAULT FALSE;
+    DECLARE v_iq_tags BOOLEAN DEFAULT FALSE;
+    DECLARE v_eq_category BOOLEAN DEFAULT FALSE;
 
     SELECT EXISTS(SELECT 1 FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = DATABASE()
                     AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'category')
-        OR EXISTS(SELECT 1 FROM information_schema.COLUMNS
+        INTO v_iq_category;
+
+    SELECT EXISTS(SELECT 1 FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = DATABASE()
                     AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'tags')
-        INTO v_iq_legacy;
+        INTO v_iq_tags;
 
     SELECT EXISTS(SELECT 1 FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = DATABASE()
                     AND TABLE_NAME = 'exam_question' AND COLUMN_NAME = 'category')
-        INTO v_eq_legacy;
+        INTO v_eq_category;
 
-    -- ============ 3.5.1 interview_question：category / tags 迁移 ============
-    IF v_iq_legacy THEN
-        -- 新增 category_id 列 + 索引
-        CALL `add_column_if_not_exists`('interview_question', 'category_id',
-            'bigint DEFAULT NULL COMMENT ''分类ID(关联 blog_category)'' AFTER `id`');
-        IF NOT EXISTS (
-            SELECT 1 FROM information_schema.STATISTICS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'interview_question' AND INDEX_NAME = 'idx_category_id'
-        ) THEN
-            ALTER TABLE `interview_question` ADD INDEX `idx_category_id` (`category_id`);
+    IF v_iq_category OR v_iq_tags OR v_eq_category THEN
+        -- 公共：新增 category_id 列 + 索引（仅老表需要）
+        IF v_iq_category OR v_iq_tags THEN
+            CALL `add_column_if_not_exists`('interview_question', 'category_id',
+                'bigint DEFAULT NULL COMMENT ''分类ID(关联 blog_category)'' AFTER `id`');
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.STATISTICS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'interview_question' AND INDEX_NAME = 'idx_category_id'
+            ) THEN
+                ALTER TABLE `interview_question` ADD INDEX `idx_category_id` (`category_id`);
+            END IF;
         END IF;
 
+        IF v_eq_category THEN
+            CALL `add_column_if_not_exists`('exam_question', 'category_id',
+                'bigint DEFAULT NULL COMMENT ''分类ID(关联 blog_category)'' AFTER `id`');
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.STATISTICS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'exam_question' AND INDEX_NAME = 'idx_category_id'
+            ) THEN
+                ALTER TABLE `exam_question` ADD INDEX `idx_category_id` (`category_id`);
+            END IF;
+        END IF;
+    END IF;
+
+    -- ============ 3.5.1 interview_question：category / tags 迁移 ============
+    IF v_iq_category THEN
         -- 分类按名称回填（显式 COLLATE utf8mb4_unicode_ci 避免两表排序规则不一致报 1267）
         UPDATE `interview_question` q
         JOIN `blog_category` c ON c.`name` COLLATE utf8mb4_unicode_ci = q.`category`
@@ -288,6 +307,18 @@ BEGIN
         JOIN `blog_category` c ON c.`name` COLLATE utf8mb4_unicode_ci = q.`category`
         SET q.`category_id` = c.`id`
         WHERE q.`category_id` IS NULL AND q.`category` IS NOT NULL;
+
+        -- 无残留才删除旧列（保证不丢数据）
+        IF EXISTS (SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'category')
+           AND NOT EXISTS (SELECT 1 FROM `interview_question`
+                           WHERE `category` IS NOT NULL AND `category_id` IS NULL) THEN
+            ALTER TABLE `interview_question` DROP COLUMN `category`;
+        END IF;
+    END IF;
+
+    IF v_iq_tags THEN
 
         -- tags 逗号串拆分（递归 CTE）：未匹配标签插入 blog_tag（幂等）
         INSERT INTO `blog_tag` (`name`)
@@ -333,15 +364,10 @@ BEGIN
               WHERE qt.`question_id` = q.`question_id` AND qt.`tag_id` = g.`id`
           );
 
-        -- 回填完成后仅当无残留才删除旧列（保证不丢数据）
-        IF EXISTS (SELECT 1 FROM information_schema.COLUMNS
-                   WHERE TABLE_SCHEMA = DATABASE()
-                     AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'category')
-           AND NOT EXISTS (SELECT 1 FROM `interview_question`
-                           WHERE `category` IS NOT NULL AND `category_id` IS NULL) THEN
-            ALTER TABLE `interview_question` DROP COLUMN `category`;
-        END IF;
+    END IF;  -- v_iq_tags
 
+    -- tags 无残留才删除旧列（保证不丢数据）
+    IF v_iq_tags THEN
         IF EXISTS (SELECT 1 FROM information_schema.COLUMNS
                    WHERE TABLE_SCHEMA = DATABASE()
                      AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'tags')
@@ -349,22 +375,14 @@ BEGIN
                            WHERE `tags` IS NOT NULL AND `tags` <> '') THEN
             ALTER TABLE `interview_question` DROP COLUMN `tags`;
         END IF;
+    END IF;
 
+    IF v_iq_category OR v_iq_tags THEN
         CALL `drop_index_if_exists`('interview_question', 'idx_category');
     END IF;
 
     -- ============ 3.5.2 exam_question：仅处理 category ============
-    IF v_eq_legacy THEN
-        CALL `add_column_if_not_exists`('exam_question', 'category_id',
-            'bigint DEFAULT NULL COMMENT ''分类ID(关联 blog_category)'' AFTER `id`');
-        IF NOT EXISTS (
-            SELECT 1 FROM information_schema.STATISTICS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'exam_question' AND INDEX_NAME = 'idx_category_id'
-        ) THEN
-            ALTER TABLE `exam_question` ADD INDEX `idx_category_id` (`category_id`);
-        END IF;
-
+    IF v_eq_category THEN
         -- 未匹配的分类插入 blog_category（幂等）
         INSERT INTO `blog_category` (`name`, `sort`)
         SELECT DISTINCT eq.`category`, 99
@@ -464,14 +482,24 @@ INSERT INTO `exam_question` (`stem`, `type`, `category_id`, `difficulty`, `optio
 ('简述 TCP 三次握手过程及原因。', 5, (SELECT id FROM `blog_category` WHERE `name` = '计算机网络' LIMIT 1), '中等', NULL, NULL, 'SYN → SYN+ACK → ACK；双方确认收发能力，防止失效连接请求。', 10, 1),
 ('实现一个函数，判断字符串是否为回文（忽略大小写与非字母数字字符）。', 6, (SELECT id FROM `blog_category` WHERE `name` = '算法' LIMIT 1), '中等', NULL, NULL, '双指针首尾向中间移动，跳过非字母数字字符并统一小写比较，O(n)。', 10, 1);
 
-INSERT INTO `exam_paper` (`title`, `description`, `total_score`, `duration`, `status`) VALUES
-('Java 全栈能力测试卷', '涵盖 Spring、MySQL、Redis、网络与算法的综合测试', 30, 45, 1);
+INSERT INTO `exam_paper` (`title`, `description`, `total_score`, `duration`, `status`)
+SELECT 'Java 全栈能力测试卷', '涵盖 Spring、MySQL、Redis、网络与算法的综合测试', 30, 45, 1
+WHERE NOT EXISTS (SELECT 1 FROM `exam_paper` WHERE `title` COLLATE utf8mb4_unicode_ci = 'Java 全栈能力测试卷');
 
 INSERT INTO `exam_paper_question` (`paper_id`, `question_id`, `sort_order`, `score`)
 SELECT p.id, q.id, q.id, q.score
 FROM `exam_paper` p, `exam_question` q
-WHERE p.title = 'Java 全栈能力测试卷' AND q.is_deleted = 0;
+WHERE p.title COLLATE utf8mb4_unicode_ci = 'Java 全栈能力测试卷'
+  AND q.is_deleted = 0
+  AND NOT EXISTS (
+      SELECT 1 FROM `exam_paper_question` pq
+      WHERE pq.paper_id = p.id AND pq.question_id = q.id
+  );
 
-INSERT INTO `music_playlist` (`name`, `description`, `status`) VALUES
-('专注编程', '适合敲代码的纯音乐歌单', 1),
-('轻松午后', '午后放松轻音乐', 1);
+INSERT INTO `music_playlist` (`name`, `description`, `status`)
+SELECT m.name, m.description, m.status FROM (
+    SELECT '专注编程' AS name, '适合敲代码的纯音乐歌单' AS description, 1 AS status
+    UNION ALL
+    SELECT '轻松午后', '午后放松轻音乐', 1
+) m
+WHERE NOT EXISTS (SELECT 1 FROM `music_playlist` p WHERE p.name COLLATE utf8mb4_unicode_ci = m.name);

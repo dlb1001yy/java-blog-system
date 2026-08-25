@@ -147,14 +147,9 @@ DROP PROCEDURE IF EXISTS `migrate_legacy_question_data`;
 DELIMITER $$
 CREATE PROCEDURE `migrate_legacy_question_data`()
 BEGIN
-    -- 守卫：三处旧列均不存在（03 已升级）则整段跳过
+    -- 按旧列分别守卫：某列已删（如被 03 脚本或其他途径迁移）则跳过对应语句
     IF EXISTS (SELECT 1 FROM information_schema.COLUMNS
-               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'category')
-    OR EXISTS (SELECT 1 FROM information_schema.COLUMNS
-               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'tags')
-    OR EXISTS (SELECT 1 FROM information_schema.COLUMNS
-               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'exam_question' AND COLUMN_NAME = 'category')
-    THEN
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'category') THEN
 
     -- 3.1 已匹配的回填（显式 COLLATE 避免两表排序规则不一致报 1267）
     UPDATE `interview_question` q
@@ -175,6 +170,11 @@ BEGIN
     JOIN `blog_category` c ON c.`name` COLLATE utf8mb4_unicode_ci = q.`category`
     SET q.`category_id` = c.`id`
     WHERE q.`category_id` IS NULL AND q.`category` IS NOT NULL;
+
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.COLUMNS
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'tags') THEN
 
     -- ------------------------------------------------------------
     -- 4.1 未匹配的标签插入 blog_tag（利用递归 CTE 拆分逗号串，幂等）
@@ -221,6 +221,10 @@ BEGIN
           WHERE qt.`question_id` = q.`question_id` AND qt.`tag_id` = g.`id`
       );
 
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.COLUMNS
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'exam_question' AND COLUMN_NAME = 'category') THEN
     -- ------------------------------------------------------------
     -- 5. exam_question 分类迁移
     -- ------------------------------------------------------------
@@ -254,27 +258,36 @@ DROP PROCEDURE IF EXISTS `drop_legacy_columns`;
 DELIMITER $$
 CREATE PROCEDURE `drop_legacy_columns`()
 BEGIN
-    -- interview_question
+    -- 残留检查必须动态执行：旧列已删时静态引用 category/tags 会报 1054
     IF EXISTS (SELECT 1 FROM information_schema.COLUMNS
-               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'category')
-       AND NOT EXISTS (SELECT 1 FROM `interview_question`
-                       WHERE `category` IS NOT NULL AND `category_id` IS NULL) THEN
-        ALTER TABLE `interview_question` DROP COLUMN `category`;
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'category') THEN
+        SET @leftover := 0;
+        SET @sql := 'SELECT EXISTS(SELECT 1 FROM `interview_question` WHERE `category` IS NOT NULL AND `category_id` IS NULL) INTO @leftover';
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+        IF @leftover = 0 THEN
+            ALTER TABLE `interview_question` DROP COLUMN `category`;
+        END IF;
     END IF;
 
     IF EXISTS (SELECT 1 FROM information_schema.COLUMNS
-               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'tags')
-       AND NOT EXISTS (SELECT 1 FROM `interview_question`
-                       WHERE `tags` IS NOT NULL AND `tags` <> '') THEN
-        ALTER TABLE `interview_question` DROP COLUMN `tags`;
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'interview_question' AND COLUMN_NAME = 'tags') THEN
+        SET @leftover := 0;
+        SET @sql := 'SELECT EXISTS(SELECT 1 FROM `interview_question` WHERE `tags` IS NOT NULL AND `tags` <> '''') INTO @leftover';
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+        IF @leftover = 0 THEN
+            ALTER TABLE `interview_question` DROP COLUMN `tags`;
+        END IF;
     END IF;
 
     -- exam_question
     IF EXISTS (SELECT 1 FROM information_schema.COLUMNS
-               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'exam_question' AND COLUMN_NAME = 'category')
-       AND NOT EXISTS (SELECT 1 FROM `exam_question`
-                       WHERE `category` IS NOT NULL AND `category_id` IS NULL) THEN
-        ALTER TABLE `exam_question` DROP COLUMN `category`;
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'exam_question' AND COLUMN_NAME = 'category') THEN
+        SET @leftover := 0;
+        SET @sql := 'SELECT EXISTS(SELECT 1 FROM `exam_question` WHERE `category` IS NOT NULL AND `category_id` IS NULL) INTO @leftover';
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+        IF @leftover = 0 THEN
+            ALTER TABLE `exam_question` DROP COLUMN `category`;
+        END IF;
     END IF;
 END$$
 DELIMITER ;
