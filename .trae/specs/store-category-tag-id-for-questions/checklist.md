@@ -1,0 +1,7 @@
+- [x] 迁移 SQL：interview_question.category→category_id、tags→关联表；exam_question.category→category_id，含数据迁移且幂等
+- [x] 面试题新增/修改/导入按 id 存储分类与标签；导入名称自动转换/创建
+- [x] exam_question 分类按 id 存储，保存/组卷/筛选同步
+- [x] 管理端与前台接口筛选参数改为 categoryId，列表返回 categoryName/tagNames
+- [x] blog-admin 面试题/题库页面下拉、提交、回显、展示均改用 id/名称字段
+- [x] 前台门户调用处同步改造
+- [x] 后端编译、各前端构建通过

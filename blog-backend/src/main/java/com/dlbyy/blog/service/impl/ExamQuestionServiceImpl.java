@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dlbyy.blog.common.PageResult;
+import com.dlbyy.blog.common.exception.BusinessException;
+import com.dlbyy.blog.entity.Category;
 import com.dlbyy.blog.entity.ExamQuestion;
 import com.dlbyy.blog.mapper.ExamQuestionMapper;
 import com.dlbyy.blog.service.CategoryService;
@@ -110,8 +112,10 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
                 if (error == null && !StringUtils.hasText(category)) {
                     error = "分类不能为空";
                 }
+                Long categoryId = null;
                 if (error == null) {
-                    categoryService.getOrCreateByName(category.trim());
+                    // 传入分类名称，不存在则自动创建
+                    categoryId = categoryService.getOrCreateByName(category.trim()).getId();
                 }
                 if (error != null) {
                     errors.add("第" + (i + 1) + "行: " + error);
@@ -121,7 +125,7 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
                 ExamQuestion q = new ExamQuestion();
                 q.setStem(stem);
                 q.setType(type);
-                q.setCategory(category);
+                q.setCategoryId(categoryId);
                 q.setDifficulty(StringUtils.hasText(difficulty) ? difficulty : "中等");
                 q.setOptions(parsedOptions);
                 q.setCorrect(parsedCorrect);
@@ -345,24 +349,43 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
     }
 
     @Override
-    public PageResult<ExamQuestion> adminPage(int page, int size, Integer type, String category,
+    public PageResult<ExamQuestion> adminPage(int page, int size, Integer type, Long categoryId,
                                                String difficulty, String keyword, Integer status) {
         Page<ExamQuestion> p = new Page<>(page, size);
         LambdaQueryWrapper<ExamQuestion> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(type != null, ExamQuestion::getType, type)
-                .eq(StringUtils.hasText(category), ExamQuestion::getCategory, category)
+                .eq(categoryId != null, ExamQuestion::getCategoryId, categoryId)
                 .eq(StringUtils.hasText(difficulty), ExamQuestion::getDifficulty, difficulty)
                 .eq(status != null, ExamQuestion::getStatus, status)
                 .like(StringUtils.hasText(keyword), ExamQuestion::getStem, keyword)
                 .orderByDesc(ExamQuestion::getUpdateTime);
         this.page(p, wrapper);
+        fillCategoryName(p.getRecords());
         return new PageResult<>(p.getTotal(), p.getRecords());
+    }
+
+    /** 批量填充分类名称（非表字段） */
+    private void fillCategoryName(List<ExamQuestion> questions) {
+        if (questions == null || questions.isEmpty()) {
+            return;
+        }
+        Set<Long> ids = questions.stream()
+                .map(ExamQuestion::getCategoryId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (ids.isEmpty()) {
+            return;
+        }
+        Map<Long, String> nameMap = categoryService.listByIds(ids).stream()
+                .collect(Collectors.toMap(Category::getId, Category::getName));
+        questions.forEach(q -> q.setCategoryName(nameMap.get(q.getCategoryId())));
     }
 
     @Override
     public Long adminSave(ExamQuestion question) {
-        if (StringUtils.hasText(question.getCategory())) {
-            categoryService.getOrCreateByName(question.getCategory().trim());
+        if (question.getCategoryId() != null
+                && categoryService.getById(question.getCategoryId()) == null) {
+            throw new BusinessException("分类不存在");
         }
         if (question.getId() == null) {
             this.save(question);

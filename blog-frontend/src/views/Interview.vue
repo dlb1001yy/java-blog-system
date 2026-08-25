@@ -8,7 +8,7 @@
           <div class="card">
             <h3 class="filter-title">技术方向</h3>
             <el-checkbox-group v-model="selectedCategories" @change="handleFilterChange">
-              <el-checkbox v-for="c in categories" :key="c" :label="c" :value="c">{{ c }}</el-checkbox>
+              <el-checkbox v-for="c in categories" :key="c.id" :label="c.name" :value="c.id">{{ c.name }}</el-checkbox>
             </el-checkbox-group>
           </div>
           <div class="card">
@@ -49,13 +49,13 @@
           <div class="card question-card" v-for="q in questionList" :key="q.id">
             <div class="question-header" @click="toggleExpand(q)">
               <div class="question-meta">
-                <el-tag size="small" type="info">{{ q.category }}</el-tag>
+                <el-tag size="small" type="info">{{ q.categoryName || q.category }}</el-tag>
                 <el-tag size="small" :type="difficultyType(q.difficulty)">{{ q.difficulty }}</el-tag>
               </div>
               <h3 class="question-title">{{ q.title }}</h3>
               <div class="question-footer">
                 <div class="question-tags">
-                  <span class="tag-chip" v-for="tag in parseTags(q.tags)" :key="tag">{{ tag }}</span>
+                  <span class="tag-chip" v-for="tag in parseTags(q.tagNames || q.tags)" :key="tag">{{ tag }}</span>
                 </div>
                 <div class="question-actions" @click.stop>
                   <el-button
@@ -123,7 +123,13 @@ import md from '@/utils/markdown'
 
 const userStore = useUserStore()
 
-const DEFAULT_CATEGORIES = ['后端', '前端', '数据库', 'DevOps', '算法']
+const DEFAULT_CATEGORIES = [
+  { id: 1, name: '后端' },
+  { id: 2, name: '前端' },
+  { id: 3, name: '数据库' },
+  { id: 4, name: 'DevOps' },
+  { id: 5, name: '算法' }
+]
 const categories = ref([...DEFAULT_CATEGORIES])
 const selectedCategories = ref([])
 const difficulty = ref('')
@@ -168,7 +174,7 @@ const fetchQuestions = async () => {
       res = await interviewApi.getQuestions({
         page: currentPage.value,
         size: pageSize,
-        category: selectedCategories.value.join(',') || undefined,
+        categoryId: selectedCategories.value.join(',') || undefined,
         difficulty: difficulty.value || undefined,
         keyword: keyword.value.trim() || undefined
       })
@@ -222,7 +228,8 @@ const fetchCategories = async () => {
   try {
     const res = await interviewApi.getCategories()
     if (Array.isArray(res.data) && res.data.length) {
-      categories.value = res.data
+      // 接口返回 [{id, name}]，兼容旧字符串数组
+      categories.value = res.data.map(c => (typeof c === 'string' ? { id: c, name: c } : c))
     }
   } catch {
     // 接口异常时保留默认方向

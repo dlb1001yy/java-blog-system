@@ -18,8 +18,11 @@ public class ExamRecordDetailItemDTO {
     /** 题型 1:单选 2:多选 3:判断 4:填空 5:简答 6:编程 */
     private Integer type;
 
-    /** 题目分类 */
-    private String category;
+    /** 分类ID */
+    private Long categoryId;
+
+    /** 分类名称 */
+    private String categoryName;
 
     /** 选项 JSON */
     private String options;

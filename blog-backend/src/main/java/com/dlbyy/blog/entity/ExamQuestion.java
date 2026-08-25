@@ -1,5 +1,6 @@
 package com.dlbyy.blog.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,8 +21,12 @@ public class ExamQuestion extends BaseEntity {
     /** 题型 1:单选 2:多选 3:判断 4:填空 5:简答 6:编程 */
     private Integer type;
 
-    /** 分类（知识领域） */
-    private String category;
+    /** 分类ID（关联 blog_category） */
+    private Long categoryId;
+
+    /** 分类名称（非表字段，返回展示用） */
+    @TableField(exist = false)
+    private String categoryName;
 
     /** 难度：简单/中等/困难 */
     private String difficulty;

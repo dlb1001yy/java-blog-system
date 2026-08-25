@@ -15,7 +15,7 @@ public interface ExamQuestionService extends IService<ExamQuestion> {
     /**
      * 管理端分页查询（type/category/difficulty/keyword 筛选）
      */
-    PageResult<ExamQuestion> adminPage(int page, int size, Integer type, String category,
+    PageResult<ExamQuestion> adminPage(int page, int size, Integer type, Long categoryId,
                                        String difficulty, String keyword, Integer status);
 
     /**

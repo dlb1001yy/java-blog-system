@@ -12,20 +12,29 @@ USE `dlbyy_zp_blog`;
 
 CREATE TABLE IF NOT EXISTS `interview_question` (
     `id`          bigint       NOT NULL AUTO_INCREMENT,
-    `category`    varchar(50)  NOT NULL COMMENT '技术方向：后端/前端/数据库/DevOps/算法',
+    `category_id` bigint       DEFAULT NULL COMMENT '分类ID(关联 blog_category)',
     `difficulty`  varchar(20)  NOT NULL DEFAULT '中等' COMMENT '难度：简单/中等/困难',
     `title`       varchar(500) NOT NULL COMMENT '题目标题/题干',
-    `tags`        varchar(200) DEFAULT NULL COMMENT '标签（逗号分隔）',
     `answer`      longtext     COMMENT '参考答案（支持 Markdown/代码块）',
     `status`      tinyint      NOT NULL DEFAULT 1 COMMENT '状态 0:停用 1:启用',
     `is_deleted`  tinyint      NOT NULL DEFAULT 0 COMMENT '逻辑删除 0:正常 1:已删',
     `create_time` datetime     DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` datetime     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    INDEX `idx_category` (`category`),
+    INDEX `idx_category_id` (`category_id`),
     INDEX `idx_difficulty` (`difficulty`),
     INDEX `idx_deleted_status` (`is_deleted`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='面试题表';
+
+CREATE TABLE IF NOT EXISTS `interview_question_tag` (
+    `id`          bigint   NOT NULL AUTO_INCREMENT,
+    `question_id` bigint   NOT NULL COMMENT '面试题ID',
+    `tag_id`      bigint   NOT NULL COMMENT '标签ID(关联 blog_tag)',
+    `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_question_tag` (`question_id`, `tag_id`),
+    INDEX `idx_tag` (`tag_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='面试题-标签关联表';
 
 CREATE TABLE IF NOT EXISTS `interview_favorite` (
     `id`          bigint   NOT NULL AUTO_INCREMENT,
@@ -48,7 +57,7 @@ CREATE TABLE IF NOT EXISTS `exam_question` (
     `id`               bigint       NOT NULL AUTO_INCREMENT,
     `stem`             longtext     NOT NULL COMMENT '题干（支持 Markdown/代码块）',
     `type`             tinyint      NOT NULL COMMENT '题型 1:单选 2:多选 3:判断 4:填空 5:简答 6:编程',
-    `category`         varchar(50)  DEFAULT NULL COMMENT '分类（知识领域）',
+    `category_id`      bigint       DEFAULT NULL COMMENT '分类ID(关联 blog_category)',
     `difficulty`       varchar(20)  NOT NULL DEFAULT '中等' COMMENT '难度：简单/中等/困难',
     `options`          text         DEFAULT NULL COMMENT '选项 JSON 数组（客观题）',
     `correct`          text         DEFAULT NULL COMMENT '正确答案 JSON（索引/布尔/字符串数组）',
@@ -61,7 +70,7 @@ CREATE TABLE IF NOT EXISTS `exam_question` (
     `update_time`      datetime     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     INDEX `idx_type` (`type`),
-    INDEX `idx_category` (`category`),
+    INDEX `idx_category_id` (`category_id`),
     INDEX `idx_deleted_status` (`is_deleted`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='考试题目表';
 
@@ -173,20 +182,64 @@ CREATE TABLE IF NOT EXISTS `music_playlist_song` (
 -- 4. 示例数据（可选，用于本地演示）
 -- ------------------------------------------------------------
 
-INSERT INTO `interview_question` (`category`, `difficulty`, `title`, `tags`, `answer`, `status`) VALUES
-('后端', '简单', '什么是 JVM 的自动装箱与拆箱？', 'Java,基础', '自动装箱是编译器将基本类型自动包装为对应包装类（int → Integer），拆箱则相反。频繁装箱可能引发性能问题，建议使用缓存池（-128~127）。', 1),
-('后端', '中等', 'HashMap 在 JDK 1.8 中的底层实现？', 'Java,集合', '数组 + 链表 + 红黑树。链表长度超过 8 且数组长度 ≥ 64 时树化；扩容阈值 0.75，容量为 2 的幂。', 1),
-('数据库', '中等', 'InnoDB 的 MVCC 机制是如何实现的？', 'MySQL,事务', '通过隐藏列 trx_id、roll_pointer 与 undo log 版本链实现，Read View 决定可见性。RC 每次查询生成 Read View，RR 只在第一次生成。', 1),
-('前端', '简单', 'Vue 的响应式原理是什么？', 'Vue,响应式', 'Vue 3 使用 Proxy 拦截对象读写，收集依赖并在 set 时触发更新。', 1),
-('算法', '困难', '手写 LRU 缓存（O(1) 复杂度）', '算法,设计', 'HashMap + 双向链表：HashMap 定位节点，链表维护访问顺序，头插最新、尾删最旧。', 1);
+-- 分类/标签：先确保 blog_category / blog_tag 中存在对应记录（幂等）
+INSERT INTO `blog_category` (`name`, `sort`)
+SELECT c.`name`, c.`sort` FROM (
+    SELECT '后端' AS `name`, 1 AS `sort` UNION ALL
+    SELECT '数据库', 3 UNION ALL
+    SELECT '前端', 2 UNION ALL
+    SELECT '算法', 5 UNION ALL
+    SELECT 'Spring', 10 UNION ALL
+    SELECT 'Redis', 11 UNION ALL
+    SELECT '计算机网络', 12
+) c
+WHERE NOT EXISTS (SELECT 1 FROM `blog_category` bc WHERE bc.`name` = c.`name`);
 
-INSERT INTO `exam_question` (`stem`, `type`, `category`, `difficulty`, `options`, `correct`, `reference_answer`, `score`, `status`) VALUES
-('Spring Boot 的自动装配主要依赖哪个注解？', 1, 'Spring', '简单', '["A. @ComponentScan","B. @EnableAutoConfiguration","C. @SpringBootApplication 扫描","D. @Conditional"]', '[1]', '自动装配核心是 @EnableAutoConfiguration 导入的 AutoConfigurationImportSelector。', 2, 1),
-('下列属于 MySQL 索引失效场景的有？', 2, '数据库', '中等', '["A. 对索引列使用函数","B. LIKE 以 % 开头","C. 联合索引最左前缀匹配","D. 隐式类型转换"]', '[0,1,3]', 'A/B/D 均会导致索引失效；C 是正确使用方式。', 4, 1),
-('Redis 是单线程处理命令的。', 3, 'Redis', '简单', '["A. 对","B. 错"]', '[0]', '命令执行单线程（6.0 后 IO 多线程），避免锁竞争。', 2, 1),
-('HTTP 状态码 401 表示______。', 4, '计算机网络', '简单', NULL, '["未授权(Unauthorized)"]', '401 表示请求未经授权，需要身份认证。', 2, 1),
-('简述 TCP 三次握手过程及原因。', 5, '计算机网络', '中等', NULL, NULL, 'SYN → SYN+ACK → ACK；双方确认收发能力，防止失效连接请求。', 10, 1),
-('实现一个函数，判断字符串是否为回文（忽略大小写与非字母数字字符）。', 6, '算法', '中等', NULL, NULL, '双指针首尾向中间移动，跳过非字母数字字符并统一小写比较，O(n)。', 10, 1);
+INSERT INTO `blog_tag` (`name`)
+SELECT t.`name` FROM (
+    SELECT 'Java' AS `name` UNION ALL
+    SELECT '基础' UNION ALL
+    SELECT '集合' UNION ALL
+    SELECT 'MySQL' UNION ALL
+    SELECT '事务' UNION ALL
+    SELECT 'Vue' UNION ALL
+    SELECT '响应式' UNION ALL
+    SELECT '算法' UNION ALL
+    SELECT '设计'
+) t
+WHERE NOT EXISTS (SELECT 1 FROM `blog_tag` g WHERE g.`name` = t.`name`);
+
+INSERT INTO `interview_question` (`category_id`, `difficulty`, `title`, `answer`, `status`) VALUES
+((SELECT id FROM `blog_category` WHERE `name` = '后端' LIMIT 1), '简单', '什么是 JVM 的自动装箱与拆箱？', '自动装箱是编译器将基本类型自动包装为对应包装类（int → Integer），拆箱则相反。频繁装箱可能引发性能问题，建议使用缓存池（-128~127）。', 1),
+((SELECT id FROM `blog_category` WHERE `name` = '后端' LIMIT 1), '中等', 'HashMap 在 JDK 1.8 中的底层实现？', '数组 + 链表 + 红黑树。链表长度超过 8 且数组长度 ≥ 64 时树化；扩容阈值 0.75，容量为 2 的幂。', 1),
+((SELECT id FROM `blog_category` WHERE `name` = '数据库' LIMIT 1), '中等', 'InnoDB 的 MVCC 机制是如何实现的？', '通过隐藏列 trx_id、roll_pointer 与 undo log 版本链实现，Read View 决定可见性。RC 每次查询生成 Read View，RR 只在第一次生成。', 1),
+((SELECT id FROM `blog_category` WHERE `name` = '前端' LIMIT 1), '简单', 'Vue 的响应式原理是什么？', 'Vue 3 使用 Proxy 拦截对象读写，收集依赖并在 set 时触发更新。', 1),
+((SELECT id FROM `blog_category` WHERE `name` = '算法' LIMIT 1), '困难', '手写 LRU 缓存（O(1) 复杂度）', 'HashMap + 双向链表：HashMap 定位节点，链表维护访问顺序，头插最新、尾删最旧。', 1);
+
+-- 面试题-标签关联（幂等，按标题匹配）
+INSERT INTO `interview_question_tag` (`question_id`, `tag_id`)
+SELECT q.`id`, g.`id`
+FROM `interview_question` q
+JOIN `blog_tag` g ON FIND_IN_SET(g.`name`, 'Java,基础,集合,MySQL,事务,Vue,响应式,算法,设计')
+WHERE (
+    (q.`title` LIKE '什么是 JVM 的自动装箱与拆箱%' AND g.`name` IN ('Java', '基础')) OR
+    (q.`title` LIKE 'HashMap 在 JDK 1.8%' AND g.`name` IN ('Java', '集合')) OR
+    (q.`title` LIKE 'InnoDB 的 MVCC%' AND g.`name` IN ('MySQL', '事务')) OR
+    (q.`title` LIKE 'Vue 的响应式原理%' AND g.`name` IN ('Vue', '响应式')) OR
+    (q.`title` LIKE '手写 LRU 缓存%' AND g.`name` IN ('算法', '设计'))
+)
+AND NOT EXISTS (
+    SELECT 1 FROM `interview_question_tag` qt
+    WHERE qt.`question_id` = q.`id` AND qt.`tag_id` = g.`id`
+);
+
+INSERT INTO `exam_question` (`stem`, `type`, `category_id`, `difficulty`, `options`, `correct`, `reference_answer`, `score`, `status`) VALUES
+('Spring Boot 的自动装配主要依赖哪个注解？', 1, (SELECT id FROM `blog_category` WHERE `name` = 'Spring' LIMIT 1), '简单', '["A. @ComponentScan","B. @EnableAutoConfiguration","C. @SpringBootApplication 扫描","D. @Conditional"]', '[1]', '自动装配核心是 @EnableAutoConfiguration 导入的 AutoConfigurationImportSelector。', 2, 1),
+('下列属于 MySQL 索引失效场景的有？', 2, (SELECT id FROM `blog_category` WHERE `name` = '数据库' LIMIT 1), '中等', '["A. 对索引列使用函数","B. LIKE 以 % 开头","C. 联合索引最左前缀匹配","D. 隐式类型转换"]', '[0,1,3]', 'A/B/D 均会导致索引失效；C 是正确使用方式。', 4, 1),
+('Redis 是单线程处理命令的。', 3, (SELECT id FROM `blog_category` WHERE `name` = 'Redis' LIMIT 1), '简单', '["A. 对","B. 错"]', '[0]', '命令执行单线程（6.0 后 IO 多线程），避免锁竞争。', 2, 1),
+('HTTP 状态码 401 表示______。', 4, (SELECT id FROM `blog_category` WHERE `name` = '计算机网络' LIMIT 1), '简单', NULL, '["未授权(Unauthorized)"]', '401 表示请求未经授权，需要身份认证。', 2, 1),
+('简述 TCP 三次握手过程及原因。', 5, (SELECT id FROM `blog_category` WHERE `name` = '计算机网络' LIMIT 1), '中等', NULL, NULL, 'SYN → SYN+ACK → ACK；双方确认收发能力，防止失效连接请求。', 10, 1),
+('实现一个函数，判断字符串是否为回文（忽略大小写与非字母数字字符）。', 6, (SELECT id FROM `blog_category` WHERE `name` = '算法' LIMIT 1), '中等', NULL, NULL, '双指针首尾向中间移动，跳过非字母数字字符并统一小写比较，O(n)。', 10, 1);
 
 INSERT INTO `exam_paper` (`title`, `description`, `total_score`, `duration`, `status`) VALUES
 ('Java 全栈能力测试卷', '涵盖 Spring、MySQL、Redis、网络与算法的综合测试', 30, 45, 1);

@@ -33,11 +33,11 @@ public class AdminInterviewQuestionController {
     public Result<PageResult<InterviewQuestion>> page(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String difficulty,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer status) {
-        return Result.success(interviewQuestionService.adminPage(page, size, category, difficulty, keyword, status));
+        return Result.success(interviewQuestionService.adminPage(page, size, categoryId, difficulty, keyword, status));
     }
 
     @GetMapping("/{id}")
@@ -67,7 +67,7 @@ public class AdminInterviewQuestionController {
             if (!StringUtils.hasText(question.getTitle())) {
                 missing.add("title");
             }
-            if (!StringUtils.hasText(question.getCategory())) {
+            if (question.getCategoryId() == null && !StringUtils.hasText(question.getCategoryName())) {
                 missing.add("category");
             }
             if (!StringUtils.hasText(question.getDifficulty())) {

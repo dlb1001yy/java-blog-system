@@ -16,7 +16,10 @@ public class ExamPortalQuestionDTO {
     /** 题型 1:单选 2:多选 3:判断 4:填空 5:简答 6:编程 */
     private Integer type;
 
-    private String category;
+    private Long categoryId;
+
+    /** 分类名称（展示用） */
+    private String categoryName;
 
     private String difficulty;
 
@@ -32,14 +35,15 @@ public class ExamPortalQuestionDTO {
     /**
      * 门户接口不含 correct / reference_answer 字段（服务端置空，不返回）
      */
-    public static ExamPortalQuestionDTO of(Long id, String stem, Integer type, String category,
+    public static ExamPortalQuestionDTO of(Long id, String stem, Integer type, Long categoryId, String categoryName,
                                            String difficulty, String options,
                                            java.math.BigDecimal score, Integer sortOrder) {
         ExamPortalQuestionDTO dto = new ExamPortalQuestionDTO();
         dto.setId(id);
         dto.setStem(stem);
         dto.setType(type);
-        dto.setCategory(category);
+        dto.setCategoryId(categoryId);
+        dto.setCategoryName(categoryName);
         dto.setDifficulty(difficulty);
         dto.setOptions(options);
         dto.setScore(score);

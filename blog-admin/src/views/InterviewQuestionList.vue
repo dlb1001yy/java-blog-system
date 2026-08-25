@@ -21,8 +21,8 @@
           <el-input v-model="searchForm.keyword" placeholder="题干/标签关键词" clearable @keyup.enter="handleSearch" />
         </el-form-item>
         <el-form-item label="方向">
-          <el-select v-model="searchForm.category" placeholder="请选择" clearable style="width: 140px">
-            <el-option v-for="c in categoryOptions" :key="c" :label="c" :value="c" />
+          <el-select v-model="searchForm.categoryId" placeholder="请选择" clearable style="width: 140px">
+            <el-option v-for="c in categoryOptions" :key="c.id" :label="c.name" :value="c.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="难度">
@@ -49,7 +49,7 @@
         <el-table-column type="selection" width="55" />
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="title" label="题干" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="category" label="方向" width="100" />
+        <el-table-column prop="categoryName" label="方向" width="100" />
         <el-table-column prop="difficulty" label="难度" width="90">
           <template #default="{ row }">
             <el-tag :type="difficultyTypeMap[row.difficulty] || 'info'" size="small">{{ row.difficulty }}</el-tag>
@@ -101,9 +101,9 @@
         <el-form-item label="题干" prop="title">
           <el-input v-model="form.title" type="textarea" :rows="2" placeholder="请输入题目标题/题干" />
         </el-form-item>
-        <el-form-item label="技术方向" prop="category">
-          <el-select v-model="form.category" placeholder="请选择技术方向" style="width: 240px">
-            <el-option v-for="c in categoryOptions" :key="c" :label="c" :value="c" />
+        <el-form-item label="技术方向" prop="categoryId">
+          <el-select v-model="form.categoryId" placeholder="请选择技术方向" style="width: 240px">
+            <el-option v-for="c in categoryOptions" :key="c.id" :label="c.name" :value="c.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="难度" prop="difficulty">
@@ -111,17 +111,16 @@
             <el-option v-for="d in difficultyOptions" :key="d" :label="d" :value="d" />
           </el-select>
         </el-form-item>
-        <el-form-item label="标签" prop="tags">
+        <el-form-item label="标签" prop="tagIds">
           <el-select
-            v-model="form.tags"
+            v-model="form.tagIds"
             multiple
             filterable
-            allow-create
             default-first-option
-            placeholder="选择或输入标签，如：Java/并发/JVM"
+            placeholder="选择标签，如：Java/并发/JVM"
             style="width: 100%"
           >
-            <el-option v-for="t in tagOptions" :key="t" :label="t" :value="t" />
+            <el-option v-for="t in tagOptions" :key="t.id" :label="t.name" :value="t.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="解题思路" prop="tips">
@@ -270,7 +269,7 @@ const tagOptions = ref([])
 const difficultyOptions = ['简单', '中等', '困难']
 const difficultyTypeMap = { 简单: 'success', 中等: 'warning', 困难: 'danger' }
 
-const searchForm = reactive({ keyword: '', category: '', difficulty: '', status: null })
+const searchForm = reactive({ keyword: '', categoryId: null, difficulty: '', status: null })
 
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
@@ -288,7 +287,7 @@ const form = reactive({
 
 const rules = {
   title: [{ required: true, message: '请输入题干', trigger: 'blur' }],
-  category: [{ required: true, message: '请选择技术方向', trigger: 'change' }],
+  categoryId: [{ required: true, message: '请选择技术方向', trigger: 'change' }],
   difficulty: [{ required: true, message: '请选择难度', trigger: 'change' }]
 }
 
@@ -333,7 +332,7 @@ const fetchData = async () => {
       page: currentPage.value,
       size: pageSize.value,
       keyword: searchForm.keyword || undefined,
-      category: searchForm.category || undefined,
+      categoryId: searchForm.categoryId ?? undefined,
       difficulty: searchForm.difficulty || undefined,
       status: searchForm.status ?? undefined
     }
@@ -351,7 +350,7 @@ const handleSearch = () => {
 }
 
 const handleReset = () => {
-  Object.assign(searchForm, { keyword: '', category: '', difficulty: '', status: null })
+  Object.assign(searchForm, { keyword: '', categoryId: null, difficulty: '', status: null })
   handleSearch()
 }
 
@@ -364,7 +363,7 @@ const handleCurrentChange = () => fetchData()
 
 const handleAdd = () => {
   dialogTitle.value = '新增面试题'
-  Object.assign(form, { id: null, title: '', category: '', difficulty: '', tags: [], tips: '', answer: '', status: 1 })
+  Object.assign(form, { id: null, title: '', categoryId: null, difficulty: '', tagIds: [], tips: '', answer: '', status: 1 })
   tipsPreview.value = false
   answerPreview.value = false
   dialogVisible.value = true
@@ -376,9 +375,9 @@ const handleEdit = async (row) => {
   Object.assign(form, {
     id: res.data.id,
     title: res.data.title,
-    category: res.data.category,
+    categoryId: res.data.categoryId ?? null,
     difficulty: res.data.difficulty,
-    tags: splitTags(res.data.tags),
+    tagIds: res.data.tagIds || [],
     tips: res.data.tips || '',
     answer: res.data.answer || '',
     status: res.data.status ?? 1
@@ -393,7 +392,7 @@ const handleSubmit = async () => {
     if (!valid) return
     submitting.value = true
     try {
-      const data = { ...form, tags: (form.tags || []).join(',') }
+      const data = { ...form }
       await interviewQuestionApi.save(data)
       ElMessage.success(form.id ? '更新成功' : '创建成功')
       dialogVisible.value = false
@@ -516,7 +515,16 @@ const handleFileChange = async (e) => {
 const confirmImport = async () => {
   importing.value = true
   try {
-    await interviewQuestionApi.importQuestions(importQuestionsList.value)
+    const payload = importQuestionsList.value.map(q => ({
+      title: q.title,
+      categoryName: q.category,
+      difficulty: q.difficulty,
+      tagNameList: splitTags(q.tags),
+      tips: q.tips,
+      answer: q.answer,
+      status: q.status
+    }))
+    await interviewQuestionApi.importQuestions(payload)
     ElMessage.success(`成功导入 ${importQuestionsList.value.length} 道面试题`)
     importPreviewVisible.value = false
     fetchData()
@@ -567,8 +575,8 @@ const downloadTemplate = () => {
 const fetchOptions = async () => {
   try {
     const [catRes, tagRes] = await Promise.all([categoryApi.getAll(), tagApi.getAll()])
-    categoryOptions.value = (catRes.data || []).map(c => c.name)
-    tagOptions.value = (tagRes.data || []).map(t => t.name)
+    categoryOptions.value = catRes.data || []
+    tagOptions.value = tagRes.data || []
   } catch (e) {
     // 选项加载失败不影响主流程
   }

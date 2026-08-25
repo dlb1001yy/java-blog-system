@@ -34,6 +34,7 @@ public class ExamPaperServiceImpl extends ServiceImpl<ExamPaperMapper, ExamPaper
 
     private final ExamPaperQuestionMapper examPaperQuestionMapper;
     private final ExamQuestionMapper examQuestionMapper;
+    private final com.dlbyy.blog.service.CategoryService categoryService;
 
     @Override
     public PageResult<ExamPaper> adminPage(int page, int size, String keyword, Integer status) {
@@ -166,12 +167,22 @@ public class ExamPaperServiceImpl extends ServiceImpl<ExamPaperMapper, ExamPaper
         Map<Long, ExamQuestion> questionMap = examQuestionMapper.selectBatchIds(
                         rels.stream().map(ExamPaperQuestion::getQuestionId).collect(Collectors.toList()))
                 .stream().collect(Collectors.toMap(ExamQuestion::getId, Function.identity()));
+        // 填充分类名称
+        Set<Long> categoryIds = questionMap.values().stream()
+                .map(ExamQuestion::getCategoryId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<Long, String> categoryNameMap = categoryIds.isEmpty() ? Map.of() :
+                categoryService.listByIds(categoryIds).stream()
+                        .collect(Collectors.toMap(com.dlbyy.blog.entity.Category::getId,
+                                com.dlbyy.blog.entity.Category::getName));
         return rels.stream()
                 .filter(rel -> questionMap.containsKey(rel.getQuestionId()))
                 .map(rel -> {
                     ExamQuestion q = questionMap.get(rel.getQuestionId());
                     // 门户侧不返回 correct / reference_answer
-                    return ExamPortalQuestionDTO.of(q.getId(), q.getStem(), q.getType(), q.getCategory(),
+                    return ExamPortalQuestionDTO.of(q.getId(), q.getStem(), q.getType(), q.getCategoryId(),
+                            categoryNameMap.get(q.getCategoryId()),
                             q.getDifficulty(), q.getOptions(), rel.getScore(), rel.getSortOrder());
                 })
                 .collect(Collectors.toList());

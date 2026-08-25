@@ -47,11 +47,11 @@ public class AdminExamQuestionController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) Integer type,
-            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String difficulty,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer status) {
-        return Result.success(examQuestionService.adminPage(page, size, type, category, difficulty, keyword, status));
+        return Result.success(examQuestionService.adminPage(page, size, type, categoryId, difficulty, keyword, status));
     }
 
     @GetMapping("/stats")
@@ -63,7 +63,14 @@ public class AdminExamQuestionController {
     @GetMapping("/{id}")
     @Operation(summary = "题目详情")
     public Result<ExamQuestion> detail(@PathVariable Long id) {
-        return Result.success(examQuestionService.getById(id));
+        ExamQuestion question = examQuestionService.getById(id);
+        if (question != null && question.getCategoryId() != null) {
+            Category category = categoryService.getById(question.getCategoryId());
+            if (category != null) {
+                question.setCategoryName(category.getName());
+            }
+        }
+        return Result.success(question);
     }
 
     @PostMapping

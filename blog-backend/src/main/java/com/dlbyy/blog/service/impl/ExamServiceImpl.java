@@ -53,6 +53,7 @@ public class ExamServiceImpl implements ExamService {
     private final ExamPaperQuestionMapper examPaperQuestionMapper;
     private final ExamQuestionMapper examQuestionMapper;
     private final ExamMarkingMapper examMarkingMapper;
+    private final com.dlbyy.blog.service.CategoryService categoryService;
     private final ExamJudgeAsyncService examJudgeAsyncService;
 
     // ==================== 交卷 ====================
@@ -265,6 +266,16 @@ public class ExamServiceImpl implements ExamService {
                                 .map(ExamPaperQuestion::getQuestionId).collect(Collectors.toList())).stream()
                         .collect(Collectors.toMap(ExamQuestion::getId, Function.identity()));
 
+        // 分类名称填充
+        Set<Long> categoryIds = questionMap.values().stream()
+                .map(ExamQuestion::getCategoryId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<Long, String> categoryNameMap = categoryIds.isEmpty() ? Map.of() :
+                categoryService.listByIds(categoryIds).stream()
+                        .collect(Collectors.toMap(com.dlbyy.blog.entity.Category::getId,
+                                com.dlbyy.blog.entity.Category::getName));
+
         // 我的答案
         Map<Long, Object> myAnswerMap = parseAnswers(record.getAnswers());
 
@@ -281,7 +292,8 @@ public class ExamServiceImpl implements ExamService {
             item.setQuestionId(question.getId());
             item.setStem(question.getStem());
             item.setType(question.getType());
-            item.setCategory(question.getCategory());
+            item.setCategoryId(question.getCategoryId());
+            item.setCategoryName(categoryNameMap.get(question.getCategoryId()));
             item.setOptions(question.getOptions());
             item.setMyAnswer(toJsonSafe(myAnswerMap.get(question.getId())));
             item.setScore(rel.getScore());

@@ -61,7 +61,7 @@
             <el-tag :type="typeMap[row.type]?.type || 'info'" size="small">{{ typeMap[row.type]?.label || row.type }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="category" label="分类" width="120" />
+        <el-table-column prop="categoryName" label="分类" width="120" />
         <el-table-column prop="difficulty" label="难度" width="80">
           <template #default="{ row }">
             <el-tag :type="difficultyType(row.difficulty)" size="small" effect="plain">{{ row.difficulty }}</el-tag>
@@ -312,7 +312,7 @@ const defaultForm = () => ({
   id: null,
   stem: '',
   type: 1,
-  category: '',
+  categoryId: null,
   difficulty: '简单',
   score: 5,
   status: 1,
@@ -394,7 +394,7 @@ const handleEdit = async (row) => {
     id: q.id,
     stem: q.stem,
     type: q.type,
-    category: q.category,
+    categoryId: q.categoryId ?? null,
     difficulty: q.difficulty,
     score: Number(q.score),
     status: q.status,
@@ -439,7 +439,7 @@ const buildPayload = () => {
     id: form.id,
     stem: form.stem,
     type: form.type,
-    category: form.category,
+    categoryId: form.categoryId,
     difficulty: form.difficulty,
     score: form.score,
     status: form.status,

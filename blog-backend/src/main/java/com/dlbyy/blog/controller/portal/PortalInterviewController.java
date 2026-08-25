@@ -15,8 +15,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 门户面试题接口
@@ -39,22 +42,39 @@ public class PortalInterviewController {
     public Result<PageResult<Map<String, Object>>> questions(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String categoryId,
             @RequestParam(required = false) String difficulty,
             @RequestParam(required = false) String keyword) {
 
+        // 分类支持多选，逗号分隔，如 categoryId=1,2,3；忽略空值与非法项
+        List<Long> categoryIds = null;
+        if (categoryId != null && !categoryId.isBlank()) {
+            categoryIds = Arrays.stream(categoryId.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(s -> {
+                        try {
+                            return Long.valueOf(s);
+                        } catch (NumberFormatException e) {
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .toList();
+        }
         PageResult<InterviewQuestion> pr = interviewQuestionService
-                .pageQuery(page, size, category, difficulty, keyword);
+                .pageQuery(page, size, categoryIds, difficulty, keyword);
 
         // 列表脱敏：置空 answer，防止未登录直接批量拉取答案
         PageResult<Map<String, Object>> result = new PageResult<>(pr.getTotal(),
                 pr.getRecords().stream().map(q -> {
                     Map<String, Object> item = new HashMap<>();
                     item.put("id", q.getId());
-                    item.put("category", q.getCategory());
+                    item.put("categoryId", q.getCategoryId());
+                    item.put("categoryName", q.getCategoryName());
                     item.put("difficulty", q.getDifficulty());
                     item.put("title", q.getTitle());
-                    item.put("tags", q.getTags());
+                    item.put("tagNames", q.getTagNameList());
                     item.put("status", q.getStatus());
                     item.put("createTime", q.getCreateTime());
                     return item;
@@ -63,9 +83,14 @@ public class PortalInterviewController {
     }
 
     @GetMapping("/categories")
-    @Operation(summary = "题库方向列表（启用题目去重）")
-    public Result<java.util.List<String>> categories() {
-        return Result.success(interviewQuestionService.listEnabledCategories());
+    @Operation(summary = "题库分类列表（id+name）")
+    public Result<java.util.List<Map<String, Object>>> categories() {
+        return Result.success(interviewQuestionService.listCategories().stream().map(c -> {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", c.getId());
+            item.put("name", c.getName());
+            return item;
+        }).toList());
     }
 
     @GetMapping("/questions/{id}/answer")
