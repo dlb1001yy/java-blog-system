@@ -55,6 +55,8 @@ class ExamServiceImplCheatFlagTest {
     @Mock
     private com.dlbyy.blog.mapper.ExamMarkingMapper examMarkingMapper;
     @Mock
+    private com.dlbyy.blog.service.CategoryService categoryService;
+    @Mock
     private ExamJudgeAsyncService examJudgeAsyncService;
 
     private ExamServiceImpl examService;
@@ -62,7 +64,7 @@ class ExamServiceImplCheatFlagTest {
     @BeforeEach
     void setUp() {
         examService = new ExamServiceImpl(examRecordMapper, examPaperMapper,
-                examPaperQuestionMapper, examQuestionMapper, examMarkingMapper, examJudgeAsyncService);
+                examPaperQuestionMapper, examQuestionMapper, examMarkingMapper, categoryService, examJudgeAsyncService);
     }
 
     private void stubPaper() {
