@@ -80,6 +80,20 @@ public class InterviewQuestionServiceImpl extends ServiceImpl<InterviewQuestionM
         this.removeById(id);
     }
 
+    @Override
+    public java.util.List<String> listEnabledCategories() {
+        return this.list(new LambdaQueryWrapper<InterviewQuestion>()
+                        .select(InterviewQuestion::getCategory)
+                        .eq(InterviewQuestion::getStatus, 1)
+                        .isNotNull(InterviewQuestion::getCategory))
+                .stream()
+                .map(InterviewQuestion::getCategory)
+                .filter(StringUtils::hasText)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
     /** 构造通用筛选条件 */
     private LambdaQueryWrapper<InterviewQuestion> buildWrapper(String category, String difficulty, String keyword) {
         LambdaQueryWrapper<InterviewQuestion> wrapper = new LambdaQueryWrapper<>();

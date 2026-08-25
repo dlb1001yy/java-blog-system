@@ -62,6 +62,12 @@ public class PortalInterviewController {
         return Result.success(result);
     }
 
+    @GetMapping("/categories")
+    @Operation(summary = "题库方向列表（启用题目去重）")
+    public Result<java.util.List<String>> categories() {
+        return Result.success(interviewQuestionService.listEnabledCategories());
+    }
+
     @GetMapping("/questions/{id}/answer")
     @Operation(summary = "获取题目详情（含答案）")
     public Result<InterviewQuestion> answer(@PathVariable Long id) {

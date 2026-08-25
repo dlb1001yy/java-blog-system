@@ -123,7 +123,8 @@ import md from '@/utils/markdown'
 
 const userStore = useUserStore()
 
-const categories = ['后端', '前端', '数据库', 'DevOps', '算法']
+const DEFAULT_CATEGORIES = ['后端', '前端', '数据库', 'DevOps', '算法']
+const categories = ref([...DEFAULT_CATEGORIES])
 const selectedCategories = ref([])
 const difficulty = ref('')
 const status = ref('all')
@@ -217,7 +218,21 @@ const handleToggle = async (id, type) => {
   if (status.value !== 'all' && !res.data) fetchQuestions()
 }
 
-onMounted(fetchQuestions)
+const fetchCategories = async () => {
+  try {
+    const res = await interviewApi.getCategories()
+    if (Array.isArray(res.data) && res.data.length) {
+      categories.value = res.data
+    }
+  } catch {
+    // 接口异常时保留默认方向
+  }
+}
+
+onMounted(() => {
+  fetchCategories()
+  fetchQuestions()
+})
 </script>
 
 <style scoped>

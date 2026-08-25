@@ -6,6 +6,11 @@ export default {
     return request.get('/portal/interview/questions', { params })
   },
 
+  // 题库方向列表（启用题目去重）
+  getCategories() {
+    return request.get('/portal/interview/categories')
+  },
+
   // 获取题目详情（含参考答案）
   getQuestionAnswer(id) {
     return request.get(`/portal/interview/questions/${id}/answer`)

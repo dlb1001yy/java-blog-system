@@ -35,4 +35,9 @@ public interface InterviewQuestionService extends IService<InterviewQuestion> {
      * 管理端删除（逻辑删除）
      */
     void adminDelete(Long id);
+
+    /**
+     * 启用题目去重方向列表（按名称排序）
+     */
+    java.util.List<String> listEnabledCategories();
 }
