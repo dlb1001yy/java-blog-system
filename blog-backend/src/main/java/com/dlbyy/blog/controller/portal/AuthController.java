@@ -144,7 +144,9 @@ public class AuthController {
             String refreshToken = jwtTokenProvider.generateRefreshToken(authentication);
 
             // refresh token 通过 HTTP-only Cookie 下发，前端不再持有
-            cookieUtils.addRefreshCookie(httpResponse, refreshToken);
+            // 后台管理端（X-Client-Type: admin）写入独立 Cookie 名，避免与前台账号串号
+            boolean isAdmin = isAdminClient(httpRequest);
+            cookieUtils.addRefreshCookie(httpResponse, refreshToken, isAdmin);
 
             Map<String, Object> response = new HashMap<>();
             response.put("accessToken", accessToken);
@@ -166,16 +168,37 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public Result<?> refresh(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
-        // 优先从 HTTP-only Cookie 读取，回退到 X-Refresh-Token 请求头（兼容移动端非浏览器客户端）
-        String refreshToken = cookieUtils.getRefreshTokenFromRequest(httpRequest);
-        if (refreshToken == null || refreshToken.isBlank()) {
-            refreshToken = httpRequest.getHeader("X-Refresh-Token");
+        boolean isAdmin = isAdminClient(httpRequest);
+        // 后台端优先读独立 Cookie，其次 X-Refresh-Token 请求头（兼容移动端非浏览器客户端）
+        String refreshToken;
+        if (isAdmin) {
+            refreshToken = cookieUtils.getAdminRefreshTokenFromRequest(httpRequest);
+            if (refreshToken == null || refreshToken.isBlank()) {
+                refreshToken = httpRequest.getHeader("X-Refresh-Token");
+            }
+            // 平滑迁移：旧版后台写入的是 refresh_token Cookie，若其中是 admin 账号的 token 则放行
+            if ((refreshToken == null || refreshToken.isBlank())) {
+                refreshToken = cookieUtils.getRefreshTokenFromRequest(httpRequest);
+                if (refreshToken != null && !refreshToken.isBlank()
+                        && (!jwtUtils.isValidRefreshToken(refreshToken) || !isAdminUsername(refreshToken))) {
+                    refreshToken = null;
+                }
+            }
+        } else {
+            refreshToken = cookieUtils.getRefreshTokenFromRequest(httpRequest);
+            if (refreshToken == null || refreshToken.isBlank()) {
+                refreshToken = httpRequest.getHeader("X-Refresh-Token");
+            }
         }
         if (refreshToken == null || refreshToken.isBlank()) {
             throw new BusinessException("RefreshToken 缺失或已过期");
         }
         if (!jwtUtils.isValidRefreshToken(refreshToken)) {
-            cookieUtils.clearRefreshCookie(httpResponse);
+            if (isAdmin) {
+                cookieUtils.clearRefreshCookie(httpResponse, true);
+            } else {
+                cookieUtils.clearRefreshCookie(httpResponse);
+            }
             throw new BusinessException("RefreshToken 无效或已吊销，请重新登录");
         }
 
@@ -185,12 +208,13 @@ public class AuthController {
         String newAccessToken = jwtUtils.generateAccessToken(username);
         String newRefreshToken = jwtUtils.generateRefreshToken(username);
 
-        // 更新 Cookie（浏览器客户端）
-        cookieUtils.addRefreshCookie(httpResponse, newRefreshToken);
+        // 更新对应端的 Cookie（浏览器客户端）
+        cookieUtils.addRefreshCookie(httpResponse, newRefreshToken, isAdmin);
 
         Map<String, Object> response = new HashMap<>();
         response.put("accessToken", newAccessToken);
         response.put("refreshToken", newRefreshToken);
+        response.put("username", username);
         return Result.success("刷新成功", response);
     }
 
@@ -207,9 +231,36 @@ public class AuthController {
                 jwtUtils.revokeAllRefreshTokens(username);
             }
         }
-        // 清除 refresh Cookie
-        cookieUtils.clearRefreshCookie(httpResponse);
+        // 清除 refresh Cookie（按端清除；登出请求头缺失时两个都清）
+        if (isAdminClient(httpRequest)) {
+            cookieUtils.clearRefreshCookie(httpResponse, true);
+        } else if (httpRequest.getHeader("X-Client-Type") != null) {
+            cookieUtils.clearRefreshCookie(httpResponse, false);
+        } else {
+            cookieUtils.clearRefreshCookie(httpResponse, false);
+            cookieUtils.clearRefreshCookie(httpResponse, true);
+        }
         return Result.success("退出成功", null);
+    }
+
+    /**
+     * 判断是否为后台管理端请求（X-Client-Type: admin）
+     */
+    private boolean isAdminClient(HttpServletRequest request) {
+        return "admin".equalsIgnoreCase(request.getHeader("X-Client-Type"));
+    }
+
+    /**
+     * 判断 refresh token 对应账号是否为 admin 角色（用于旧版 Cookie 平滑迁移）
+     */
+    private boolean isAdminUsername(String refreshToken) {
+        try {
+            String username = jwtUtils.getUsernameFromToken(refreshToken);
+            User user = userService.lambdaQuery().eq(User::getUsername, username).one();
+            return user != null && "admin".equals(user.getRole());
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**

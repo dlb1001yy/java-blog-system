@@ -5,7 +5,9 @@ import { signRequest } from './signing'
 
 const request = axios.create({
   baseURL: '/api',
-  timeout: 15000
+  timeout: 15000,
+  // 声明后台管理端身份：后端据此写入/读取独立的 admin_refresh_token Cookie，避免与前台账号串号
+  headers: { 'X-Client-Type': 'admin' }
 })
 
 // 请求拦截器：自动附加 access token + 请求签名
