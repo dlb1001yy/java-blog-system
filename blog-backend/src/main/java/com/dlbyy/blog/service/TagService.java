@@ -21,4 +21,11 @@ public interface TagService extends IService<Tag> {
      * @param tagIds 待删除标签 id 集合
      */
     void checkBeforeDelete(List<Long> tagIds);
+
+    /**
+     * 删除文章-标签关联记录（文章删除时同步清理，避免孤儿关联导致标签无法删除）
+     *
+     * @param articleIds 已删除的文章 id 集合
+     */
+    void removeRelationsByArticleIds(List<Long> articleIds);
 }

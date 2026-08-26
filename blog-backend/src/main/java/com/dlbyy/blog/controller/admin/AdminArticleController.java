@@ -137,6 +137,8 @@ public class AdminArticleController {
     @Operation(summary = "删除文章")
     public Result<?> delete(@PathVariable Long id) {
         articleService.removeById(id);
+        // 同步清理文章-标签关联，避免孤儿关联导致标签无法删除
+        tagService.removeRelationsByArticleIds(List.of(id));
 
         // 发布文章删除事件，异步删除 Elasticsearch 中的对应文档
         eventPublisher.publishEvent(new ArticlePublishedEvent(this, id, ArticlePublishedEvent.EventType.DELETED));
@@ -153,6 +155,8 @@ public class AdminArticleController {
             // 发布文章删除事件，异步删除 Elasticsearch 中的对应文档
             eventPublisher.publishEvent(new ArticlePublishedEvent(this, id, ArticlePublishedEvent.EventType.DELETED));
         }
+        // 同步清理文章-标签关联，避免孤儿关联导致标签无法删除
+        tagService.removeRelationsByArticleIds(batchIds.getIds());
         return Result.success("批量删除成功", null);
     }
 
