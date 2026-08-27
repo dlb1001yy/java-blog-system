@@ -144,6 +144,7 @@
           <!-- Monaco 编辑器：加载失败或超时回退 textarea -->
           <vue-monaco-editor
             v-if="monacoReady"
+            height="360px"
             :value="textAnswer"
             :language="codeLang"
             theme="vs-dark"
@@ -688,7 +689,6 @@ onBeforeUnmount(cleanup)
 }
 
 .code-editor {
-  height: 360px;
   border-radius: 6px;
   overflow: hidden;
   border: 1px solid var(--border-color, #e4e7ed);
