@@ -8,7 +8,8 @@ import lombok.Data;
 @Data
 public class ExamPortalQuestionDTO {
 
-    private Long id;
+    /** 题目ID */
+    private Long questionId;
 
     /** 题干 */
     private String stem;
@@ -35,11 +36,11 @@ public class ExamPortalQuestionDTO {
     /**
      * 门户接口不含 correct / reference_answer 字段（服务端置空，不返回）
      */
-    public static ExamPortalQuestionDTO of(Long id, String stem, Integer type, Long categoryId, String categoryName,
+    public static ExamPortalQuestionDTO of(Long questionId, String stem, Integer type, Long categoryId, String categoryName,
                                            String difficulty, String options,
                                            java.math.BigDecimal score, Integer sortOrder) {
         ExamPortalQuestionDTO dto = new ExamPortalQuestionDTO();
-        dto.setId(id);
+        dto.setQuestionId(questionId);
         dto.setStem(stem);
         dto.setType(type);
         dto.setCategoryId(categoryId);
