@@ -291,12 +291,23 @@ const toggleMark = () => {
   markedSet.value = s
 }
 
+const parseOptions = (opt) => {
+  if (Array.isArray(opt)) return opt
+  if (typeof opt === 'string' && opt.trim()) {
+    try {
+      const v = JSON.parse(opt)
+      if (Array.isArray(v)) return v
+    } catch { /* ignore */ }
+  }
+  return []
+}
+
 // 加载试卷
 const loadPaper = async () => {
   loading.value = true
   try {
     const res = await examApi.getPaperQuestions(route.params.paperId)
-    questions.value = res.data || []
+    questions.value = (res.data || []).map(q => ({ ...q, options: parseOptions(q.options) }))
     if (res.data?.title) paperTitle.value = res.data.title
   } finally {
     loading.value = false
