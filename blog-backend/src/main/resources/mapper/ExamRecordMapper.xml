@@ -7,7 +7,7 @@
     <select id="selectPendingPage" resultType="com.dlbyy.blog.entity.ExamRecord">
         SELECT
             r.*,
-            u.nickname  AS user_name,
+            COALESCE(NULLIF(u.nickname, ''), u.username) AS user_name,
             p.title     AS paper_title,
             (SELECT COUNT(*) FROM exam_marking m
               WHERE m.record_id = r.id AND m.is_deleted = 0 AND m.status = 0) AS subjective_count

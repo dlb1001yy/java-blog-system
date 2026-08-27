@@ -28,7 +28,7 @@
               <span>客观题 {{ row.objectiveScore ?? 0 }} 分</span>
               <span>
                 <el-tag v-if="row.cheatFlag === 1" type="danger" size="small" effect="dark" class="cheat-tag">作弊嫌疑</el-tag>
-                {{ row.submitTime }}
+                {{ formatTime(row.submitTime) }}
               </span>
             </div>
           </div>
@@ -59,47 +59,88 @@
           </div>
 
           <div class="marking-body" v-loading="detailLoading">
-            <div v-for="(item, index) in subjectiveItems" :key="item.questionId" class="question-card">
-              <div class="question-card__head">
-                <el-tag :type="item.type === 6 ? 'danger' : 'primary'" size="small">
-                  {{ item.type === 6 ? '编程题' : '简答题' }}
-                </el-tag>
-                <span v-if="item.category" class="question-category">{{ item.category }}</span>
-                <span class="question-full">共 {{ item.score }} 分</span>
-              </div>
-              <pre class="question-stem">{{ item.stem }}</pre>
+            <div v-for="(item, index) in allItems" :key="item.questionId" class="question-card">
+              <!-- 客观题：只读参考卡片（已自动判分） -->
+              <template v-if="item.type <= 4">
+                <div class="question-card__head">
+                  <el-tag :type="typeTagType(item.type)" size="small">{{ typeLabel(item.type) }}</el-tag>
+                  <span v-if="item.categoryName" class="question-category">{{ item.categoryName }}</span>
+                  <span class="question-full">{{ item.gotScore ?? 0 }} / {{ item.score }} 分</span>
+                  <el-tag size="small" :type="item.correct ? 'success' : 'danger'">
+                    {{ item.correct ? '正确' : '错误' }}
+                  </el-tag>
+                </div>
+                <pre class="question-stem">{{ item.stem }}</pre>
 
-              <div class="answer-block">
-                <div class="answer-block__label">考生答案</div>
-                <pre class="answer-block__content">{{ formatAnswer(item.myAnswer) }}</pre>
-              </div>
+                <ul v-if="parseOptions(item.options).length" class="option-list">
+                  <li
+                    v-for="(opt, oi) in parseOptions(item.options)"
+                    :key="oi"
+                    :class="{
+                      'is-my': optionIndexes(item.myAnswer).includes(oi),
+                      'is-correct': optionIndexes(item.correctAnswer).includes(oi),
+                      'is-wrong-pick': optionIndexes(item.myAnswer).includes(oi) && !optionIndexes(item.correctAnswer).includes(oi)
+                    }"
+                  >
+                    <span class="option-letter">{{ letter(oi) }}.</span>
+                    <span class="option-text">{{ opt }}</span>
+                  </li>
+                </ul>
 
-              <div class="answer-block answer-block--ref">
-                <div class="answer-block__label">参考答案</div>
-                <pre class="answer-block__content">{{ item.referenceAnswer || '（无）' }}</pre>
-              </div>
+                <div class="answer-block">
+                  <div class="answer-block__label">考生答案</div>
+                  <pre class="answer-block__content">{{ formatObjectiveAnswer(item, item.myAnswer) }}</pre>
+                </div>
 
-              <div class="score-row">
-                <span class="score-row__label">评分</span>
-                <el-input-number
-                  v-model="markForms[item.questionId].score"
-                  :min="0"
-                  :max="Number(item.score)"
-                  :step="0.5"
-                  :precision="1"
-                />
-                <span class="score-row__label">评语</span>
-                <el-input
-                  v-model="markForms[item.questionId].comment"
-                  type="textarea"
-                  :rows="2"
-                  placeholder="填写评语（可选）"
-                  resize="vertical"
-                  class="score-row__comment"
-                />
-              </div>
+                <div class="answer-block answer-block--ref">
+                  <div class="answer-block__label">正确答案</div>
+                  <pre class="answer-block__content">{{ formatObjectiveAnswer(item, item.correctAnswer) }}</pre>
+                </div>
+              </template>
+
+              <!-- 主观题：评分卡片 -->
+              <template v-else>
+                <div class="question-card__head">
+                  <el-tag :type="item.type === 6 ? 'danger' : 'primary'" size="small">
+                    {{ item.type === 6 ? '编程题' : '简答题' }}
+                  </el-tag>
+                  <span v-if="item.categoryName" class="question-category">{{ item.categoryName }}</span>
+                  <span class="question-full">共 {{ item.score }} 分</span>
+                </div>
+                <pre class="question-stem">{{ item.stem }}</pre>
+
+                <div class="answer-block">
+                  <div class="answer-block__label">考生答案</div>
+                  <pre class="answer-block__content">{{ formatAnswer(item.myAnswer) }}</pre>
+                </div>
+
+                <div class="answer-block answer-block--ref">
+                  <div class="answer-block__label">参考答案</div>
+                  <pre class="answer-block__content">{{ item.referenceAnswer || '（无）' }}</pre>
+                </div>
+
+                <div class="score-row">
+                  <span class="score-row__label">评分</span>
+                  <el-input-number
+                    v-model="markForms[item.questionId].score"
+                    :min="0"
+                    :max="Number(item.score)"
+                    :step="0.5"
+                    :precision="1"
+                  />
+                  <span class="score-row__label">评语</span>
+                  <el-input
+                    v-model="markForms[item.questionId].comment"
+                    type="textarea"
+                    :rows="2"
+                    placeholder="填写评语（可选）"
+                    resize="vertical"
+                    class="score-row__comment"
+                  />
+                </div>
+              </template>
             </div>
-            <el-empty v-if="!detailLoading && !subjectiveItems.length" description="该试卷无主观题" />
+            <el-empty v-if="!detailLoading && !allItems.length" description="该试卷无题目" />
           </div>
 
           <div class="action-bar">
@@ -139,6 +180,59 @@ const markForms = reactive({})
 const subjectiveItems = computed(() =>
   (detail.value?.items || []).filter(item => item.type === 5 || item.type === 6)
 )
+
+const allItems = computed(() => detail.value?.items || [])
+
+const TYPE_MAP = { 1: '单选题', 2: '多选题', 3: '判断题', 4: '填空题', 5: '简答题', 6: '编程题' }
+const typeLabel = (t) => TYPE_MAP[t] || '未知'
+const typeTagType = (t) => ({ 1: 'primary', 2: 'primary', 3: 'info', 4: 'warning' }[t] || 'info')
+
+const letter = (i) => String.fromCharCode(65 + i)
+
+// 选项 JSON 字符串安全解析为数组
+const parseOptions = (opt) => {
+  if (Array.isArray(opt)) return opt
+  if (typeof opt === 'string' && opt.trim()) {
+    try {
+      const v = JSON.parse(opt)
+      if (Array.isArray(v)) return v
+    } catch { /* ignore */ }
+  }
+  return []
+}
+
+// 答案（索引/索引数组 JSON）→ 选项索引集合，供选项高亮
+const optionIndexes = (val) => {
+  if (val == null) return []
+  let parsed = val
+  if (typeof val === 'string') {
+    try { parsed = JSON.parse(val) } catch { return [] }
+  }
+  const list = Array.isArray(parsed) ? parsed : [parsed]
+  const set = []
+  for (const v of list) {
+    const n = Number(v)
+    if (Number.isInteger(n) && n >= 0) set.push(n)
+  }
+  return set
+}
+
+const formatTime = (t) => (t ? String(t).replace('T', ' ').slice(0, 19) : '')
+
+// 客观题答案可读化：选择题索引→字母，判断索引→对/错，其余沿用 formatAnswer
+const formatObjectiveAnswer = (item, val) => {
+  if (item.type === 1 || item.type === 2) {
+    const idxes = optionIndexes(val)
+    if (idxes.length) return idxes.map(i => letter(i)).join('、')
+    return formatAnswer(val)
+  }
+  if (item.type === 3) {
+    const idxes = optionIndexes(val)
+    if (idxes.length) return idxes.map(i => (parseOptions(item.options)[i] ?? letter(i))).join('、')
+    return formatAnswer(val)
+  }
+  return formatAnswer(val)
+}
 
 const fetchPending = async () => {
   listLoading.value = true
@@ -382,6 +476,48 @@ onMounted(() => fetchPending())
   word-break: break-word;
   font-family: inherit;
   line-height: 1.6;
+}
+
+/* 客观题选项列表 */
+.option-list {
+  list-style: none;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.option-list li {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  line-height: 1.6;
+}
+
+.option-letter { font-weight: 600; flex-shrink: 0; }
+
+/* 考生所选且正确：绿色 */
+.option-list li.is-my.is-correct {
+  border-color: var(--el-color-success, #67c23a);
+  background: var(--el-color-success-light-9, #f0f9eb);
+  color: var(--el-color-success, #67c23a);
+}
+
+/* 考生所选但错误：红色 */
+.option-list li.is-wrong-pick {
+  border-color: var(--el-color-danger, #f56c6c);
+  background: var(--el-color-danger-light-9, #fef0f0);
+  color: var(--el-color-danger, #f56c6c);
+}
+
+/* 未选的正确答案：绿色虚线提示 */
+.option-list li.is-correct:not(.is-my) {
+  border-color: var(--el-color-success-light-5, #b3e19d);
+  border-style: dashed;
+  color: var(--el-color-success, #67c23a);
 }
 
 .answer-block { margin-bottom: var(--space-3); }
