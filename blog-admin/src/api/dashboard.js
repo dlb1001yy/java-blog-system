@@ -5,6 +5,16 @@ export default {
   getStats() {
     return request.get('/admin/dashboard/stats')
   },
+
+  // 获取平台概览统计
+  getOverview() {
+    return request.get('/admin/dashboard/overview')
+  },
+
+  // 获取各模块内容数量分布
+  getModuleStats() {
+    return request.get('/admin/dashboard/module-stats')
+  },
   
   // 获取文章发布趋势
   getArticleTrend() {

@@ -15,8 +15,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @RestController
@@ -29,6 +33,14 @@ public class AdminDashboardController {
     private final MessageService messageService;
     private final CategoryService categoryService;
     private final ExamService examService;
+    private final InterviewQuestionService interviewQuestionService;
+    private final ExamQuestionService examQuestionService;
+    private final ExamPaperService examPaperService;
+    private final ResumeInfoService resumeInfoService;
+    private final MusicSongService musicSongService;
+    private final UserService userService;
+    private final LinkService linkService;
+    private final TagService tagService;
     private final OperationLogMapper operationLogMapper;
     private final SchemaMapper schemaMapper;
     private final RedisUtils redisUtils;
@@ -73,6 +85,137 @@ public class AdminDashboardController {
                 new LambdaQueryWrapper<Article>().ge(Article::getCreateTime, todayStart)));
         
         return Result.success(stats);
+    }
+
+    @GetMapping("/overview")
+    public Result<?> overview() {
+        Map<String, Object> overview = new HashMap<>();
+
+        // 文章总数
+        overview.put("articleCount", articleService.count());
+
+        // 已发布文章数
+        overview.put("publishedCount", articleService.count(
+                new LambdaQueryWrapper<Article>().eq(Article::getIsPublish, 1)));
+
+        // 评论总数
+        overview.put("commentCount", commentService.count());
+
+        // 待审核评论
+        overview.put("pendingCommentCount", commentService.count(
+                new LambdaQueryWrapper<Comment>().eq(Comment::getStatus, 0)));
+
+        // 留言总数
+        overview.put("messageCount", messageService.count());
+
+        // 待审核留言
+        overview.put("pendingMessageCount", messageService.count(
+                new LambdaQueryWrapper<Message>().eq(Message::getStatus, 0)));
+
+        // 面试题总数
+        overview.put("interviewQuestionCount", interviewQuestionService.count());
+
+        // 试题总数
+        overview.put("examQuestionCount", examQuestionService.count());
+
+        // 试卷总数
+        overview.put("examPaperCount", examPaperService.count());
+
+        // 待阅卷数
+        overview.put("pendingMarkingCount", examService.countPendingMarking());
+
+        // 用户总数
+        overview.put("userCount", userService.count());
+
+        // 简历总数
+        overview.put("resumeCount", resumeInfoService.count());
+
+        // 音乐总数
+        overview.put("musicCount", musicSongService.count());
+
+        // 分类总数
+        overview.put("categoryCount", categoryService.count());
+
+        // 标签总数
+        overview.put("tagCount", tagService.count());
+
+        // 友链总数
+        overview.put("linkCount", linkService.count());
+
+        // 总浏览量与总点赞数
+        List<Article> articles = articleService.list();
+        int totalViews = articles.stream().mapToInt(Article::getViewCount).sum();
+        int totalLikes = articles.stream().mapToInt(Article::getLikeCount).sum();
+        overview.put("totalViews", totalViews);
+        overview.put("totalLikes", totalLikes);
+
+        // 今日新增文章
+        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+        overview.put("todayArticleCount", articleService.count(
+                new LambdaQueryWrapper<Article>().ge(Article::getCreateTime, todayStart)));
+
+        return Result.success(overview);
+    }
+
+    @GetMapping("/module-stats")
+    public Result<List<Map<String, Object>>> moduleStats() {
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        // 文章
+        Map<String, Object> article = new HashMap<>();
+        article.put("name", "文章");
+        article.put("value", articleService.count());
+        result.add(article);
+
+        // 面试题
+        Map<String, Object> interviewQuestion = new HashMap<>();
+        interviewQuestion.put("name", "面试题");
+        interviewQuestion.put("value", interviewQuestionService.count());
+        result.add(interviewQuestion);
+
+        // 试题
+        Map<String, Object> examQuestion = new HashMap<>();
+        examQuestion.put("name", "试题");
+        examQuestion.put("value", examQuestionService.count());
+        result.add(examQuestion);
+
+        // 试卷
+        Map<String, Object> examPaper = new HashMap<>();
+        examPaper.put("name", "试卷");
+        examPaper.put("value", examPaperService.count());
+        result.add(examPaper);
+
+        // 简历
+        Map<String, Object> resume = new HashMap<>();
+        resume.put("name", "简历");
+        resume.put("value", resumeInfoService.count());
+        result.add(resume);
+
+        // 音乐
+        Map<String, Object> music = new HashMap<>();
+        music.put("name", "音乐");
+        music.put("value", musicSongService.count());
+        result.add(music);
+
+        // 友链
+        Map<String, Object> link = new HashMap<>();
+        link.put("name", "友链");
+        link.put("value", linkService.count());
+        result.add(link);
+
+        // 留言
+        Map<String, Object> message = new HashMap<>();
+        message.put("name", "留言");
+        message.put("value", messageService.count());
+        result.add(message);
+
+        // 评论
+        Map<String, Object> comment = new HashMap<>();
+        comment.put("name", "评论");
+        comment.put("value", commentService.count());
+        result.add(comment);
+
+        return Result.success(result);
     }
 
     @GetMapping("/article-trend")
@@ -140,6 +283,9 @@ public class AdminDashboardController {
                 new LambdaQueryWrapper<Message>().eq(Message::getStatus, 0)));
         // 待阅卷数
         todo.put("pendingMarkingCount", examService.countPendingMarking());
+        // 待审核简历数
+        todo.put("pendingResumeCount", resumeInfoService.count(
+                new LambdaQueryWrapper<ResumeInfo>().eq(ResumeInfo::getStatus, 0)));
         return Result.success(todo);
     }
 
@@ -196,6 +342,36 @@ public class AdminDashboardController {
         jvm.put("totalMemory", runtime.totalMemory());
         jvm.put("freeMemory", runtime.freeMemory());
         status.put("jvm", jvm);
+
+        // 运行时长
+        status.put("uptime", System.currentTimeMillis()
+                - ManagementFactory.getRuntimeMXBean().getStartTime());
+
+        // JDK 版本
+        status.put("jdkVersion", System.getProperty("java.version"));
+
+        // 操作系统
+        status.put("osName", System.getProperty("os.name"));
+        status.put("osVersion", System.getProperty("os.version"));
+
+        // 应用版本
+        String appVersion = getClass().getPackage().getImplementationVersion();
+        status.put("appVersion", appVersion != null ? appVersion : "1.0.0");
+
+        // 构建时间：取运行 jar/目录的最后修改时间
+        String buildTime = "--";
+        try {
+            File codeSource = new File(getClass().getProtectionDomain()
+                    .getCodeSource().getLocation().toURI());
+            LocalDateTime lastModified = LocalDateTime.ofInstant(
+                    Instant.ofEpochMilli(codeSource.lastModified()),
+                    ZoneId.systemDefault());
+            buildTime = lastModified.format(
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        } catch (Exception e) {
+            buildTime = "--";
+        }
+        status.put("buildTime", buildTime);
 
         return Result.success(status);
     }

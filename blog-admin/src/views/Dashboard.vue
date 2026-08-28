@@ -1,5 +1,40 @@
 <template>
   <div class="dashboard">
+    <!-- 平台概览欢迎区块 -->
+    <div class="hero-card">
+      <div class="hero-main">
+        <p class="hero-date">{{ todayText }}</p>
+        <h2 class="hero-greeting">{{ greeting }}，{{ userStore.username || '管理员' }}</h2>
+        <div class="hero-brand">
+          <h1 class="hero-title">Java码农笔记</h1>
+          <p class="hero-slogan">Java 技术学习分享一体化平台 · 集成 博客 · 面试题库 · 在线考试 · 音乐 · 简历 五大模块</p>
+          <p class="hero-desc">记录 Java 学习之路，分享技术心得，提供在线刷题、组卷考试与简历制作能力</p>
+        </div>
+      </div>
+      <div class="hero-chips">
+        <div class="chip-group">
+          <span class="chip-group-label">内容管理</span>
+          <span class="chip" @click="router.push('/article')">文章管理</span>
+          <span class="chip" @click="router.push('/interview-questions')">面试题管理</span>
+          <span class="chip" @click="router.push('/music')">音乐管理</span>
+        </div>
+        <span class="chip-divider"></span>
+        <div class="chip-group">
+          <span class="chip-group-label">考试管理</span>
+          <span class="chip" @click="router.push('/exam-questions')">题库</span>
+          <span class="chip" @click="router.push('/exam-papers')">试卷</span>
+          <span class="chip" @click="router.push('/marking')">阅卷中心</span>
+        </div>
+        <span class="chip-divider"></span>
+        <div class="chip-group">
+          <span class="chip-group-label">系统管理</span>
+          <span class="chip" @click="router.push('/comment')">评论</span>
+          <span class="chip" @click="router.push('/users')">用户</span>
+          <span class="chip" @click="router.push('/operation-log')">操作日志</span>
+        </div>
+      </div>
+    </div>
+
     <!-- 统计卡片 -->
     <el-row :gutter="20" class="stat-row">
       <el-col :xs="12" :sm="6">
@@ -21,6 +56,7 @@
           <div class="stat-info">
             <p class="stat-label">总浏览量</p>
             <p class="stat-value">{{ stats.totalViews || 0 }}</p>
+            <p class="stat-sub">已发布 {{ stats.publishedCount || 0 }} 篇</p>
           </div>
         </div>
       </el-col>
@@ -38,11 +74,57 @@
       <el-col :xs="12" :sm="6">
         <div class="stat-card stat-card--danger">
           <div class="stat-icon">
-            <el-icon :size="28"><Star /></el-icon>
+            <el-icon :size="28"><Message /></el-icon>
           </div>
           <div class="stat-info">
-            <p class="stat-label">总点赞数</p>
-            <p class="stat-value">{{ stats.totalLikes || 0 }}</p>
+            <p class="stat-label">留言总数</p>
+            <p class="stat-value">{{ stats.messageCount || 0 }}</p>
+          </div>
+        </div>
+      </el-col>
+    </el-row>
+    <el-row :gutter="20" class="stat-row">
+      <el-col :xs="12" :sm="6">
+        <div class="stat-card stat-card--info">
+          <div class="stat-icon">
+            <el-icon :size="28"><Notebook /></el-icon>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">面试题总数</p>
+            <p class="stat-value">{{ stats.interviewQuestionCount || 0 }}</p>
+          </div>
+        </div>
+      </el-col>
+      <el-col :xs="12" :sm="6">
+        <div class="stat-card stat-card--violet">
+          <div class="stat-icon">
+            <el-icon :size="28"><Collection /></el-icon>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">试题总数</p>
+            <p class="stat-value">{{ stats.examQuestionCount || 0 }}</p>
+          </div>
+        </div>
+      </el-col>
+      <el-col :xs="12" :sm="6">
+        <div class="stat-card stat-card--red">
+          <div class="stat-icon">
+            <el-icon :size="28"><EditPen /></el-icon>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">待阅卷数</p>
+            <p class="stat-value">{{ stats.pendingMarkingCount || 0 }}</p>
+          </div>
+        </div>
+      </el-col>
+      <el-col :xs="12" :sm="6">
+        <div class="stat-card stat-card--teal-dark">
+          <div class="stat-icon">
+            <el-icon :size="28"><UserFilled /></el-icon>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">注册用户数</p>
+            <p class="stat-value">{{ stats.userCount || 0 }}</p>
           </div>
         </div>
       </el-col>
@@ -61,9 +143,9 @@
       <el-col :xs="24" :lg="8">
         <div class="chart-card">
           <div class="chart-header">
-            <span class="chart-title">文章类型分布</span>
+            <span class="chart-title">模块内容分布</span>
           </div>
-          <div ref="typeChartRef" style="height: 320px;"></div>
+          <div ref="moduleChartRef" style="height: 320px;"></div>
         </div>
       </el-col>
     </el-row>
@@ -102,6 +184,11 @@
               <el-icon><EditPen /></el-icon>
               <span class="todo-text">待阅卷</span>
               <el-badge :value="todo.pendingMarkingCount || 0" :max="99" />
+            </div>
+            <div class="todo-item" @click="$router.push('/resumeManage')">
+              <el-icon><Tickets /></el-icon>
+              <span class="todo-text">待审核简历</span>
+              <el-badge :value="todo.pendingResumeCount || 0" :max="99" />
             </div>
             <div class="todo-item">
               <el-icon><Calendar /></el-icon>
@@ -161,6 +248,27 @@
               <span class="status-name">JVM 内存</span>
               <span class="status-value">{{ jvmText }}</span>
             </div>
+            <div class="status-sub-title">服务信息</div>
+            <div class="status-item">
+              <span class="status-dot is-neutral"></span>
+              <span class="status-name">运行时长</span>
+              <span class="status-value">{{ uptimeText }}</span>
+            </div>
+            <div class="status-item">
+              <span class="status-dot is-neutral"></span>
+              <span class="status-name">JDK 版本</span>
+              <span class="status-value">{{ systemStatus.jdkVersion || '--' }}</span>
+            </div>
+            <div class="status-item">
+              <span class="status-dot is-neutral"></span>
+              <span class="status-name">操作系统</span>
+              <span class="status-value">{{ osText }}</span>
+            </div>
+            <div class="status-item">
+              <span class="status-dot is-neutral"></span>
+              <span class="status-name">后端版本</span>
+              <span class="status-value">{{ appVersionText }}</span>
+            </div>
           </div>
         </div>
       </el-col>
@@ -170,27 +278,33 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import * as echarts from 'echarts'
 import {
-  Document, View, ChatDotRound, Star, Message, Calendar, EditPen
+  Document, View, ChatDotRound, Message, Calendar, EditPen,
+  Notebook, Collection, UserFilled, Tickets
 } from '@element-plus/icons-vue'
 import { useAppStore } from '@/stores/app'
+import { useUserStore } from '@/stores/user'
 import dashboardApi from '@/api/dashboard'
+
+const router = useRouter()
+const userStore = useUserStore()
 
 const stats = reactive({})
 const trendChartRef = ref()
-const typeChartRef = ref()
+const moduleChartRef = ref()
 const categoryChartRef = ref()
 
 let trendChart = null
-let typeChart = null
+let moduleChart = null
 let categoryChart = null
 
 const appStore = useAppStore()
 
 // 缓存图表数据，主题切换时直接用缓存重建 option，无需重新请求接口
 const trendData = ref([])
-const typeData = ref({})
+const moduleData = ref([])
 const categoryData = ref([])
 
 // 从 CSS 变量读取主题感知颜色（html 上的 dark 类切换后变量值随之变化）
@@ -203,12 +317,32 @@ const getThemeColors = () => {
   }
 }
 
-const fetchStats = async () => {
-  const res = await dashboardApi.getStats()
-  Object.assign(stats, res.data)
+// 欢迎区问候语与日期
+const greeting = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 9) return '早上好'
+  if (hour < 12) return '上午好'
+  if (hour < 18) return '下午好'
+  return '晚上好'
+})
+
+const todayText = computed(() => {
+  const now = new Date()
+  const date = now.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })
+  const week = now.toLocaleDateString('zh-CN', { weekday: 'long' })
+  return `${date} ${week}`
+})
+
+const fetchOverview = async () => {
+  try {
+    const res = await dashboardApi.getOverview()
+    Object.assign(stats, res.data || {})
+  } catch {
+    // 概览拉取失败时保持空对象，卡片显示 0，不阻塞看板渲染
+  }
 }
 
-// 待办事项（含待阅卷数）
+// 待办事项（含待阅卷数、待审核简历数）
 const todo = reactive({})
 
 const fetchTodo = async () => {
@@ -266,9 +400,39 @@ const jvmDotClass = computed(() => {
   return used / jvm.maxMemory > 0.9 ? 'is-down' : 'is-up'
 })
 
+// 运行时长：毫秒格式化为 "X天 X小时 X分"
+const uptimeText = computed(() => {
+  const ms = Number(systemStatus.uptime)
+  if (!ms || ms <= 0) return '--'
+  const minutes = Math.floor(ms / 60000)
+  const days = Math.floor(minutes / 1440)
+  const hours = Math.floor((minutes % 1440) / 60)
+  const mins = minutes % 60
+  if (days > 0) return `${days}天 ${hours}小时 ${mins}分`
+  if (hours > 0) return `${hours}小时 ${mins}分`
+  return `${mins}分`
+})
+
+const osText = computed(() => {
+  const { osName, osVersion } = systemStatus
+  if (!osName && !osVersion) return '--'
+  return `${osName || ''} ${osVersion || ''}`.trim()
+})
+
+const appVersionText = computed(() => {
+  const { appVersion, buildTime } = systemStatus
+  if (!appVersion && !buildTime) return '--'
+  if (!buildTime) return appVersion
+  return `${appVersion || '--'} · ${buildTime}`
+})
+
 const fetchSystemStatus = async () => {
-  const res = await dashboardApi.getSystemStatus()
-  Object.assign(systemStatus, res.data || {})
+  try {
+    const res = await dashboardApi.getSystemStatus()
+    Object.assign(systemStatus, res.data || {})
+  } catch {
+    // 状态拉取失败时展示 '--'，不让卡片报错
+  }
 }
 
 // 构建趋势图配置：轴线/网格线/文字颜色跟随主题，品牌绿渐变保持不变
@@ -314,34 +478,51 @@ const fetchTrend = async () => {
   trendChart.setOption(buildTrendOption(trendData.value))
 }
 
-// 构建类型分布饼图配置：图例文字颜色跟随主题，饼图系列色保持不变
-const buildTypeOption = (data) => {
+// 模块内容分布色板（品牌色系）
+const MODULE_COLORS = ['#059669', '#10B981', '#F59E0B', '#0D9488', '#EC4899', '#8B5CF6', '#2DD4BF', '#F472B6', '#34D399']
+
+// 构建模块分布环形饼图配置：图例文字颜色跟随主题，系列色固定为品牌色板
+const buildModuleOption = (data) => {
   const colors = getThemeColors()
+  const total = data.reduce((sum, item) => sum + (Number(item.value) || 0), 0)
   return {
-    tooltip: { trigger: 'item' },
+    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
     legend: { bottom: 0, textStyle: { color: colors.label } },
+    title: {
+      text: '内容总量',
+      subtext: String(total),
+      left: 'center',
+      top: '38%',
+      textStyle: { color: colors.label, fontSize: 14, fontWeight: 600 },
+      subtextStyle: { color: colors.axisLine, fontSize: 18, fontWeight: 700 }
+    },
+    color: MODULE_COLORS,
     series: [{
       type: 'pie',
-      radius: ['40%', '70%'],
+      radius: ['45%', '70%'],
+      center: ['50%', '44%'],
       avoidLabelOverlap: false,
       label: { show: false },
-      emphasis: { label: { show: true, fontSize: 18, fontWeight: 'bold' } },
-      data: [
-        { value: data.original, name: '原创', itemStyle: { color: '#059669' } },
-        { value: data.reproduced, name: '转载', itemStyle: { color: '#F59E0B' } },
-        { value: data.translated, name: '翻译', itemStyle: { color: '#10B981' } }
-      ]
+      emphasis: {
+        scale: true,
+        scaleSize: 6
+      },
+      data: data.map(item => ({ name: item.name, value: Number(item.value) || 0 }))
     }]
   }
 }
 
-const fetchTypeStats = async () => {
-  const res = await dashboardApi.getTypeStats()
-  typeData.value = res.data || {}
+const fetchModuleStats = async () => {
+  try {
+    const res = await dashboardApi.getModuleStats()
+    moduleData.value = res.data || []
+  } catch {
+    moduleData.value = []
+  }
 
   await nextTick()
-  if (!typeChart) typeChart = echarts.init(typeChartRef.value)
-  typeChart.setOption(buildTypeOption(typeData.value))
+  if (moduleChartRef.value && !moduleChart) moduleChart = echarts.init(moduleChartRef.value)
+  moduleChart?.setOption(buildModuleOption(moduleData.value))
 }
 
 // 构建分类柱状图配置：轴标签/网格线颜色跟随主题，绿色渐变保持不变
@@ -387,7 +568,7 @@ const fetchCategoryStats = async () => {
 
 const handleResize = () => {
   trendChart?.resize()
-  typeChart?.resize()
+  moduleChart?.resize()
   categoryChart?.resize()
 }
 
@@ -395,21 +576,21 @@ const handleResize = () => {
 watch(() => appStore.theme, () => {
   nextTick(() => {
     if (trendChart) trendChart.setOption(buildTrendOption(trendData.value))
-    if (typeChart) typeChart.setOption(buildTypeOption(typeData.value))
+    if (moduleChart) moduleChart.setOption(buildModuleOption(moduleData.value))
     if (categoryChart) categoryChart.setOption(buildCategoryOption(categoryData.value))
     handleResize()
   })
 })
 
 onMounted(() => {
-  fetchStats()
+  fetchOverview()
   fetchTodo()
   fetchActivities()
   fetchSystemStatus()
   fetchTrend()
-  fetchTypeStats()
+  fetchModuleStats()
   fetchCategoryStats()
-  
+
   window.addEventListener('resize', handleResize)
 })
 </script>
@@ -417,6 +598,131 @@ onMounted(() => {
 <style scoped>
 .dashboard {
   padding: 0;
+}
+
+.hero-card {
+  position: relative;
+  padding: var(--space-6) var(--space-6) var(--space-5);
+  margin-bottom: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+  box-shadow: var(--shadow-primary);
+  color: #fff;
+  overflow: hidden;
+}
+
+/* 渐变区右上装饰光斑 */
+.hero-card::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -40px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+
+.hero-card::after {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  right: 120px;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.hero-date {
+  position: relative;
+  z-index: 1;
+  font-size: var(--font-sm);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.hero-greeting {
+  position: relative;
+  z-index: 1;
+  margin-top: var(--space-1);
+  font-size: var(--font-xl);
+  font-weight: 700;
+  color: #fff;
+}
+
+.hero-brand {
+  position: relative;
+  z-index: 1;
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.hero-title {
+  font-size: var(--font-2xl);
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+.hero-slogan {
+  margin-top: var(--space-2);
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.hero-desc {
+  margin-top: var(--space-1);
+  font-size: var(--font-sm);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.hero-chips {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.chip-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip-group-label {
+  font-size: var(--font-xs);
+  color: rgba(255, 255, 255, 0.75);
+  margin-right: var(--space-1);
+}
+
+.chip-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.chip {
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.18);
+  font-size: var(--font-sm);
+  color: #fff;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(4px);
+}
+
+.chip:hover {
+  background: rgba(255, 255, 255, 0.32);
+  transform: translateY(-1px);
 }
 
 .stat-row {
@@ -472,6 +778,22 @@ onMounted(() => {
   background: linear-gradient(135deg, #EC4899, #F472B6);
 }
 
+.stat-card--info {
+  background: linear-gradient(135deg, #2563EB, #60A5FA);
+}
+
+.stat-card--violet {
+  background: linear-gradient(135deg, #6D28D9, #A78BFA);
+}
+
+.stat-card--red {
+  background: linear-gradient(135deg, #DC2626, #F87171);
+}
+
+.stat-card--teal-dark {
+  background: linear-gradient(135deg, #134E4A, #0F766E);
+}
+
 .stat-icon {
   position: relative;
   z-index: 1;
@@ -501,6 +823,12 @@ onMounted(() => {
   font-size: var(--font-3xl);
   font-weight: 700;
   color: #fff;
+}
+
+.stat-sub {
+  margin-top: var(--space-1);
+  font-size: var(--font-xs);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .chart-card {
@@ -612,6 +940,19 @@ onMounted(() => {
 .status-dot.is-down {
   background: #EF4444;
   box-shadow: 0 0 4px rgba(239, 68, 68, 0.6);
+}
+
+.status-dot.is-neutral {
+  background: var(--text-secondary);
+  box-shadow: none;
+}
+
+.status-sub-title {
+  margin-top: var(--space-2);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
 }
 
 .status-name {
