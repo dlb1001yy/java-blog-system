@@ -86,11 +86,11 @@ const refreshSelectedTag = (tag) => {
 const openMenu = (tag, e) => {
   selectedTag.value = tag
   const menuMinWidth = 105
-  const offsetLeft = e.clientX
-  const offsetWidth = e.target.offsetWidth
-  const maxLeft = offsetWidth - menuMinWidth
-  menuLeft.value = offsetLeft > maxLeft ? maxLeft : offsetLeft
-  menuTop.value = e.clientY
+  const menuMinHeight = 150 // 4 个菜单项大致高度，防止底部越界
+  const maxLeft = window.innerWidth - menuMinWidth
+  const maxTop = window.innerHeight - menuMinHeight
+  menuLeft.value = e.clientX > maxLeft ? maxLeft : e.clientX
+  menuTop.value = e.clientY > maxTop ? maxTop : e.clientY
   menuVisible.value = true
 }
 
