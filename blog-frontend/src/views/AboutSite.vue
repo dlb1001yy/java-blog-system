@@ -9,8 +9,8 @@
           <p>这是一个专注于Java技术分享的个人博客。在这里，我会记录自己在Java学习之路上的心得体会，分享Spring、数据库、前端技术以及DevOps等方面的知识。</p>
           <h2>联系方式</h2>
           <ul>
-            <li>邮箱: admin@javalog.com</li>
-            <li>GitHub: github.com/javalog</li>
+            <li>邮箱: 1310471544@qq.com</li>
+            <li>Gitee: https://gitee.com/dlbyy/java-blog-system.git</li>
           </ul>
         </div>
       </div>
