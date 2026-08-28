@@ -176,11 +176,11 @@
           <div class="item-answers">
             <div class="answer-line">
               <span class="answer-label">我的答案</span>
-              <span class="answer-value">{{ formatAnswer(item.myAnswer) || '未作答' }}</span>
+              <span class="answer-value">{{ formatAnswer(item.myAnswer, item.type) || '未作答' }}</span>
             </div>
             <div class="answer-line" v-if="item.type <= 4 || detail.status === 1">
               <span class="answer-label">正确答案</span>
-              <div class="answer-value markdown-body correct" v-html="renderMd(formatAnswer(item.type <= 4 ? item.correctAnswer : item.referenceAnswer))"></div>
+              <div class="answer-value markdown-body correct" v-html="renderMd(formatAnswer(item.type <= 4 ? item.correctAnswer : item.referenceAnswer, item.type))"></div>
             </div>
             <div class="answer-line" v-if="item.type <= 4 || detail.status === 1">
               <span class="answer-label">解析</span>
@@ -313,17 +313,35 @@ const formatDuration = (sec) => {
 
 const formatTime = (t) => (t ? String(t).replace('T', ' ').slice(0, 19) : '-')
 
+// 单值 → 展示文本：单选/多选数字索引转字母，判断转对/错
+const toDisplayValue = (v, type) => {
+  if (v === null || v === undefined) return ''
+  if ((type === 1 || type === 2) && typeof v === 'number' && Number.isInteger(v) && v >= 0 && v < 26) {
+    return String.fromCharCode(65 + v)
+  }
+  if (type === 3) {
+    if (typeof v === 'boolean') return v ? '对' : '错'
+    if (typeof v === 'number') return v !== 0 ? '对' : '错'
+    if (typeof v === 'string') {
+      const t = v.trim().toLowerCase()
+      if (['对', '正确', '√', '是', 'true', 't', 'yes', 'y', '1'].includes(t)) return '对'
+      if (['错', '错误', '×', 'x', '否', 'false', 'f', 'no', 'n', '0'].includes(t)) return '错'
+    }
+  }
+  if (typeof v === 'object') return JSON.stringify(v)
+  return String(v)
+}
+
 // 答案格式化：后端为 JSON 字符串（字符串或数组）
-const formatAnswer = (ans) => {
+const formatAnswer = (ans, type) => {
   if (ans === null || ans === undefined || ans === '') return ''
-  if (typeof ans !== 'string') return String(ans)
+  if (typeof ans !== 'string') return toDisplayValue(ans, type)
   try {
     const v = JSON.parse(ans)
-    if (Array.isArray(v)) return v.join('、')
-    if (typeof v === 'object') return JSON.stringify(v)
-    return String(v)
+    if (Array.isArray(v)) return v.map(x => toDisplayValue(x, type)).filter(Boolean).join('、')
+    return toDisplayValue(v, type)
   } catch (_) {
-    return ans
+    return toDisplayValue(ans, type)
   }
 }
 
