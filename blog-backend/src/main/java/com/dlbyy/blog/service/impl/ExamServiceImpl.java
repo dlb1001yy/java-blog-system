@@ -28,6 +28,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -124,8 +126,15 @@ public class ExamServiceImpl implements ExamService {
         examRecordMapper.insert(record);
 
         // 异步判分：客观题判分 + 主观题批改草稿批量插入
+        // 事务提交后才触发，避免异步线程读不到未提交的答卷记录
         Map<Long, Object> rawAnswerMap = answerMap;
-        examJudgeAsyncService.judge(record.getId(), paperId, rawAnswerMap);
+        Long recordId = record.getId();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                examJudgeAsyncService.judge(recordId, paperId, rawAnswerMap);
+            }
+        });
         return record.getId();
     }
 

@@ -11,7 +11,6 @@ import com.dlbyy.blog.mapper.ExamQuestionMapper;
 import com.dlbyy.blog.mapper.ExamRecordMapper;
 import com.dlbyy.blog.utils.JsoupXssUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -101,9 +100,11 @@ public class ExamJudgeAsyncService {
     }
 
     /**
-     * 客观题判分：correct 为 JSON
-     * 1 单选/3 判断：[index]，答案可为数字索引或单元素列表；
+     * 客观题判分：correct 兼容数组与裸标量（历史数据单选存 "0"、判断存 "true"），
+     * 考生答案兼容数字索引与字母（考生端提交 'A'/'B'...、判断题 '对'/'错'）：
+     * 1 单选：双方归一化为索引比较，correct 须仅 1 个元素；
      * 2 多选：[i,j,...] 需与考生答案集合完全一致（顺序无关）；
+     * 3 判断：双方归一化为布尔语义比较（对/错、true/false、√/× 等）；
      * 4 填空：["答案文本", ...]，忽略首尾空格、大小写不敏感，逐空比对全部一致。
      */
     boolean judgeObjective(int type, String correctJson, Object myAnswer) {
@@ -111,19 +112,30 @@ public class ExamJudgeAsyncService {
             return false;
         }
         try {
-            List<Object> correct = OBJECT_MAPPER.readValue(correctJson, new TypeReference<List<Object>>() {});
+            Object parsed = OBJECT_MAPPER.readValue(correctJson, Object.class);
+            List<Object> correct = parsed instanceof List<?> list
+                    ? new ArrayList<>(list)
+                    : List.of(parsed);
             switch (type) {
-                case 1:
-                case 3: {
+                case 1: {
+                    if (correct.size() != 1) {
+                        return false;
+                    }
+                    Integer expect = normalizeToInt(correct.get(0));
                     Integer idx = toIndex(myAnswer);
-                    return idx != null && correct.size() == 1
-                            && idx.equals(Integer.valueOf(String.valueOf(correct.get(0))));
+                    return expect != null && idx != null && expect.equals(idx);
                 }
                 case 2: {
                     Set<Integer> correctSet = correct.stream()
-                            .map(c -> Integer.valueOf(String.valueOf(c))).collect(Collectors.toSet());
+                            .map(this::normalizeToInt).filter(java.util.Objects::nonNull)
+                            .collect(Collectors.toSet());
                     Set<Integer> mySet = toIndexSet(myAnswer);
-                    return !mySet.isEmpty() && mySet.equals(correctSet);
+                    return !mySet.isEmpty() && !correctSet.isEmpty() && mySet.equals(correctSet);
+                }
+                case 3: {
+                    Boolean expect = toBoolean(correct.get(0));
+                    Boolean actual = toBoolean(myAnswer);
+                    return expect != null && actual != null && expect.equals(actual);
                 }
                 case 4: {
                     List<String> myTexts = toStringList(myAnswer);
@@ -147,34 +159,76 @@ public class ExamJudgeAsyncService {
         }
     }
 
+    /** 任意答案值 → 选项索引：数字索引、布尔(1/0)、数字字符串、单字母 A-Z/a-z */
+    private Integer normalizeToInt(Object value) {
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+        if (value instanceof Boolean) {
+            return ((Boolean) value) ? 1 : 0;
+        }
+        if (value instanceof String s) {
+            String t = s.trim();
+            if (t.isEmpty()) {
+                return null;
+            }
+            try {
+                return Integer.valueOf(t);
+            } catch (NumberFormatException ignore) {
+                // fallthrough 字母解析
+            }
+            if (t.length() == 1) {
+                char c = Character.toUpperCase(t.charAt(0));
+                if (c >= 'A' && c <= 'Z') {
+                    return c - 'A';
+                }
+            }
+        }
+        return null;
+    }
+
     /** 考生答案 → 单个选项索引 */
     private Integer toIndex(Object answer) {
-        if (answer instanceof Number) {
-            return ((Number) answer).intValue();
+        if (answer instanceof List<?> list && !list.isEmpty()) {
+            return toIndex(list.get(0));
         }
-        if (answer instanceof List<?> && !((List<?>) answer).isEmpty()) {
-            return toIndex(((List<?>) answer).get(0));
-        }
-        try {
-            return Integer.valueOf(String.valueOf(answer).trim());
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        return normalizeToInt(answer);
     }
 
     /** 考生答案 → 选项索引集合 */
     private Set<Integer> toIndexSet(Object answer) {
         Set<Integer> set = new TreeSet<>();
-        if (answer instanceof List<?>) {
-            ((List<?>) answer).forEach(a -> {
-                Integer idx = toIndex(a);
+        if (answer instanceof List<?> list) {
+            list.forEach(a -> {
+                Integer idx = normalizeToInt(a);
                 if (idx != null) set.add(idx);
             });
         } else {
-            Integer idx = toIndex(answer);
+            Integer idx = normalizeToInt(answer);
             if (idx != null) set.add(idx);
         }
         return set;
+    }
+
+    /** 任意答案值 → 布尔语义：对/错、true/false、√/×、1/0 等；无法识别返回 null */
+    private Boolean toBoolean(Object value) {
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        if (value instanceof Number) {
+            return ((Number) value).intValue() != 0;
+        }
+        if (value instanceof List<?> list && !list.isEmpty()) {
+            return toBoolean(list.get(0));
+        }
+        if (value instanceof String s) {
+            return switch (s.trim().toLowerCase()) {
+                case "对", "正确", "√", "是", "true", "t", "yes", "y", "1" -> Boolean.TRUE;
+                case "错", "错误", "×", "x", "否", "false", "f", "no", "n", "0" -> Boolean.FALSE;
+                default -> null;
+            };
+        }
+        return null;
     }
 
     /** 考生答案 → 字符串列表（填空） */
