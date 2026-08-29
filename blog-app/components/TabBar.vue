@@ -16,13 +16,19 @@
           <path d="M9 20v-6h6v6" />
         </svg>
       </view>
-      <!-- 简历：文档轮廓（保留原 path 数据，描边 1.8） -->
-      <view class="icon" v-else-if="item.icon === 'resume'">
+      <!-- 刷题：书本轮廓（描边 1.8） -->
+      <view class="icon" v-else-if="item.icon === 'book'">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M7 3h7l5 5v13H7z" />
-          <path d="M14 3v5h5" />
-          <path d="M10 13h6" />
-          <path d="M10 17h6" />
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+      </view>
+      <!-- 音乐：音符轮廓（描边 1.8） -->
+      <view class="icon" v-else-if="item.icon === 'music'">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13" />
+          <circle cx="6" cy="18" r="3" />
+          <circle cx="18" cy="16" r="3" />
         </svg>
       </view>
       <!-- 我的：人形轮廓（保留原 path 数据，描边 1.8） -->
@@ -43,9 +49,10 @@ defineProps({
 })
 
 const list = [
-  { path: '/pages/index/index',        text: '首页', icon: 'home' },
-  { path: '/subpkg/pages/resume/index', text: '简历', icon: 'resume' },
-  { path: '/subpkg/pages/mine/index',   text: '我的', icon: 'mine' }
+  { path: '/pages/index/index',                  text: '首页', icon: 'home' },
+  { path: '/subpkg-study/pages/interview/index', text: '刷题', icon: 'book' },
+  { path: '/subpkg-music/pages/index',           text: '音乐', icon: 'music' },
+  { path: '/subpkg/pages/mine/index',            text: '我的', icon: 'mine' }
 ]
 
 const onTap = (item) => {
@@ -94,9 +101,9 @@ const onTap = (item) => {
     line-height: 1;
   }
 
-  /* 激活态：主色 */
+  /* 激活态：主色（跟随页面根节点级联的主题变量） */
   &.active {
-    color: $color-primary;
+    color: var(--app-primary, $color-primary);
   }
 }
 
@@ -109,6 +116,6 @@ const onTap = (item) => {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: $color-primary;
+  background: var(--app-primary, $color-primary);
 }
 </style>

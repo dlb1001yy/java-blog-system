@@ -1,5 +1,5 @@
 // #ifdef H5
-export const BASE_URL = 'http://localhost:8080/api'
+export const BASE_URL = 'http://192.168.244.130:8080/api'
 // #endif
 
 // #ifdef APP-PLUS
@@ -20,8 +20,8 @@ export const IMG_CDN_HOSTS = []
 // 为空时 H5 用当前站点路由（origin + /#/pages/article/detail?id=），App/小程序回退服务器地址（BASE_URL 去 /api）
 export const SITE_URL = ''
 
-// 服务器 origin（去掉 /api 后缀），用于拼接相对路径的文件 URL
-const SERVER_ORIGIN = BASE_URL.replace(/\/api$/, '')
+// 服务器 origin（去掉 /api 后缀），用于拼接相对路径的文件 URL 与分享链接
+export const SERVER_ORIGIN = BASE_URL.replace(/\/api$/, '')
 
 /**
  * 解析文件 URL：相对路径拼接服务器 origin，已是完整 http(s) URL 的原样返回。

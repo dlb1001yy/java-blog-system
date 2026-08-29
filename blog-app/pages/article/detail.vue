@@ -1,5 +1,8 @@
 <template>
   <view :class="['detail-page', isDark ? 'theme-dark' : '']">
+    <!-- 顶部阅读进度条：fixed 顶部，宽度随滚动增长（渐变主色，亮暗主题均可见） -->
+    <view class="reading-progress" :style="{ width: readProgress + '%' }"></view>
+
     <!-- 加载中：详情页骨架 -->
     <Skeleton v-if="!article" type="detail" :count="1" />
 
@@ -60,6 +63,20 @@
             @click="previewImage(i)"
           />
         </template>
+      </view>
+
+      <!-- 上一篇/下一篇导航：无对应文章时置灰显示"没有了"，点击 redirectTo 替换当前页（避免页面栈膨胀，重进 onLoad 自然回顶） -->
+      <view class="card nav-card">
+        <view :class="['nav-row', prevArticle ? '' : 'disabled']" @click="goPrevNext(prevArticle)">
+          <Icon name="chevron-left" :size="18" />
+          <text class="nav-label">上一篇：</text>
+          <text class="nav-title">{{ prevArticle ? prevArticle.title : '没有了' }}</text>
+        </view>
+        <view :class="['nav-row', nextArticle ? '' : 'disabled']" @click="goPrevNext(nextArticle)">
+          <text class="nav-label">下一篇：</text>
+          <text class="nav-title">{{ nextArticle ? nextArticle.title : '没有了' }}</text>
+          <Icon name="chevron-right" :size="18" />
+        </view>
       </view>
 
       <!-- 评论区 -->
@@ -140,8 +157,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { onLoad, onShow } from '@dcloudio/uni-app'
+import { ref, computed, watch, nextTick, getCurrentInstance } from 'vue'
+import { onLoad, onShow, onPageScroll } from '@dcloudio/uni-app'
 import api from '@/common/api.js'
 import { resolveFileUrl } from '@/common/config.js'
 import { optimizeImageUrl } from '@/common/imageUrl.js'
@@ -320,6 +337,54 @@ const submitComment = async () => {
 const goRelated = (id) => {
   uni.navigateTo({ url: `/pages/article/detail?id=${id}` })
 }
+
+// ===== 上一篇/下一篇 =====
+// 详情接口返回的 prev/next（结构 {id, title}，无则为 null；后端未返回时保持 null，UI 置灰显示"没有了"）
+const prevArticle = computed(() => article.value?.prev || null)
+const nextArticle = computed(() => article.value?.next || null)
+
+// 跳转上/下一篇：redirectTo 销毁重建页面，onLoad 重新执行并回顶，避免页面栈膨胀
+const goPrevNext = (item) => {
+  if (!item || !item.id) return
+  uni.redirectTo({ url: `/pages/article/detail?id=${item.id}` })
+}
+
+// ===== 顶部阅读进度条 =====
+// 页面级滚动（无 scroll-view），用 onPageScroll 的 scrollTop 配合 selectorQuery
+// 测量的内容总高（减视口高）计算百分比；测量结果缓存，文章切换时重置重测
+const readProgress = ref(0)
+// 可滚动总距离 = 页面内容总高 - 视口高（px）
+let scrollableHeight = 0
+
+// 测量 .detail-page 内容总高并缓存（文章加载完成后/图片高度变化时重测）
+const measureScrollableHeight = () => {
+  uni.createSelectorQuery()
+    .in(getCurrentInstance().proxy)
+    .select('.detail-page')
+    .boundingClientRect((rect) => {
+      if (rect && rect.height > 0) {
+        scrollableHeight = Math.max(0, rect.height - uni.getSystemInfoSync().windowHeight)
+      }
+    })
+    .exec()
+}
+
+// 滚动时更新进度：无缓存时先测量再计算
+onPageScroll((options) => {
+  if (scrollableHeight <= 0) measureScrollableHeight()
+  const total = scrollableHeight
+  readProgress.value = total <= 0
+    ? 100
+    : Math.min(100, Math.max(0, (options.scrollTop / total) * 100))
+})
+
+// 文章切换（redirectTo 后 onLoad 重建实例）与初次加载完成时重置进度，nextTick 等渲染后重测高度
+watch(() => article.value?.id, async () => {
+  readProgress.value = 0
+  scrollableHeight = 0
+  await nextTick()
+  measureScrollableHeight()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -501,6 +566,74 @@ const goRelated = (id) => {
 .markdown-body :deep(a) {
   color: $color-primary;
   text-decoration: none;
+}
+
+/* ===== 顶部阅读进度条 ===== */
+/* fixed 顶部 3px，z-index 高于内容、低于弹层（SharePoster 为 999）；渐变主色保证亮暗主题均可见 */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  z-index: 900;
+  background: linear-gradient(90deg, #4F46E5, #6366F1, #06B6D4);
+  border-radius: 0 3px 3px 0;
+  transition: width 0.1s linear;
+}
+
+/* ===== 上/下一篇导航卡 ===== */
+.nav-card {
+  margin-top: $spacing-md;
+  padding: $spacing-md $spacing-lg;
+}
+.nav-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm 0;
+  min-width: 0;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.nav-row:active {
+  transform: scale(0.98);
+}
+.nav-row + .nav-row {
+  border-top: 1px solid var(--app-divider, #F1F5F9);
+}
+/* 无上/下一篇：置灰不可点 */
+.nav-row.disabled {
+  color: var(--app-text-tertiary, #94A3B8);
+  opacity: 0.7;
+}
+.nav-row.disabled:active {
+  transform: none;
+}
+/* 图标跟随行内 currentColor：可用态为主题色，置灰态随行置灰（暗黑模式自动适配） */
+.nav-row:not(.disabled) {
+  color: var(--app-primary, #4F46E5);
+}
+.nav-label {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--app-text-tertiary, #94A3B8);
+}
+.nav-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--app-text, #0F172A);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 有文章时标题用主题色强调 */
+.nav-row:not(.disabled) .nav-title {
+  color: var(--app-primary, #4F46E5);
+}
+/* 无文章：整行置灰（含标题），叠在基础规则之上覆盖 */
+.nav-row.disabled .nav-title {
+  color: var(--app-text-tertiary, #94A3B8);
 }
 
 /* ===== 评论区 ===== */

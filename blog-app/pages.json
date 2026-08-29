@@ -47,6 +47,105 @@
             "navigationBarTitleText": "个人简历",
             "backgroundColor": "@bgColor"
           }
+        },
+        {
+          "path": "pages/mine/register",
+          "style": {
+            "navigationBarTitleText": "注册",
+            "backgroundColor": "@bgColor"
+          }
+        },
+        {
+          "path": "pages/message/index",
+          "style": {
+            "navigationBarTitleText": "留言反馈",
+            "backgroundColor": "@bgColor"
+          }
+        },
+        {
+          "path": "pages/about/index",
+          "style": {
+            "navigationBarTitleText": "关于我们",
+            "backgroundColor": "@bgColor"
+          }
+        }
+      ]
+    },
+    {
+      "root": "subpkg-article",
+      "pages": [
+        {
+          "path": "pages/list",
+          "style": {
+            "navigationBarTitleText": "文章列表",
+            "backgroundColor": "@bgColor"
+          }
+        },
+        {
+          "path": "pages/category",
+          "style": {
+            "navigationBarTitleText": "分类",
+            "backgroundColor": "@bgColor"
+          }
+        },
+        {
+          "path": "pages/tags",
+          "style": {
+            "navigationBarTitleText": "标签",
+            "backgroundColor": "@bgColor"
+          }
+        },
+        {
+          "path": "pages/archives",
+          "style": {
+            "navigationBarTitleText": "归档",
+            "backgroundColor": "@bgColor"
+          }
+        }
+      ]
+    },
+    {
+      "root": "subpkg-study",
+      "pages": [
+        {
+          "path": "pages/interview/index",
+          "style": {
+            "navigationBarTitleText": "面试刷题",
+            "backgroundColor": "@bgColor"
+          }
+        },
+        {
+          "path": "pages/exam/index",
+          "style": {
+            "navigationBarTitleText": "在线考试",
+            "backgroundColor": "@bgColor"
+          }
+        },
+        {
+          "path": "pages/exam/taking",
+          "style": {
+            "navigationBarTitleText": "答题",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "pages/scores/index",
+          "style": {
+            "navigationBarTitleText": "成绩查询",
+            "backgroundColor": "@bgColor"
+          }
+        }
+      ]
+    },
+    {
+      "root": "subpkg-music",
+      "pages": [
+        {
+          "path": "pages/index",
+          "style": {
+            "navigationBarTitleText": "音乐",
+            "backgroundColor": "@bgColor"
+          }
         }
       ]
     }

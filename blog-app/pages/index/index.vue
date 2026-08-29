@@ -33,7 +33,69 @@
       </view>
     </view>
 
-    <!-- 搜索栏：负 margin 上浮到 hero 边缘 -->
+    <!-- 站点统计卡：1x4 小网格，负 margin 上浮于 Hero 底部 -->
+    <view class="stats-card">
+      <view v-for="s in statItems" :key="s.label" class="stat-item">
+        <text class="stat-num">{{ s.value }}</text>
+        <text class="stat-label">{{ s.label }}</text>
+      </view>
+    </view>
+
+    <!-- 功能模块入口：4 列 2 行 -->
+    <view class="modules">
+      <view class="modules-grid">
+        <view
+          v-for="(m, i) in modules"
+          :key="m.url"
+          class="module-item"
+          @click="goModule(m.url)"
+        >
+          <view :class="['icon-box', `m-${i}`]">
+            <Icon :name="m.icon" :size="22" />
+          </view>
+          <text class="module-name">{{ m.label }}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 最新文章区：失败静默隐藏 -->
+    <view v-if="showLatestSection" class="latest-section">
+      <view class="section-head">
+        <text class="section-title">最新文章</text>
+        <view class="section-more" @click="goArticleList">
+          <text class="more-text">查看全部</text>
+          <Icon name="chevron-right" :size="14" />
+        </view>
+      </view>
+      <!-- 加载中骨架 -->
+      <Skeleton v-if="latestLoading" type="article" :count="3" />
+      <template v-else>
+        <view
+          v-for="item in latestArticles"
+          :key="item.id"
+          class="latest-item"
+          @click="goDetail(item.id)"
+        >
+          <!-- 封面缩略 60x60，无封面用浅色图标占位 -->
+          <image
+            v-if="item.coverImage"
+            class="latest-cover"
+            :src="latestCover(item)"
+            mode="aspectFill"
+            lazy-load
+          />
+          <view v-else class="latest-cover latest-cover-placeholder">
+            <Icon name="document" :size="20" />
+          </view>
+          <view class="latest-info">
+            <text class="latest-title">{{ item.title }}</text>
+            <text class="latest-date">{{ (item.createTime || '').slice(0, 10) }}</text>
+          </view>
+        </view>
+      </template>
+    </view>
+
+    <!-- 搜索栏 -->
     <view class="search-wrap">
       <SearchBar
         placeholder="搜索文章..."
@@ -86,6 +148,9 @@
 
     </scroll-view>
 
+    <!-- 全局迷你播放条：fixed 定位，置于 TabBar 之上 -->
+    <PlayerBar />
+
     <!-- 底部 TabBar：fixed 定位，置于滚动容器外 -->
     <TabBar current="/pages/index/index" />
   </view>
@@ -97,11 +162,15 @@ import { onLoad, onShow } from '@dcloudio/uni-app'
 import api from '@/common/api.js'
 import { colors, darkColors, isDark, applyNavBarTheme } from '@/common/theme.js'
 import { initNetworkWatch, offlineMode, cacheArticleList, getCachedArticleList } from '@/common/offline.js'
+import { resolveFileUrl } from '@/common/config.js'
+import { optimizeImageUrl } from '@/common/imageUrl.js'
 import ArticleItem from '@/components/ArticleItem.vue'
 import SearchBar from '@/components/SearchBar.vue'
 import CategoryChips from '@/components/CategoryChips.vue'
 import Skeleton from '@/components/Skeleton.vue'
 import LoadingDots from '@/components/LoadingDots.vue'
+import Icon from '@/components/Icon.vue'
+import PlayerBar from '@/components/PlayerBar.vue'
 import TabBar from '@/components/TabBar.vue'
 
 // 类型 chips：固定列表（全部/原创/转载/翻译）
@@ -110,6 +179,18 @@ const types = [
   { label: '原创', value: 0 },
   { label: '转载', value: 1 },
   { label: '翻译', value: 2 }
+]
+
+// 功能模块入口：8 项 4 列 2 行
+const modules = [
+  { label: '文章', icon: 'document', url: '/subpkg-article/pages/list' },
+  { label: '刷题', icon: 'book',     url: '/subpkg-study/pages/interview/index' },
+  { label: '考试', icon: 'edit',     url: '/subpkg-study/pages/exam/index' },
+  { label: '成绩', icon: 'trophy',   url: '/subpkg-study/pages/scores/index' },
+  { label: '音乐', icon: 'music',    url: '/subpkg-music/pages/index' },
+  { label: '留言', icon: 'mail',     url: '/subpkg/pages/message/index' },
+  { label: '简历', icon: 'user',     url: '/subpkg/pages/resume/index' },
+  { label: '关于', icon: 'location', url: '/subpkg/pages/about/index' }
 ]
 
 // 列表与分页状态
@@ -132,6 +213,13 @@ const refresherStyle = 'none'
 // 站点统计与分类
 const stats = ref(null)
 const categories = ref([])
+// 题库题量（来自面试题分页接口 total）
+const questionCount = ref(0)
+
+// 最新文章区状态
+const latestLoading = ref(true)
+const latestFailed = ref(false)
+const latestArticles = ref([])
 
 // 筛选项
 const activeCategoryId = ref(null)
@@ -155,16 +243,32 @@ const categoryChips = computed(() => {
   )
 })
 
-// Hero 右下角统计文本："12 篇文章 · 1.2k 浏览"
+// Hero 主行统计文本："12 篇文章 · 1.2k 浏览"
 const statsText = computed(() => {
   if (!stats.value) return ''
   const articleCount = stats.value.articleCount || 0
-  return `${articleCount} 篇文章 · ${formatViewCount(stats.value.viewCount)} 浏览`
+  return `${formatCount(articleCount)} 篇文章 · ${formatCount(stats.value.viewCount)} 浏览`
 })
 
-// 浏览数格式化：>=1000 显示为 1.2k
-const formatViewCount = (n) => {
+// 统计卡 4 项：文章 / 分类 / 标签 / 题量
+const statItems = computed(() => [
+  { label: '文章', value: formatCount(stats.value && stats.value.articleCount) },
+  { label: '分类', value: formatCount(stats.value && stats.value.categoryCount) },
+  { label: '标签', value: formatCount(stats.value && stats.value.tagCount) },
+  { label: '题量', value: formatCount(questionCount.value) }
+])
+
+// 最新文章区显隐：加载中或加载成功且有数据时显示，失败静默隐藏
+const showLatestSection = computed(() => {
+  return latestLoading.value || (!latestFailed.value && latestArticles.value.length > 0)
+})
+
+// 数字格式化：>=10000 显示 1.2w，>=1000 显示 1.2k
+const formatCount = (n) => {
   if (n == null) return '0'
+  if (n >= 10000) {
+    return (n / 10000).toFixed(1).replace(/\.0$/, '') + 'w'
+  }
   if (n >= 1000) {
     return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k'
   }
@@ -242,9 +346,43 @@ const loadStats = async () => {
     const res = await api.getStats()
     stats.value = res.data
   } catch (e) {
-    // 静默失败，hero 不显示统计即可
+    // 静默失败，统计卡显示 0
   }
 }
+
+// 拉取题库题量：分页接口 size=1 仅取 total，失败静默置 0
+const loadQuestionCount = async () => {
+  if (offlineMode.value) return
+  try {
+    const res = await api.getInterviewQuestions({ page: 1, size: 1 })
+    questionCount.value = (res.data && res.data.total) || 0
+  } catch (e) {
+    questionCount.value = 0
+  }
+}
+
+// 拉取最新文章：取前 3 篇，失败静默隐藏该区
+const loadLatest = async () => {
+  if (offlineMode.value) {
+    latestLoading.value = false
+    latestFailed.value = true
+    return
+  }
+  latestLoading.value = true
+  try {
+    const res = await api.getLatestArticles()
+    const records = Array.isArray(res.data) ? res.data : []
+    latestArticles.value = records.slice(0, 3)
+    if (latestArticles.value.length === 0) latestFailed.value = true
+  } catch (e) {
+    latestFailed.value = true
+  } finally {
+    latestLoading.value = false
+  }
+}
+
+// 最新文章封面：相对路径拼接 origin + 命中 CDN 时追加压缩参数
+const latestCover = (item) => optimizeImageUrl(resolveFileUrl(item && item.coverImage), 120)
 
 // 拉取分类列表
 const loadCategories = async () => {
@@ -314,15 +452,27 @@ const goDetail = (id) => {
   uni.navigateTo({ url: `/pages/article/detail?id=${id}` })
 }
 
+// 跳转文章列表页（最新文章"查看全部"）
+const goArticleList = () => {
+  uni.navigateTo({ url: '/subpkg-article/pages/list' })
+}
+
+// 跳转功能模块
+const goModule = (url) => {
+  uni.navigateTo({ url })
+}
+
 // 页面显示时同步原生导航栏配色；主题切换时实时刷新
 onShow(() => applyNavBarTheme())
 watch(isDark, () => applyNavBarTheme())
 
-// 页面加载：初始化网络监听，并行拉取统计、分类、文章
+// 页面加载：初始化网络监听，并行拉取统计、题量、分类、最新文章、文章
 onLoad(() => {
   initNetworkWatch()
   loadStats()
+  loadQuestionCount()
   loadCategories()
+  loadLatest()
   fetchData()
 })
 
@@ -333,12 +483,15 @@ const onLoadMore = () => {
   fetchData()
 }
 
-// 自定义下拉刷新：重置分页后重新拉取第一页，完成后收起刷新动画
+// 自定义下拉刷新：重置分页后重新拉取，同时刷新统计与最新文章
 const onRefresh = async () => {
   refreshing.value = true
   page.value = 1
   hasMore.value = true
   list.value = []
+  loadStats()
+  loadQuestionCount()
+  loadLatest()
   await fetchData()
   refreshing.value = false
 }
@@ -351,11 +504,11 @@ const onRefresh = async () => {
   background: var(--app-bg, #F1F5F9);
 }
 
-/* 滚动容器：占满根节点高度形成滚动区，底部留白避开 TabBar */
+/* 滚动容器：占满根节点高度形成滚动区，底部留白避开 PlayerBar + TabBar */
 .container {
   height: 100%;
   box-sizing: border-box;
-  padding-bottom: calc(56px + env(safe-area-inset-bottom) + 12px);
+  padding-bottom: calc(140px + env(safe-area-inset-bottom));
 }
 
 /* ===== 自定义下拉刷新区：三个品牌色圆点脉冲 ===== */
@@ -386,9 +539,9 @@ const onRefresh = async () => {
 
 /* ===== Hero 区 ===== */
 .hero {
-  height: 140px;
+  height: 176px;
   box-sizing: border-box;
-  padding: 24px 20px;
+  padding: 24px 20px 48px;
   border-radius: 0 0 16px 16px;
   /* 内联 style 注入渐变，此处仅作兜底色 */
   background: $color-primary;
@@ -414,10 +567,10 @@ const onRefresh = async () => {
   color: rgba(255, 255, 255, 0.8);
 }
 
-/* 右下角统计：推到底部右对齐 */
+/* Hero 主行统计：推到底部，避开下方上浮的统计卡 */
 .hero-stats {
   margin-top: auto;
-  align-self: flex-end;
+  align-self: flex-start;
 }
 
 .stats-text {
@@ -425,9 +578,199 @@ const onRefresh = async () => {
   color: rgba(255, 255, 255, 0.85);
 }
 
-/* ===== 搜索栏（上浮到 hero 边缘） ===== */
+/* ===== 统计卡：1x4 网格，上浮于 Hero 底部 ===== */
+.stats-card {
+  display: flex;
+  margin: -32px $spacing-lg 0;
+  padding: $spacing-md 0;
+  background: var(--app-bg-card, #FFFFFF);
+  border-radius: 14px;
+  box-shadow: $shadow-floating;
+  position: relative;
+  z-index: 5;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+/* 相邻项之间细分隔线 */
+.stat-item + .stat-item {
+  border-left: 1px solid var(--app-divider, #F1F5F9);
+}
+
+.stat-num {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--app-text, #0F172A);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--app-text-tertiary, #94A3B8);
+}
+
+/* ===== 功能模块入口：4 列 2 行 ===== */
+.modules {
+  margin: $spacing-md $spacing-lg 0;
+  padding: $spacing-lg $spacing-xs $spacing-sm;
+  background: var(--app-bg-card, #FFFFFF);
+  border-radius: 14px;
+  box-shadow: $shadow-card;
+}
+
+.modules-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.module-item {
+  width: 25%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $spacing-sm 0;
+  transition: opacity 0.15s ease;
+}
+
+/* 按压反馈 */
+.module-item:active {
+  opacity: 0.6;
+}
+
+/* 圆形浅色底图标容器：Icon 颜色继承容器 color */
+.icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: $spacing-xs;
+}
+
+/* 八个模块依次配色（浅色底 + 品牌色图标） */
+.m-0 { background: rgba($color-primary, 0.12); color: $color-primary; }
+.m-1 { background: rgba($color-secondary, 0.12); color: $color-secondary; }
+.m-2 { background: rgba($color-accent, 0.12); color: $color-accent; }
+.m-3 { background: rgba($color-warning, 0.14); color: $color-warning; }
+.m-4 { background: rgba($color-primary-light, 0.12); color: $color-primary-light; }
+.m-5 { background: rgba($color-success, 0.12); color: $color-success; }
+.m-6 { background: rgba($color-accent, 0.12); color: $color-accent; }
+.m-7 {
+  background: rgba($color-text-secondary, 0.15);
+  color: var(--app-text-secondary, #64748B);
+}
+
+.module-name {
+  font-size: 12px;
+  color: var(--app-text, #0F172A);
+  line-height: 1.4;
+}
+
+/* ===== 最新文章区 ===== */
+.latest-section {
+  margin-top: $spacing-lg;
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 $spacing-lg;
+  margin-bottom: $spacing-sm;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--app-text, #0F172A);
+}
+
+.section-more {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--app-text-tertiary, #94A3B8);
+}
+
+.more-text {
+  font-size: 12px;
+  color: var(--app-text-tertiary, #94A3B8);
+}
+
+/* 紧凑最新卡：60x60 缩略 + 标题 2 行 + 日期 */
+.latest-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  margin: 0 $spacing-lg $spacing-sm;
+  padding: $spacing-md;
+  background: var(--app-bg-card, #FFFFFF);
+  border-radius: 10px;
+  box-shadow: $shadow-card;
+  transition: opacity 0.15s ease;
+}
+
+.latest-item:active {
+  opacity: 0.85;
+}
+
+.latest-item:last-child {
+  margin-bottom: 0;
+}
+
+.latest-cover {
+  width: 60px;
+  height: 60px;
+  border-radius: $radius-md;
+  flex-shrink: 0;
+  background: var(--app-bg, #F1F5F9);
+}
+
+/* 无封面：浅底 + document 图标占位 */
+.latest-cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--app-text-tertiary, #94A3B8);
+}
+
+.latest-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.latest-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-text, #0F172A);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.latest-date {
+  font-size: 11px;
+  color: var(--app-text-tertiary, #94A3B8);
+}
+
+/* ===== 搜索栏 ===== */
 .search-wrap {
-  margin: -20px 16px 0;
+  margin: $spacing-md $spacing-lg 0;
   position: relative;
   z-index: 5;
 }

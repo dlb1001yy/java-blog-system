@@ -81,6 +81,12 @@
         <view class="tips">
           <text class="tip-text">默认账号: admin / admin123</text>
         </view>
+
+        <!-- 底部注册引导 -->
+        <view class="register-link">
+          <text class="tip-text">没有账号？</text>
+          <text class="link" @click="goRegister">去注册</text>
+        </view>
       </view>
       </view>
     </view>
@@ -97,13 +103,16 @@ import Icon from '@/components/Icon.vue'
 import NavBar from '@/components/NavBar.vue'
 
 const form = ref({
-  username: 'admin',
-  password: 'admin123',
+  username: '',
+  password: '',
   captchaId: '',
   captchaCode: ''
 })
 const loading = ref(false)
 const captchaImage = ref('')
+
+// 登录成功后需要回跳的页面地址（外部带入，encodeURIComponent 编码）
+const redirectUrl = ref('')
 
 // 获取图形验证码（captchaId 一次性消费，失败后需刷新）
 const refreshCaptcha = async () => {
@@ -117,9 +126,26 @@ const refreshCaptcha = async () => {
   }
 }
 
-onLoad(() => {
+onLoad((options) => {
+  // 记录回跳地址（外部通过 ?redirect=xxx 传入，需解码）
+  if (options && options.redirect) {
+    try {
+      redirectUrl.value = decodeURIComponent(options.redirect)
+    } catch (e) {
+      redirectUrl.value = options.redirect
+    }
+  }
+  // 注册页跳转过来时预填用户名（不再默认填充 admin/admin123）
+  if (options && options.username) {
+    form.value.username = decodeURIComponent(options.username)
+  }
   refreshCaptcha()
 })
+
+// 跳转注册页
+const goRegister = () => {
+  uni.navigateTo({ url: '/subpkg/pages/mine/register' })
+}
 
 const handleLogin = async () => {
   if (!form.value.username || !form.value.password) {
@@ -139,8 +165,12 @@ const handleLogin = async () => {
 
     uni.showToast({ title: '登录成功', icon: 'success' })
 
-    // 登录成功后的跳转逻辑
+    // 登录成功后的跳转逻辑：优先回跳来源页，其次返回上一页，最后落到首页
     setTimeout(() => {
+      if (redirectUrl.value) {
+        uni.reLaunch({ url: redirectUrl.value })
+        return
+      }
       const pages = getCurrentPages()
       // 如果有上一页，返回上一页；否则跳转到首页
       if (pages.length > 1) {
@@ -306,5 +336,19 @@ const handleLogin = async () => {
 .tip-text {
   font-size: 12px;
   color: var(--app-text-secondary, #64748B);
+}
+
+// 底部注册引导
+.register-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.register-link .link {
+  font-size: 12px;
+  color: $color-primary;
+  font-weight: 500;
 }
 </style>

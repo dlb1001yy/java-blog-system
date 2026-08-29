@@ -35,55 +35,53 @@
 
     <!-- 菜单列表 -->
     <view class="menu-list">
-      <!-- 外观设置：跟随系统/亮色/暗色三态切换 -->
-      <view class="menu-item" @click="chooseThemeMode">
-        <view class="menu-icon">
-          <!-- 内联 SVG 日月图标 16x16 stroke 1.8 currentColor -->
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="4" />
-            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-          </svg>
-        </view>
-        <text class="menu-text">外观设置</text>
-        <text class="menu-value">{{ themeModeLabel }}</text>
-        <Icon name="chevron-right" :size="18" color="#CBD5E1" />
-      </view>
       <view class="menu-item" @click="goPage('/subpkg/pages/resume/index')">
         <view class="menu-icon">
           <Icon name="document" :size="18" />
         </view>
-        <text class="menu-text">我的简历</text>
+        <text class="menu-text">简历预览</text>
         <Icon name="chevron-right" :size="18" color="#CBD5E1" />
       </view>
       <view class="menu-item" @click="goPage('/subpkg/pages/readlater/index')">
         <view class="menu-icon">
-          <!-- 内联 SVG bookmark 图标 16x16 stroke 1.8 currentColor -->
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-          </svg>
+          <Icon name="clock" :size="18" />
         </view>
         <text class="menu-text">稍后阅读</text>
         <text class="menu-badge" v-if="readLaterIds.length">{{ readLaterIds.length }}</text>
         <Icon name="chevron-right" :size="18" color="#CBD5E1" />
       </view>
-      <view class="menu-item" @click="showTodo">
+      <view class="menu-item" @click="goPage('/subpkg/pages/message/index')">
         <view class="menu-icon">
           <Icon name="mail" :size="18" />
         </view>
         <text class="menu-text">留言反馈</text>
         <Icon name="chevron-right" :size="18" color="#CBD5E1" />
       </view>
-      <view class="menu-item" @click="showTodo">
+      <!-- 外观设置：跟随系统/亮色/暗色三态切换 -->
+      <view class="menu-item" @click="chooseThemeMode">
         <view class="menu-icon">
-          <Icon name="user" :size="18" />
+          <Icon name="star" :size="18" />
+        </view>
+        <text class="menu-text">外观设置</text>
+        <text class="menu-value">{{ themeModeLabel }}</text>
+        <Icon name="chevron-right" :size="18" color="#CBD5E1" />
+      </view>
+      <view class="menu-item" @click="goPage('/subpkg/pages/about/index')">
+        <view class="menu-icon">
+          <Icon name="location" :size="18" />
         </view>
         <text class="menu-text">关于我们</text>
         <Icon name="chevron-right" :size="18" color="#CBD5E1" />
       </view>
+      <!-- 退出登录：仅登录态显示 -->
+      <view class="menu-item" v-if="isLogin" @click="handleLogout">
+        <view class="menu-icon">
+          <Icon name="logout" :size="18" />
+        </view>
+        <text class="menu-text">退出登录</text>
+        <Icon name="chevron-right" :size="18" color="#CBD5E1" />
+      </view>
     </view>
-
-    <!-- 退出登录按钮（仅登录时显示） -->
-    <view class="logout-btn" v-if="isLogin" @click="handleLogout">退出登录</view>
 
     <TabBar current="/subpkg/pages/mine/index" />
   </view>
@@ -172,11 +170,6 @@ const goLogin = () => {
 
 const goPage = (url) => {
   uni.navigateTo({ url })
-}
-
-// 待开发功能提示
-const showTodo = () => {
-  uni.showToast({ title: '功能开发中', icon: 'none' })
 }
 
 const handleLogout = () => {
@@ -347,18 +340,5 @@ const handleLogout = () => {
   margin-right: 8px;
   font-size: 12px;
   color: var(--app-text-tertiary, #94A3B8);
-}
-
-// 退出登录按钮
-.logout-btn {
-  margin: 16px;
-  background: var(--app-bg-card, #FFFFFF);
-  color: $color-danger;
-  border-radius: 12px;
-  height: 44px;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 </style>

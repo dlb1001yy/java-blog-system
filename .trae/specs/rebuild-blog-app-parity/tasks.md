@@ -1,0 +1,52 @@
+# Tasks
+
+- [x] Task 1: 基础设施扩展——API/上传/守卫/图标
+  - [x] 1.1 `common/api.js` 新增接口：register、getHotArticles、getLatestArticles、getArchives、sendMessage、interview 全套（getInterviewQuestions/getInterviewCategories/getInterviewAnswer/toggleFavorite/toggleWrong/getFavorites/getWrong）、exam 全套（getExamPapers/getExamPaper/submitExam/getExamRecords/getExamRecord）、music 全套（getSongs/getPlaylists/getPlaylist/reportPlay）、resume mine 全套（getMyResume/saveMyResume/createShare/getMyShares/revokeShare）
+  - [x] 1.2 新建 `common/upload.js`：uni.uploadFile 封装（FormData file 字段、Bearer token + 签名头注入、10MB 前置校验、返回 data.url）
+  - [x] 1.3 新建 `common/auth.js`：`requireLogin()` 守卫（无 token 跳登录页并携带 redirect；提供 `getToken()`）
+  - [x] 1.4 `components/Icon.vue` 图标字典扩充：play/pause/next/prev/repeat/repeat-one/shuffle/music/star/book/chevron-down/chevron-left/calendar/trophy/check/close/share/image/upload/trash
+- [x] Task 2: 全局音乐播放器
+  - [x] 2.1 新建 `common/player.js` 单例：uni.createInnerAudioContext、状态（playlist/currentIndex/isPlaying/currentTime/duration/volume/repeat/shuffle）、方法（setPlaylist/playAt/toggle/next/prev/seek/toggleRepeat/toggleShuffle）、偏好持久化、播放量上报静默失败、页面卸载不销毁
+  - [x] 2.2 新建 `components/PlayerBar.vue` 迷你播放条：封面/标题/歌手、播放/上一首/下一首、进度显示、循环与随机切换按钮；fixed 悬浮于 TabBar 之上，暗黑适配
+- [x] Task 3: 分包注册与 TabBar 重构
+  - [x] 3.1 `pages.json` 注册新分包 subpkg-article（list/category/tags/archives）、subpkg-study（interview/exam/exam-taking/scores）、subpkg-music（index），及 subpkg 新页（mine/register、message/index、about/index、resume/edit）
+  - [x] 3.2 `components/TabBar.vue` 改为 4 tab（首页/刷题/音乐/我的）并更新路径
+- [x] Task 4: 首页改造
+  - [x] 4.1 Hero 统计扩为 4 项（文章/分类/标签/题量，并行拉 /portal/stats 与 /portal/interview/questions?page=1&size=1 取 total）
+  - [x] 4.2 新增模块入口网格 8 项（文章/刷题/考试/成绩/音乐/留言/简历/关于），点击跳转
+  - [x] 4.3 新增"最新文章"区：3 篇卡片 + "查看全部"入口（/portal/articles/latest）；首页原全量文章流与搜索/分类筛选保留在入口下方或按 spec 收敛（保留搜索+chips+文章流，最新文章区置于其上）
+- [x] Task 5: 文章模块分包 subpkg-article
+  - [x] 5.1 `subpkg-article/pages/list.vue`：支持 keyword/categoryId/tagId 三种筛选模式 + 分类 chips + 触底加载分页 + 空态/骨架
+  - [x] 5.2 `subpkg-article/pages/category.vue`：分类网格，点击跳列表
+  - [x] 5.3 `subpkg-article/pages/tags.vue`：标签云（字号伪随机），点击跳列表
+  - [x] 5.4 `subpkg-article/pages/archives.vue`：按月分组时间线，点击跳详情
+- [x] Task 6: 学习模块分包 subpkg-study（上）
+  - [x] 6.1 `subpkg-study/pages/interview/index.vue`：筛选区（方向多选/难度/状态/关键词）+ 题目卡片（展开懒加载答案 markdown + 解题思路 + 收藏/错题 toggle）+ 分页；onLoad 登录守卫
+- [x] Task 7: 学习模块分包 subpkg-study（下）
+  - [x] 7.1 `subpkg-study/pages/exam/index.vue`：试卷列表卡（总分/时长/题数/开始考试）
+  - [x] 7.2 `subpkg-study/pages/exam/taking.vue`：全屏答题（倒计时、切屏计数防作弊 onHide/onShow、答题卡三态、6 题型含编程 textarea、标记/上一题/下一题/交卷确认、自动交卷）
+  - [x] 7.3 `subpkg-study/pages/scores/index.vue`：记录列表 + 详情态（hero 得分卡/题型分布与掌握度 CSS 图表/逐题回顾）+ 判分中轮询
+- [x] Task 8: 音乐分包 subpkg-music
+  - [x] 8.1 `subpkg-music/pages/index.vue`：正在播放卡（进度 slider/播放控制/循环随机）+ 歌曲列表（分页/当前曲高亮/行内播放）+ 歌单网格（点击载入播放）
+- [x] Task 9: 个人中心扩展（subpkg）
+  - [x] 9.1 `subpkg/pages/mine/register.vue`：注册表单（密码强度校验、邮箱格式、两次一致），成功跳登录
+  - [x] 9.2 `subpkg/pages/mine/login.vue`：支持 `redirect` 参数登录后回跳；补"去注册"链接
+  - [x] 9.3 `subpkg/pages/mine/index.vue`：菜单更新（我的简历/简历预览/稍后阅读/留言反馈/外观设置/关于我们/退出登录），移除占位项
+  - [x] 9.4 `subpkg/pages/message/index.vue`：留言表单（昵称/邮箱选填/内容）提交
+  - [x] 9.5 `subpkg/pages/about/index.vue`：站点介绍 + 模块网格 + 技术栈标签 + 联系方式
+- [x] Task 10: 简历编辑页
+  - [x] 10.1 `subpkg/pages/resume/edit.vue`：审核状态区 + 全量动态表单 + 照片上传 + 保存（JSON 序列化动态字段）+ 预览入口
+  - [x] 10.2 分享链接管理：有效期选择、生成、列表展示、撤销、复制链接
+- [x] Task 11: 文章详情增强
+  - [x] 11.1 `pages/article/detail.vue`：上一篇/下一篇导航卡（跳转回顶）
+  - [x] 11.2 顶部阅读进度条（滚动驱动）
+- [x] Task 12: 贯通验证
+  - [x] 12.1 全页面路由跳转链路自测（TabBar/首页网格/详情上下篇/守卫回跳）
+  - [x] 12.2 对照 checklist.md 逐项核验并勾选
+
+# Task Dependencies
+- Task 1 是所有页面任务的前置（API 与图标）
+- Task 2 是 Task 8 与 PlayerBar 挂载的前置
+- Task 3 注册页面后 Task 4~11 才能跳转（pages.json 未注册页面 uni 会报错）；Task 3 可与 Task 1/2 并行
+- Task 4~11 之间相互独立，可并行
+- Task 12 依赖全部完成
