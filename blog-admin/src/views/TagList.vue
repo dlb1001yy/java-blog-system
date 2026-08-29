@@ -5,6 +5,26 @@
       <el-button type="primary" :icon="Plus" @click="handleAdd">新增标签</el-button>
     </template>
     <div class="table-card">
+      <!-- 搜索栏 -->
+      <div class="search-bar">
+        <el-form :inline="true" :model="searchForm">
+          <el-form-item>
+            <el-input
+              v-model="searchForm.name"
+              placeholder="请输入标签名称"
+              clearable
+              style="width: 200px"
+              @keyup.enter="handleSearch"
+              @clear="handleSearch"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleSearch">查询</el-button>
+            <el-button @click="handleReset">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+
       <el-table :data="tableData" v-loading="loading" :border="false" stripe @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" />
         <el-table-column prop="id" label="ID" width="80" />
@@ -17,6 +37,18 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="pagination-wrap">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :total="total"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </div>
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="400px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
@@ -41,6 +73,9 @@ import PageContainer from '@/components/PageContainer.vue'
 
 const loading = ref(false)
 const tableData = ref([])
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const selectedRows = ref([])
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
@@ -49,14 +84,32 @@ const formRef = ref()
 const form = reactive({ id: null, name: '' })
 const rules = { name: [{ required: true, message: '请输入标签名称', trigger: 'blur' }] }
 
+const searchForm = reactive({ name: '' })
+
 const fetchData = async () => {
   loading.value = true
   try {
-    const res = await tagApi.getAll()
-    tableData.value = res.data
+    const params = {
+      current: currentPage.value,
+      size: pageSize.value,
+      name: searchForm.name
+    }
+    const res = await tagApi.getPage(params)
+    tableData.value = res.data.records
+    total.value = res.data.total
   } finally {
     loading.value = false
   }
+}
+
+const handleSearch = () => {
+  currentPage.value = 1
+  fetchData()
+}
+
+const handleReset = () => {
+  searchForm.name = ''
+  handleSearch()
 }
 
 const handleAdd = () => {
@@ -109,10 +162,21 @@ const handleBatchDelete = () => {
     }).catch(() => {})
 }
 
+const handleSizeChange = () => fetchData()
+const handleCurrentChange = () => fetchData()
+
 onMounted(() => fetchData())
 </script>
 
 <style scoped>
+.search-bar {
+  margin-bottom: var(--space-5);
+}
+
+:deep(.el-form--inline .el-form-item) {
+  margin-bottom: 0;
+}
+
 .table-card {
   background: var(--bg-card);
   border-radius: var(--radius-lg);
@@ -139,6 +203,11 @@ onMounted(() => fetchData())
 }
 :deep(.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell) {
   background: var(--bg-subtle);
+}
+.pagination-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-5);
 }
 :deep(.el-dialog) {
   border-radius: var(--radius-lg);

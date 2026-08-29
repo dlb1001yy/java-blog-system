@@ -5,6 +5,25 @@
       <el-button type="primary" :icon="Plus" @click="handleAdd">新增分类</el-button>
     </template>
     <div class="table-card">
+      <!-- 搜索栏 -->
+      <div class="search-bar">
+        <el-form :inline="true" :model="searchForm">
+          <el-form-item>
+            <el-input
+              v-model="searchForm.name"
+              placeholder="请输入分类名称"
+              clearable
+              style="width: 200px"
+              @keyup.enter="handleSearch"
+              @clear="handleSearch"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleSearch">查询</el-button>
+            <el-button @click="handleReset">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
       <el-table :data="tableData" v-loading="loading" :border="false" stripe @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" />
         <el-table-column prop="id" label="ID" width="80" />
@@ -18,6 +37,17 @@
           </template>
         </el-table-column>
       </el-table>
+      <div class="pagination-wrap">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :total="total"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </div>
     <!-- 编辑弹窗 -->
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="400px">
@@ -46,10 +76,17 @@ import PageContainer from '@/components/PageContainer.vue'
 
 const loading = ref(false)
 const tableData = ref([])
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const selectedRows = ref([])
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const formRef = ref()
+
+const searchForm = reactive({
+  name: ''
+})
 
 const form = reactive({
   id: null,
@@ -64,12 +101,31 @@ const rules = {
 const fetchData = async () => {
   loading.value = true
   try {
-    const res = await categoryApi.getAll()
-    tableData.value = res.data
+    const params = {
+      current: currentPage.value,
+      size: pageSize.value,
+      name: searchForm.name
+    }
+    const res = await categoryApi.getPage(params)
+    tableData.value = res.data.records
+    total.value = res.data.total
   } finally {
     loading.value = false
   }
 }
+
+const handleSearch = () => {
+  currentPage.value = 1
+  fetchData()
+}
+
+const handleReset = () => {
+  searchForm.name = ''
+  handleSearch()
+}
+
+const handleSizeChange = () => fetchData()
+const handleCurrentChange = () => fetchData()
 
 const handleAdd = () => {
   dialogTitle.value = '新增分类'
@@ -132,6 +188,19 @@ onMounted(() => fetchData())
   padding: var(--space-5);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
+}
+.search-bar {
+  margin-bottom: var(--space-5);
+}
+
+:deep(.el-form--inline .el-form-item) {
+  margin-bottom: 0;
+}
+
+.pagination-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-5);
 }
 :deep(.el-table) {
   border-radius: var(--radius-md);

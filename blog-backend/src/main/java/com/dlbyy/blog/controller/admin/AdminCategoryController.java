@@ -1,10 +1,13 @@
 package com.dlbyy.blog.controller.admin;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dlbyy.blog.annotation.Admin;
 import com.dlbyy.blog.common.Result;
 import com.dlbyy.blog.dto.BatchIds;
 import com.dlbyy.blog.entity.Category;
 import com.dlbyy.blog.service.CategoryService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +25,23 @@ public class AdminCategoryController {
     @GetMapping
     public Result<List<Category>> list() {
         return Result.success(categoryService.list());
+    }
+
+    @GetMapping("/page")
+    @Operation(summary = "分页查询分类")
+    public Result<Page<Category>> page(
+            @RequestParam(defaultValue = "1") Integer current,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) String name) {
+
+        Page<Category> page = new Page<>(current, size);
+        LambdaQueryWrapper<Category> wrapper = new LambdaQueryWrapper<>();
+        if (name != null && !name.isEmpty()) {
+            wrapper.like(Category::getName, name);
+        }
+        wrapper.orderByAsc(Category::getSort);
+        wrapper.orderByDesc(Category::getCreateTime);
+        return Result.success(categoryService.page(page, wrapper));
     }
 
     @PostMapping
