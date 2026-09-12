@@ -94,3 +94,7 @@ blog:
   # Elasticsearch 开关：通过环境变量 BLOG_SEARCH_ENABLED 控制
   search:
     enabled: ${BLOG_SEARCH_ENABLED:false}
+  # 数据库定时备份配置（Linux 容器内路径，通过数据卷持久化）
+  backup:
+    dir: /app/backups
+    retention-days: 30

@@ -137,3 +137,7 @@ blog:
   # Docker 环境通过 BLOG_SEARCH_ENABLED 环境变量覆盖
   search:
     enabled: false
+  # 数据库定时备份配置（配合定时任务 databaseBackup 使用）
+  backup:
+    dir: ./backups        # 备份文件存放目录（*.sql.gz）
+    retention-days: 30    # 备份保留天数，超期自动清理

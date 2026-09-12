@@ -1,0 +1,44 @@
+# Tasks
+
+- [x] Task 1: 定时任务框架基础（表 + 实体 + SPI）
+  - [x] 1.1 新增 `ScheduledTask` 实体与 `ScheduledTaskMapper`；`sys_scheduled_task` 表字段：id, task_key, task_name, description, cron_expression, status(1启用/0暂停), last_execute_time, last_execute_status, last_execute_error, create_time, update_time
+  - [x] 1.2 `SchemaMapper` 增加幂等建表方法，`DataInitializer` 启动时调用（沿用现有 ensure* 模式）
+  - [x] 1.3 定义 `ScheduledTaskSpi` 接口：taskKey() / taskName() / description() / defaultCron() / run()
+- [x] Task 2: 动态调度管理器
+  - [x] 2.1 实现 `DynamicTaskManager`：基于 `ThreadPoolTaskScheduler`，启动时扫描所有 SPI Bean 与表记录同步（缺记录则插入种子、缺 Bean 则告警跳过），按 status+cron 注册/取消调度
+  - [x] 2.2 提供 reschedule(taskKey, cron) / pause(taskKey) / resume(taskKey) / triggerOnce(taskKey)，改配置即时生效无需重启
+  - [x] 2.3 统一执行包装：执行前后回写 last_execute_time/status/error，异常仅记日志不影响下次调度；任务执行加简单并发保护
+- [x] Task 3: 备份基础能力（配置 + 实体 + 建表）
+  - [x] 3.1 新增 `BackupRecord` 实体与 `BackupRecordMapper`；`sys_backup_record` 表：id, file_name, file_size, type(auto/manual), status(success/failed), error_msg, backup_time, create_time
+  - [x] 3.2 `SchemaMapper` 幂等建表 + `DataInitializer` 调用；同时写入 databaseBackup 任务的种子记录（若不存在）
+  - [x] 3.3 `application.yaml` / `application-docker.yaml` 增加 `blog.backup.dir` / `blog.backup.retention-days`，新建 `BackupProperties` 配置类
+- [x] Task 4: 备份/还原核心服务
+  - [x] 4.1 实现 `BackupService.backup()`：纯 JDBC 导出全库（SHOW CREATE TABLE + SELECT 逐行 INSERT，头部 SET NAMES utf8mb4 / SET FOREIGN_KEY_CHECKS=0），gzip 写 `backup_yyyyMMdd_HHmmss.sql.gz`，写记录；AtomicBoolean 防并发；失败清理残留文件
+  - [x] 4.2 备份成功后删除超期（retention-days）文件与记录
+  - [x] 4.3 实现 `restore(id)`：校验文件存在且 status=success → 解压 → 按语句切分执行（正确处理引号/转义/注释），失败抛出含位置的错误
+  - [x] 4.4 实现 `delete(id)` / `page()` 查询
+- [x] Task 5: 内置任务与管理接口
+  - [x] 5.1 实现 `DatabaseBackupTask`（实现 ScheduledTaskSpi，taskKey=databaseBackup，defaultCron=`0 0 4 * * ?`，run() 调 BackupService.backup()）
+  - [x] 5.2 `JavaBlogApplication` 加 `@EnableScheduling`
+  - [x] 5.3 新建 `AdminTaskController`：`GET /admin/tasks/page`、`PUT /admin/tasks/{id}/cron`（CronExpression 校验）、`PUT /admin/tasks/{id}/pause`、`PUT /admin/tasks/{id}/resume`、`POST /admin/tasks/{id}/run`；写操作加 `@Admin(...)`
+  - [x] 5.4 新建 `AdminBackupController`：`GET /admin/backups/page`、`POST /admin/backups`、`DELETE /admin/backups/{id}`、`POST /admin/backups/{id}/restore`；写操作加 `@Admin(...)`
+- [x] Task 6: 管理后台页面
+  - [x] 6.1 新增 `blog-admin/src/api/task.js`、`src/api/backup.js`
+  - [x] 6.2 新增 `views/TaskManage.vue`：任务表格（任务名/描述/cron/状态 Tag/下次触发/最近执行）、编辑 cron 弹窗、启停开关（二次确认）、立即执行（二次确认）
+  - [x] 6.3 新增 `views/BackupManage.vue`：分页表格（文件名/大小/时间/类型 Tag/状态）、立即备份、还原（危险二次确认，提示覆盖当前数据）、删除（二次确认）
+  - [x] 6.4 `router/index.js` 注册 `/tasks`、`/backup` 路由；`Sidebar.vue` 增加两个菜单项（系统设置附近）
+- [x] Task 7: Docker 与工程配置
+  - [x] 7.1 `docker-compose.yml`：blog-backend 挂载 `backup_data:/app/backups`，声明 `blog_backup_data` 命名卷
+  - [x] 7.2 根 `.gitignore` 忽略本地 `backups/` 目录
+- [x] Task 8: 构建验证
+  - [x] 8.1 后端 `mvn clean package` 编译通过
+  - [x] 8.2 前端 blog-admin 构建通过（如可行）
+  - [x] 8.3 人工核对还原流程 SQL 语句切分逻辑（引号/转义/注释）正确性（发现 NUL/0x1A 转义缺口，已补 `\0`/`\Z` 转义并重新编译验证）
+
+# Task Dependencies
+- Task 2 依赖 Task 1
+- Task 4 依赖 Task 3
+- Task 5 依赖 Task 2、Task 4
+- Task 6 依赖 Task 5（接口定义）
+- Task 7 与 Task 5/6 可并行
+- Task 8 依赖全部完成后执行

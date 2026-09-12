@@ -50,4 +50,43 @@ public interface SchemaMapper {
             "KEY idx_create_time (create_time) " +
             ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='后台操作日志表'")
     void createOperationLogTable();
+
+    @Select("SELECT COUNT(*) FROM information_schema.tables " +
+            "WHERE table_schema = DATABASE() AND table_name = 'sys_scheduled_task'")
+    int countScheduledTaskTable();
+
+    @Update("CREATE TABLE IF NOT EXISTS sys_scheduled_task (" +
+            "id bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID', " +
+            "task_key varchar(64) NOT NULL COMMENT '任务唯一标识', " +
+            "task_name varchar(128) DEFAULT NULL COMMENT '任务名称', " +
+            "description varchar(255) DEFAULT NULL COMMENT '任务描述', " +
+            "cron_expression varchar(64) DEFAULT NULL COMMENT 'cron表达式', " +
+            "status tinyint DEFAULT 1 COMMENT '状态 1:启用 0:暂停', " +
+            "last_execute_time datetime DEFAULT NULL COMMENT '最近执行时间', " +
+            "last_execute_status varchar(16) DEFAULT NULL COMMENT '最近执行状态', " +
+            "last_execute_error text COMMENT '最近执行错误信息', " +
+            "create_time datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间', " +
+            "update_time datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间', " +
+            "PRIMARY KEY (id), " +
+            "UNIQUE KEY uk_task_key (task_key) " +
+            ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='定时任务表'")
+    void createScheduledTaskTable();
+
+    @Select("SELECT COUNT(*) FROM information_schema.tables " +
+            "WHERE table_schema = DATABASE() AND table_name = 'sys_backup_record'")
+    int countBackupRecordTable();
+
+    @Update("CREATE TABLE IF NOT EXISTS sys_backup_record (" +
+            "id bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID', " +
+            "file_name varchar(255) DEFAULT NULL COMMENT '备份文件名', " +
+            "file_size bigint DEFAULT NULL COMMENT '文件大小(字节)', " +
+            "type varchar(16) DEFAULT NULL COMMENT '备份类型 auto:定时 manual:手动', " +
+            "status varchar(16) DEFAULT NULL COMMENT '备份状态 success:成功 failed:失败', " +
+            "error_msg text COMMENT '失败原因', " +
+            "backup_time datetime DEFAULT NULL COMMENT '备份时间', " +
+            "create_time datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间', " +
+            "PRIMARY KEY (id), " +
+            "KEY idx_backup_time (backup_time) " +
+            ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='数据库备份记录表'")
+    void createBackupRecordTable();
 }

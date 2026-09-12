@@ -151,6 +151,8 @@ services:
       - uploads_data:/app/uploads
       # 日志持久化（logback 文件输出，轮转后仍保留在卷中）
       - backend_logs:/app/logs
+      # 备份数据库文件持久化
+      - backup_data:/app/backups
     networks:
       - blog-net
     healthcheck:
@@ -298,6 +300,8 @@ volumes:
     name: blog_uploads_data
   backend_logs:
     name: blog_backend_logs
+  backup_data:
+    name: blog_backup_data
   es_data:
     name: blog_es_data
   minio_data:

@@ -34,6 +34,9 @@ public class DataInitializer implements CommandLineRunner {
         ensureUserColumns();
         // 幂等确保后台操作日志表存在，供操作日志审计切面写入
         ensureOperationLogTable();
+        // 幂等确保定时任务表与备份记录表存在，供动态调度与数据库备份使用
+        ensureScheduledTaskTable();
+        ensureBackupRecordTable();
 
         User admin = userService.getByUsername(DEFAULT_ADMIN_USERNAME);
         if (admin == null) {
@@ -89,6 +92,38 @@ public class DataInitializer implements CommandLineRunner {
         } catch (Exception e) {
             // 建库失败时忽略，下次启动重试
             log.warn("[DataInitializer] 创建 sys_operation_log 表时出错（可忽略，下次启动重试）：{}", e.getMessage());
+        }
+    }
+
+    /**
+     * 幂等确保定时任务表 sys_scheduled_task 存在。仅当表不存在时才执行 CREATE，
+     * 首次部署与已有旧库重复部署均可安全执行。
+     */
+    private void ensureScheduledTaskTable() {
+        try {
+            if (schemaMapper.countScheduledTaskTable() == 0) {
+                schemaMapper.createScheduledTaskTable();
+                log.info("[DataInitializer] 已创建定时任务表 sys_scheduled_task");
+            }
+        } catch (Exception e) {
+            // 建库失败时忽略，下次启动重试
+            log.warn("[DataInitializer] 创建 sys_scheduled_task 表时出错（可忽略，下次启动重试）：{}", e.getMessage());
+        }
+    }
+
+    /**
+     * 幂等确保数据库备份记录表 sys_backup_record 存在。仅当表不存在时才执行 CREATE，
+     * 首次部署与已有旧库重复部署均可安全执行。
+     */
+    private void ensureBackupRecordTable() {
+        try {
+            if (schemaMapper.countBackupRecordTable() == 0) {
+                schemaMapper.createBackupRecordTable();
+                log.info("[DataInitializer] 已创建数据库备份记录表 sys_backup_record");
+            }
+        } catch (Exception e) {
+            // 建库失败时忽略，下次启动重试
+            log.warn("[DataInitializer] 创建 sys_backup_record 表时出错（可忽略，下次启动重试）：{}", e.getMessage());
         }
     }
 }

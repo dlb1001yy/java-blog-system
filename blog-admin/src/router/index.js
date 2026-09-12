@@ -129,6 +129,18 @@ const routes = [
         meta: { title: '操作日志', icon: 'Clock' }
       },
       {
+        path: 'tasks',
+        name: 'TaskManage',
+        component: () => import('@/views/TaskManage.vue'),
+        meta: { title: '定时任务', icon: 'Timer' }
+      },
+      {
+        path: 'backup',
+        name: 'BackupManage',
+        component: () => import('@/views/BackupManage.vue'),
+        meta: { title: '数据备份', icon: 'FolderOpened' }
+      },
+      {
         path: 'settings',
         name: 'Settings',
         component: () => import('@/views/Settings.vue'),
