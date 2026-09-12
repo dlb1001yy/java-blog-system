@@ -10,6 +10,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Component;
@@ -100,8 +101,8 @@ public class DynamicTaskManager implements CommandLineRunner {
     /**
      * 同步种子记录并注册调度：
      * 1) SPI Bean 无对应记录则插入默认记录（status=1, cron=defaultCron()）；
-     * 2) 表中 status=1 且存在对应 Bean 的注册调度；
-     * 3) 表中有记录但无对应 Bean 的告警跳过。
+     * 2) 表中 status=1 且能解析到 Bean 的记录注册调度（支持 taskKey 形如 "{spiKey}-后缀" 的多实例）；
+     * 3) 表中有记录但无法解析到 Bean 的告警跳过。
      */
     private void syncAndRegister() {
         for (ScheduledTaskSpi spi : taskSpis) {
@@ -116,38 +117,42 @@ public class DynamicTaskManager implements CommandLineRunner {
                 seed.setStatus(STATUS_ENABLED);
                 scheduledTaskMapper.insert(seed);
                 log.info("[DynamicTaskManager] 已注册定时任务: {} [{}] cron={}", spi.taskKey(), spi.taskName(), spi.defaultCron());
-                schedule(spi, spi.defaultCron());
-            } else if (record.getStatus() != null && record.getStatus() == STATUS_ENABLED) {
-                schedule(spi, record.getCronExpression());
-            } else {
-                log.info("[DynamicTaskManager] 定时任务 {} 处于暂停状态，跳过调度", spi.taskKey());
             }
         }
-        // 表中存在但无对应 SPI Bean 的记录（如任务代码已下线），仅告警
+        // 全表扫描注册调度（含多实例记录，如 databaseBackup-daily）
         List<ScheduledTask> records = scheduledTaskMapper.selectList(null);
         for (ScheduledTask record : records) {
-            if (!spiMap.containsKey(record.getTaskKey())) {
+            if (resolveSpi(record.getTaskKey()) == null) {
                 log.warn("[DynamicTaskManager] 定时任务 '{}' 在数据库中存在但未找到对应实现 Bean，跳过调度", record.getTaskKey());
+                continue;
+            }
+            if (record.getStatus() != null && record.getStatus() == STATUS_ENABLED && record.getCronExpression() != null) {
+                schedule(record.getTaskKey(), record.getCronExpression());
+            } else {
+                log.info("[DynamicTaskManager] 定时任务 {} 处于暂停状态，跳过调度", record.getTaskKey());
             }
         }
     }
 
     /**
-     * 注册（或重新注册）一个任务的 cron 调度
+     * 注册（或重新注册）一个任务的 cron 调度。
+     * <p>
+     * 记录驱动：不依赖 SPI 对象，仅按 taskKey 注册，执行时再解析
+     * {@link #runWithRecord(String)}，故表记录无对应 Bean 也能注册（执行时回写失败）。
      */
-    private void schedule(ScheduledTaskSpi spi, String cron) {
-        cancel(spi.taskKey());
+    private void schedule(String taskKey, String cron) {
+        cancel(taskKey);
         if (cron == null || cron.isEmpty()) {
-            log.warn("[DynamicTaskManager] 定时任务 {} 的 cron 为空，跳过调度", spi.taskKey());
+            log.warn("[DynamicTaskManager] 定时任务 {} 的 cron 为空，跳过调度", taskKey);
             return;
         }
-        ScheduledFuture<?> future = scheduler.schedule(() -> runWithRecord(spi),
+        ScheduledFuture<?> future = scheduler.schedule(() -> runWithRecord(taskKey),
                 triggerContext -> {
                     // 由 CronTrigger 语义计算下一次触发时间（Trigger 需返回 Instant）
                     ZonedDateTime next = CronExpression.parse(cron).next(ZonedDateTime.now());
                     return next == null ? null : next.toInstant();
                 });
-        taskFutures.put(spi.taskKey(), future);
+        taskFutures.put(taskKey, future);
     }
 
     /**
@@ -158,6 +163,26 @@ public class DynamicTaskManager implements CommandLineRunner {
         if (future != null) {
             future.cancel(false);
         }
+    }
+
+    /**
+     * 按任务标识执行并回写执行结果（记录驱动入口）。
+     * <p>
+     * 执行时才从容器解析 SPI Bean：取不到则不执行业务逻辑，
+     * 直接回写 failed 与"未找到任务实现"提示并告警返回。
+     */
+    public void runWithRecord(String taskKey) {
+        ScheduledTaskSpi spi = resolveSpi(taskKey);
+        if (spi == null) {
+            log.warn("[DynamicTaskManager] 定时任务 {} 未找到任务实现，跳过执行", taskKey);
+            scheduledTaskMapper.update(null, new LambdaUpdateWrapper<ScheduledTask>()
+                    .eq(ScheduledTask::getTaskKey, taskKey)
+                    .set(ScheduledTask::getLastExecuteTime, LocalDateTime.now())
+                    .set(ScheduledTask::getLastExecuteStatus, "failed")
+                    .set(ScheduledTask::getLastExecuteError, "未找到任务实现: " + taskKey));
+            return;
+        }
+        runWithRecord(spi);
     }
 
     /**
@@ -196,30 +221,10 @@ public class DynamicTaskManager implements CommandLineRunner {
     }
 
     /**
-     * 修改任务 cron 表达式并重新调度
-     *
-     * @param taskKey 任务标识
-     * @param newCron 新 cron 表达式（Spring CronExpression 格式）
-     */
-    public void reschedule(String taskKey, String newCron) {
-        ScheduledTaskSpi spi = requireSpi(taskKey);
-        if (!CronExpression.isValidExpression(newCron)) {
-            throw new BusinessException("cron 表达式非法: " + newCron);
-        }
-        scheduledTaskMapper.update(null, new LambdaUpdateWrapper<ScheduledTask>()
-                .eq(ScheduledTask::getTaskKey, taskKey)
-                .set(ScheduledTask::getCronExpression, newCron)
-                .set(ScheduledTask::getStatus, STATUS_ENABLED));
-        // 修改 cron 视为恢复启用，统一走注册逻辑
-        schedule(spi, newCron);
-        log.info("[DynamicTaskManager] 定时任务 {} 已调整为 cron={}", taskKey, newCron);
-    }
-
-    /**
      * 暂停任务（取消调度，数据库状态置 0）
      */
     public void pause(String taskKey) {
-        requireSpi(taskKey);
+        requireRecord(taskKey);
         scheduledTaskMapper.update(null, new LambdaUpdateWrapper<ScheduledTask>()
                 .eq(ScheduledTask::getTaskKey, taskKey)
                 .set(ScheduledTask::getStatus, STATUS_DISABLED));
@@ -231,7 +236,7 @@ public class DynamicTaskManager implements CommandLineRunner {
      * 恢复任务（按数据库中的 cron 重新注册调度）
      */
     public void resume(String taskKey) {
-        ScheduledTaskSpi spi = requireSpi(taskKey);
+        requireRecord(taskKey);
         ScheduledTask record = getByTaskKey(taskKey);
         if (record == null || record.getCronExpression() == null) {
             throw new BusinessException("任务记录缺失或 cron 为空，无法恢复");
@@ -239,7 +244,7 @@ public class DynamicTaskManager implements CommandLineRunner {
         scheduledTaskMapper.update(null, new LambdaUpdateWrapper<ScheduledTask>()
                 .eq(ScheduledTask::getTaskKey, taskKey)
                 .set(ScheduledTask::getStatus, STATUS_ENABLED));
-        schedule(spi, record.getCronExpression());
+        schedule(taskKey, record.getCronExpression());
         log.info("[DynamicTaskManager] 定时任务 {} 已恢复，cron={}", taskKey, record.getCronExpression());
     }
 
@@ -247,8 +252,8 @@ public class DynamicTaskManager implements CommandLineRunner {
      * 手动触发一次任务执行（异步，立即返回）
      */
     public void triggerOnce(String taskKey) {
-        ScheduledTaskSpi spi = requireSpi(taskKey);
-        scheduler.execute(() -> runWithRecord(spi));
+        requireRecord(taskKey);
+        scheduler.execute(() -> runWithRecord(taskKey));
         log.info("[DynamicTaskManager] 定时任务 {} 已手动触发", taskKey);
     }
 
@@ -276,14 +281,141 @@ public class DynamicTaskManager implements CommandLineRunner {
     }
 
     /**
-     * 获取 SPI 实现，不存在则抛业务异常
+     * 校验任务记录存在（按表记录驱动，不要求 SPI Bean 一定存在），不存在抛业务异常
      */
-    private ScheduledTaskSpi requireSpi(String taskKey) {
-        ScheduledTaskSpi spi = spiMap.get(taskKey);
-        if (spi == null) {
-            throw new BusinessException("未找到任务实现: " + taskKey);
+    private void requireRecord(String taskKey) {
+        if (getByTaskKey(taskKey) == null) {
+            throw new BusinessException("任务不存在: " + taskKey);
         }
-        return spi;
+    }
+
+    /**
+     * 解析任务标识对应的 SPI 实现：
+     * 先精确匹配（taskKey == spiKey），再按 "-" 分界做最长前缀匹配
+     * （支持同类型多实例，如 "databaseBackup-daily" -> databaseBackup）。
+     */
+    private ScheduledTaskSpi resolveSpi(String taskKey) {
+        if (taskKey == null) {
+            return null;
+        }
+        ScheduledTaskSpi exact = spiMap.get(taskKey);
+        if (exact != null) {
+            return exact;
+        }
+        ScheduledTaskSpi best = null;
+        int bestLen = -1;
+        for (Map.Entry<String, ScheduledTaskSpi> entry : spiMap.entrySet()) {
+            String spiKey = entry.getKey();
+            // 前缀须形如 "{spiKey}-"，且取最长匹配避免 SPI key 本身互为前缀时歧义
+            if (taskKey.length() > spiKey.length() + 1
+                    && taskKey.startsWith(spiKey + "-")
+                    && spiKey.length() > bestLen) {
+                best = entry.getValue();
+                bestLen = spiKey.length();
+            }
+        }
+        return best;
+    }
+
+    /**
+     * 新增定时任务记录（任务类型必须可解析到容器内实现）。
+     * <p>
+     * taskKey 可为 SPI 的 taskKey（如 databaseBackup）或 "{spiKey}-后缀"
+     * （如 databaseBackup-daily，同类型多实例，重启后调度不丢失）。
+     *
+     * @param taskKey     任务唯一标识（须能解析到 {@link ScheduledTaskSpi} 实现）
+     * @param taskName    任务名称
+     * @param description 任务描述
+     * @param cron        cron 表达式（Spring CronExpression 格式）
+     * @param status      状态 1:启用 0:暂停（null 默认启用）
+     * @return 插入后的任务记录
+     */
+    public ScheduledTask create(String taskKey, String taskName, String description, String cron, Integer status) {
+        if (taskKey == null || taskKey.isBlank()) {
+            throw new BusinessException("任务标识不能为空");
+        }
+        if (!CronExpression.isValidExpression(cron)) {
+            throw new BusinessException("cron 表达式非法: " + cron);
+        }
+        if (getByTaskKey(taskKey) != null) {
+            throw new BusinessException("任务标识已存在: " + taskKey);
+        }
+        // 新增任务必须能解析到 SPI 类型，否则只是无法执行的死记录
+        if (resolveSpi(taskKey) == null) {
+            throw new BusinessException("未找到任务类型实现: " + taskKey);
+        }
+        ScheduledTask task = new ScheduledTask();
+        task.setTaskKey(taskKey);
+        task.setTaskName(taskName);
+        task.setDescription(description);
+        task.setCronExpression(cron);
+        task.setStatus(status == null ? STATUS_ENABLED : status);
+        try {
+            scheduledTaskMapper.insert(task);
+        } catch (DuplicateKeyException e) {
+            // 并发创建同 taskKey 撞唯一索引，转为友好业务提示
+            throw new BusinessException("任务标识已存在: " + taskKey);
+        }
+        if (task.getStatus() == STATUS_ENABLED) {
+            schedule(taskKey, cron);
+        }
+        log.info("[DynamicTaskManager] 已新增定时任务: {} [{}] cron={}", taskKey, taskName, cron);
+        return task;
+    }
+
+    /**
+     * 编辑定时任务基本信息（name/描述/cron，null 字段不更新）。
+     * <p>
+     * 记录处于启用状态且 cron 变更时按新 cron 重新调度；暂停状态不调度。
+     *
+     * @param id          任务记录主键
+     * @param taskName    任务名称（null 不更新）
+     * @param description 任务描述（null 不更新）
+     * @param cron        新 cron 表达式（null 不更新）
+     * @return 更新后的任务记录
+     */
+    public ScheduledTask update(Long id, String taskName, String description, String cron) {
+        ScheduledTask record = scheduledTaskMapper.selectById(id);
+        if (record == null) {
+            throw new BusinessException("任务不存在: id=" + id);
+        }
+        if (cron != null && !CronExpression.isValidExpression(cron)) {
+            throw new BusinessException("cron 表达式非法: " + cron);
+        }
+        boolean cronChanged = cron != null && !cron.equals(record.getCronExpression());
+        LambdaUpdateWrapper<ScheduledTask> wrapper = new LambdaUpdateWrapper<ScheduledTask>()
+                .eq(ScheduledTask::getId, id);
+        if (taskName != null) {
+            wrapper.set(ScheduledTask::getTaskName, taskName);
+        }
+        if (description != null) {
+            wrapper.set(ScheduledTask::getDescription, description);
+        }
+        if (cron != null) {
+            wrapper.set(ScheduledTask::getCronExpression, cron);
+        }
+        scheduledTaskMapper.update(null, wrapper);
+        // 启用状态下 cron 变更才重新调度；暂停状态仅更新记录
+        if (cronChanged && record.getStatus() != null && record.getStatus() == STATUS_ENABLED) {
+            schedule(record.getTaskKey(), cron);
+        }
+        log.info("[DynamicTaskManager] 已编辑定时任务: id={} taskKey={}", id, record.getTaskKey());
+        return scheduledTaskMapper.selectById(id);
+    }
+
+    /**
+     * 列出容器内全部任务类型元信息（后台新增任务时下拉选择用）
+     */
+    public List<SpiOption> listSpiOptions() {
+        return taskSpis.stream()
+                .map(spi -> new SpiOption(spi.taskKey(), spi.taskName(), spi.description(), spi.defaultCron()))
+                .toList();
+    }
+
+    /**
+     * 任务类型元信息（对应容器内一个 {@link ScheduledTaskSpi} 实现）
+     */
+    public record SpiOption(String taskKey, String taskName, String description, String defaultCron) {
     }
 
     /**

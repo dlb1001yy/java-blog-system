@@ -1,14 +1,24 @@
 import request from './request'
 
 export default {
+  // 可用任务 SPI 列表（新增任务时选择类型）
+  spiOptions() {
+    return request.get('/admin/tasks/spis')
+  },
+
+  // 新增任务
+  createTask(data) {
+    return request.post('/admin/tasks', data)
+  },
+
+  // 更新任务（任务名/描述/cron）
+  updateTask(id, data) {
+    return request.put(`/admin/tasks/${id}`, data)
+  },
+
   // 分页查询定时任务
   pageTasks(params) {
     return request.get('/admin/tasks/page', { params })
-  },
-
-  // 更新任务 cron 表达式
-  updateTaskCron(id, data) {
-    return request.put(`/admin/tasks/${id}/cron`, data)
   },
 
   // 暂停任务

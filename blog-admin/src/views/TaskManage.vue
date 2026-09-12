@@ -1,5 +1,9 @@
 <template>
   <PageContainer title="定时任务" description="后台定时任务调度管理">
+    <template #action>
+      <el-button type="primary" @click="handleAdd">新增任务</el-button>
+    </template>
+
     <div class="table-card">
       <el-table :data="tableData" v-loading="loading" :border="false" stripe>
         <el-table-column prop="taskName" label="任务名" min-width="140" />
@@ -38,7 +42,7 @@
         </el-table-column>
         <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" @click="handleEditCron(row)">编辑cron</el-button>
+            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
             <el-button v-if="row.status === 1" link type="warning" @click="handleToggle(row, false)">暂停</el-button>
             <el-button v-else link type="success" @click="handleToggle(row, true)">启用</el-button>
             <el-button link type="primary" @click="handleRun(row)">立即执行</el-button>
@@ -57,29 +61,65 @@
       </div>
     </div>
 
-    <el-dialog v-model="cronVisible" title="编辑 cron 表达式" width="480px">
-      <el-form label-width="100px">
-        <el-form-item label="任务名">
-          <span>{{ cronForm.taskName }}</span>
+    <!-- 新增/编辑任务弹窗 -->
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑任务' : '新增任务'" width="680px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
+        <el-form-item label="任务类型">
+          <el-select
+            v-model="form.spiKey"
+            :disabled="isEdit"
+            placeholder="请选择任务类型"
+            style="width: 100%"
+            @change="handleSpiChange"
+          >
+            <el-option
+              v-for="spi in spiList"
+              :key="spi.taskKey"
+              :label="`${spi.taskName}(${spi.taskKey})`"
+              :value="spi.taskKey"
+            />
+          </el-select>
         </el-form-item>
-        <el-form-item label="cron 表达式">
-          <el-input v-model="cronForm.cron" placeholder="如：0 0 4 * * ?" style="width: 240px; font-family: monospace" />
+        <el-form-item v-if="!isEdit" label="任务标识" prop="taskKey">
+          <el-input v-model="form.taskKey" placeholder="如 databaseBackup-daily（类型-后缀，同类型可建多个）" />
+        </el-form-item>
+        <el-form-item label="任务名" prop="taskName">
+          <el-input v-model="form.taskName" placeholder="请输入任务名" />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input v-model="form.description" placeholder="请输入描述（可选）" />
+        </el-form-item>
+        <el-form-item label="执行频率" required>
+          <div class="cron-editor">
+            <Cron
+              :key="cronKey"
+              v-model="form.cron"
+              format="spring"
+              locale="zh"
+              :periods="cronPeriods"
+              @error="handleCronError"
+            />
+            <el-input :model-value="form.cron" readonly class="cron-echo" placeholder="请选择执行频率" />
+            <div class="cron-tip">格式：秒 分 时 日 月 周（Spring 6 段）</div>
+          </div>
+        </el-form-item>
+        <el-form-item v-if="!isEdit" label="状态">
+          <el-switch v-model="form.status" :active-value="1" :inactive-value="0" active-text="启用" inactive-text="暂停" />
         </el-form-item>
       </el-form>
-      <div class="cron-tip">
-        格式：秒 分 时 日 月 周（6 段，可选第 7 段年），如「0 0 4 * * ?」表示每天 04:00:00 执行
-      </div>
       <template #footer>
-        <el-button @click="cronVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" :disabled="!cronValid" @click="handleSaveCron">保存</el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="saving" :disabled="!cronValid" @click="handleSave">保存</el-button>
       </template>
     </el-dialog>
   </PageContainer>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, nextTick, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { CronElementPlus as Cron } from '@vue-js-cron/element-plus'
+import '@vue-js-cron/element-plus/dist/element-plus.css'
 import taskApi from '@/api/task'
 import PageContainer from '@/components/PageContainer.vue'
 
@@ -104,30 +144,112 @@ const fetchData = async () => {
   }
 }
 
-// 编辑 cron
-const cronVisible = ref(false)
-const cronForm = reactive({ id: null, taskName: '', cron: '' })
-
-// 前端正则校验：6-7 段（秒 分 时 日 月 周 [年]），每段仅允许常规 cron 字符
-const cronValid = computed(() => {
-  const parts = cronForm.cron.trim().split(/\s+/)
-  return parts.length >= 6 && parts.length <= 7 &&
-    parts.every(p => /^[\d*,/\-?LW#A-Za-z]+$/.test(p))
-})
-
-const handleEditCron = (row) => {
-  cronForm.id = row.id
-  cronForm.taskName = row.taskName
-  cronForm.cron = row.cronExpression
-  cronVisible.value = true
+// 任务 SPI 选项（懒加载一次）
+const spiList = ref([])
+const spiLoaded = ref(false)
+const fetchSpis = async () => {
+  const res = await taskApi.spiOptions()
+  spiList.value = res.data || []
+  spiLoaded.value = true
 }
 
-const handleSaveCron = async () => {
+// 新增/编辑任务弹窗（isEdit 区分）
+const dialogVisible = ref(false)
+const isEdit = ref(false)
+const formRef = ref()
+const cronKey = ref(0)
+const cronError = ref('')
+const form = reactive({ id: null, spiKey: '', taskKey: '', taskName: '', description: '', cron: '', status: 1 })
+
+// cron 组件 periods：限定 6 段（秒/分/时/日/月/周，不含年），对齐后端 Spring CronExpression
+const cronPeriods = [
+  { id: 'q-second', value: [] },
+  { id: 'q-minute', value: ['second'] },
+  { id: 'q-hour', value: ['minute', 'second'] },
+  { id: 'day', value: ['hour', 'minute', 'second'] },
+  { id: 'week', value: ['dayOfWeek', 'hour', 'minute', 'second'] },
+  { id: 'month', value: ['day', 'dayOfWeek', 'hour', 'minute', 'second'] }
+]
+
+const rules = {
+  taskName: [{ required: true, message: '请输入任务名', trigger: 'blur' }],
+  taskKey: [
+    { required: true, message: '请输入任务标识', trigger: 'blur' },
+    {
+      pattern: /^[a-zA-Z][a-zA-Z0-9-]*$/,
+      message: '仅支持字母开头的字母/数字/中划线',
+      trigger: 'blur'
+    }
+  ]
+}
+
+// 表达式有值且组件未报错才允许保存
+const cronValid = computed(() => !!form.cron && !cronError.value)
+
+const handleCronError = (err) => {
+  cronError.value = err
+}
+
+const openDialog = (edit, row) => {
+  isEdit.value = edit
+  if (edit) {
+    form.id = row.id
+    form.taskKey = row.taskKey || ''
+    form.taskName = row.taskName
+    form.description = row.description || ''
+    form.cron = row.cronExpression || ''
+    form.status = row.status ?? 1
+  } else {
+    Object.assign(form, { id: null, spiKey: '', taskKey: '', taskName: '', description: '', cron: '', status: 1 })
+  }
+  cronError.value = ''
+  cronKey.value++ // 重挂载 cron 组件以同步初始表达式
+  dialogVisible.value = true
+  nextTick(() => formRef.value?.clearValidate())
+  if (!spiLoaded.value) fetchSpis().catch(() => {})
+}
+
+const handleAdd = () => openDialog(false)
+
+const handleEdit = (row) => openDialog(true, row)
+
+// 选中任务类型后自动填充默认信息（任务标识默认取类型 key，可追加后缀建多实例）
+const handleSpiChange = (spiKey) => {
+  const spi = spiList.value.find(s => s.taskKey === spiKey)
+  if (!spi) return
+  form.taskKey = spi.taskKey || ''
+  form.taskName = spi.taskName || ''
+  form.description = spi.description || ''
+  form.cron = spi.defaultCron || ''
+  cronError.value = ''
+  cronKey.value++
+}
+
+const handleSave = async () => {
+  const valid = await formRef.value.validate().catch(() => false)
+  if (!valid) return
+  if (!isEdit.value && !form.spiKey) {
+    ElMessage.warning('请选择任务类型')
+    return
+  }
+  if (!cronValid.value) {
+    ElMessage.warning('请设置合法的 cron 表达式')
+    return
+  }
   saving.value = true
   try {
-    await taskApi.updateTaskCron(cronForm.id, { cron: cronForm.cron.trim() })
-    ElMessage.success('更新成功')
-    cronVisible.value = false
+    const payload = {
+      taskName: form.taskName.trim(),
+      description: (form.description || '').trim(),
+      cronExpression: form.cron.trim()
+    }
+    if (isEdit.value) {
+      await taskApi.updateTask(form.id, payload)
+    } else {
+      await taskApi.createTask({ taskKey: form.taskKey.trim(), status: form.status, ...payload })
+    }
+    ElMessage.success(isEdit.value ? '更新成功' : '创建成功')
+    dialogVisible.value = false
     fetchData()
   } finally {
     saving.value = false
@@ -186,9 +308,20 @@ onMounted(() => fetchData())
 :deep(.el-dialog__body) { padding: var(--space-5); }
 :deep(.el-dialog__footer) { padding: var(--space-4) var(--space-5); border-top: 1px solid var(--border-color); }
 
+.cron-editor {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  line-height: normal;
+}
+
+.cron-echo {
+  font-family: monospace;
+}
+
 .cron-tip {
   font-size: 12px;
   color: var(--text-secondary, #909399);
-  padding-left: 100px;
 }
 </style>

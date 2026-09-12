@@ -69,18 +69,6 @@ public class AdminTaskController {
         return Result.success(voPage);
     }
 
-    @PutMapping("/{id}/cron")
-    @Admin("修改定时任务cron")
-    @Operation(summary = "修改定时任务cron表达式")
-    public Result<Void> updateCron(@PathVariable Long id, @RequestBody CronUpdateDTO dto) {
-        ScheduledTask task = scheduledTaskMapper.selectById(id);
-        if (task == null) {
-            return Result.error("任务不存在");
-        }
-        dynamicTaskManager.reschedule(task.getTaskKey(), dto.getCron());
-        return Result.success();
-    }
-
     @PutMapping("/{id}/pause")
     @Admin("暂停定时任务")
     @Operation(summary = "暂停定时任务")
@@ -117,10 +105,58 @@ public class AdminTaskController {
         return Result.success("已触发");
     }
 
-    @Data
-    public static class CronUpdateDTO {
-        /** 新 cron 表达式（Spring CronExpression 格式） */
-        private String cron;
+    @GetMapping("/spis")
+    @Operation(summary = "查询可用任务类型")
+    public Result<List<DynamicTaskManager.SpiOption>> spis() {
+        return Result.success(dynamicTaskManager.listSpiOptions());
+    }
+
+    @PostMapping
+    @Admin("新增定时任务")
+    @Operation(summary = "新增定时任务")
+    public Result<ScheduledTask> create(@RequestBody TaskCreateDTO dto) {
+        ScheduledTask task = dynamicTaskManager.create(
+                dto.taskKey(), dto.taskName(), dto.description(), dto.cronExpression(), dto.status());
+        return Result.success(task);
+    }
+
+    @PutMapping("/{id}")
+    @Admin("编辑定时任务")
+    @Operation(summary = "编辑定时任务")
+    public Result<ScheduledTask> update(@PathVariable Long id, @RequestBody TaskUpdateDTO dto) {
+        // 按记录主键更新，body 中 taskKey 仅用于前端回显，不参与定位
+        ScheduledTask task = dynamicTaskManager.update(id, dto.taskName(), dto.description(), dto.cronExpression());
+        return Result.success(task);
+    }
+
+    /**
+     * 新增定时任务请求体
+     */
+    public record TaskCreateDTO(
+            /** 任务唯一标识（须有对应任务类型实现） */
+            String taskKey,
+            /** 任务名称 */
+            String taskName,
+            /** 任务描述 */
+            String description,
+            /** cron 表达式（Spring CronExpression 格式） */
+            String cronExpression,
+            /** 状态 1:启用 0:暂停（空默认启用） */
+            Integer status) {
+    }
+
+    /**
+     * 编辑定时任务请求体（null 字段不更新）
+     */
+    public record TaskUpdateDTO(
+            /** 任务唯一标识（回显用，不参与更新） */
+            String taskKey,
+            /** 任务名称 */
+            String taskName,
+            /** 任务描述 */
+            String description,
+            /** cron 表达式（Spring CronExpression 格式） */
+            String cronExpression) {
     }
 
     @Data
