@@ -547,6 +547,17 @@ location /api/ {
 }
 ```
 
+> **注意：外部统一入口 nginx 还需追加 `/uploads/` 反代到 MinIO**，否则经该入口访问的音乐/封面等 MinIO 文件（fileUrl 形如 `/uploads/music/xxx.mp3`，无 `/api` 前缀）会 404——典型症状为 App 打包后音乐播放失败、Web 端封面裂图（local 存储的老文件走 `/api/uploads/**` 不受影响）：
+
+```nginx
+# MinIO 对象存储反代：/uploads/<key> → MinIO 桶 blog/<key>（尾部斜杠做前缀替换）
+location /uploads/ {
+    proxy_pass http://127.0.0.1:9000/blog/;
+    proxy_set_header Host $host;
+    client_max_body_size 50m;
+}
+```
+
 ### 移动端打包
 
 使用 HBuilderX：
