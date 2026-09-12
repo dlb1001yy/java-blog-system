@@ -65,9 +65,17 @@ const reportPlay = (id) => {
 
 // ===== 全局唯一音频实例（模块顶层创建） =====
 const audio = uni.createInnerAudioContext()
-// 音乐场景下不跟随系统静音开关
-audio.obeyMuteSwitch = false
-audio.volume = state.volume
+// 音乐场景下不跟随系统静音开关（部分平台该属性只读，赋值需容错，否则启动即白屏）
+try {
+  audio.obeyMuteSwitch = false
+} catch (e) {
+  // ignore: 平台不支持时保持默认行为
+}
+try {
+  audio.volume = state.volume
+} catch (e) {
+  // ignore: 平台不支持时保持默认音量
+}
 
 audio.onPlay(() => {
   state.isPlaying = true

@@ -1,7 +1,7 @@
 <template>
   <!-- 外层 view 作为页面根节点，主题类挂此处向内级联 CSS 变量 -->
   <view :class="['page-root', isDark ? 'theme-dark' : '']">
-    <!-- scroll-view 自定义下拉刷新 + 触底加载 -->
+    <!-- scroll-view 自定义下拉刷新 -->
     <scroll-view
       class="container"
       scroll-y
@@ -9,7 +9,6 @@
       :refresher-default-style="refresherStyle"
       :refresher-triggered="refreshing"
       @refresherrefresh="onRefresh"
-      @scrolltolower="onLoadMore"
     >
       <!-- 品牌脉冲刷新动画：App 编译器不支持 refresher 具名插槽，仅非 App 平台编译；App 回退系统原生样式 -->
       <!-- #ifndef APP-PLUS -->
@@ -41,7 +40,7 @@
       </view>
     </view>
 
-    <!-- 功能模块入口：4 列 2 行 -->
+    <!-- 功能模块入口：3 列 2 行 -->
     <view class="modules">
       <view class="modules-grid">
         <view
@@ -95,57 +94,6 @@
       </template>
     </view>
 
-    <!-- 搜索栏 -->
-    <view class="search-wrap">
-      <SearchBar
-        placeholder="搜索文章..."
-        :value="searchKeyword"
-        @input="onSearchInput"
-        @search="onSearch"
-      />
-    </view>
-
-    <!-- 搜索结果数（仅搜索态） -->
-    <view v-if="isSearching" class="search-info">
-      <text class="search-info-text">找到 {{ searchTotal }} 篇相关文章</text>
-    </view>
-
-    <!-- 分类筛选 chips（搜索态隐藏） -->
-    <view v-else class="chips-wrap">
-      <CategoryChips :list="categoryChips" :active="activeCategoryId" @change="onCategoryChange" />
-      <CategoryChips :list="types" :active="activeType" @change="onTypeChange" />
-    </view>
-
-    <!-- 文章列表 -->
-    <view class="list">
-      <!-- 首次加载 / 切换筛选：骨架 -->
-      <Skeleton v-if="showSkeleton" type="article" :count="3" />
-      <template v-else>
-        <ArticleItem
-          v-for="item in list"
-          :key="item.id"
-          :article="item"
-          @click="goDetail"
-        />
-        <!-- 空状态 -->
-        <view v-if="list.length === 0" class="empty">
-          <svg class="empty-icon" viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <path d="M14 2v6h6" />
-            <path d="M16 13H8" />
-            <path d="M16 17H8" />
-            <path d="M10 9H8" />
-          </svg>
-          <text class="empty-text">暂无文章</text>
-        </view>
-        <!-- 加载更多（三点跳动动画）/ 没有更多 -->
-        <view v-if="list.length > 0 && loading" class="status">
-          <LoadingDots :size="6" />
-        </view>
-        <view v-if="list.length > 0 && !loading && !hasMore" class="status">没有更多了</view>
-      </template>
-    </view>
-
     </scroll-view>
 
     <!-- 全局迷你播放条：fixed 定位，置于 TabBar 之上 -->
@@ -161,43 +109,24 @@ import { ref, computed, watch } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import api from '@/common/api.js'
 import { colors, darkColors, isDark, applyNavBarTheme } from '@/common/theme.js'
-import { initNetworkWatch, offlineMode, cacheArticleList, getCachedArticleList } from '@/common/offline.js'
+import { initNetworkWatch, offlineMode } from '@/common/offline.js'
 import { resolveFileUrl } from '@/common/config.js'
 import { optimizeImageUrl } from '@/common/imageUrl.js'
-import ArticleItem from '@/components/ArticleItem.vue'
-import SearchBar from '@/components/SearchBar.vue'
-import CategoryChips from '@/components/CategoryChips.vue'
 import Skeleton from '@/components/Skeleton.vue'
-import LoadingDots from '@/components/LoadingDots.vue'
 import Icon from '@/components/Icon.vue'
 import PlayerBar from '@/components/PlayerBar.vue'
 import TabBar from '@/components/TabBar.vue'
 
-// 类型 chips：固定列表（全部/原创/转载/翻译）
-const types = [
-  { label: '全部', value: null },
-  { label: '原创', value: 0 },
-  { label: '转载', value: 1 },
-  { label: '翻译', value: 2 }
-]
-
-// 功能模块入口：8 项 4 列 2 行
+// 功能模块入口：6 项 3 列 2 行
 const modules = [
   { label: '文章', icon: 'document', url: '/subpkg-article/pages/list' },
   { label: '刷题', icon: 'book',     url: '/subpkg-study/pages/interview/index' },
   { label: '考试', icon: 'edit',     url: '/subpkg-study/pages/exam/index' },
   { label: '成绩', icon: 'trophy',   url: '/subpkg-study/pages/scores/index' },
   { label: '音乐', icon: 'music',    url: '/subpkg-music/pages/index' },
-  { label: '留言', icon: 'mail',     url: '/subpkg/pages/message/index' },
-  { label: '简历', icon: 'user',     url: '/subpkg/pages/resume/index' },
-  { label: '关于', icon: 'location', url: '/subpkg/pages/about/index' }
+  { label: '简历', icon: 'user',     url: '/subpkg/pages/resume/index' }
 ]
 
-// 列表与分页状态
-const list = ref([])
-const page = ref(1)
-const loading = ref(false)
-const hasMore = ref(true)
 // 自定义下拉刷新进行中（绑定 refresher-triggered）
 const refreshing = ref(false)
 
@@ -210,9 +139,8 @@ const refresherStyle = 'black'
 const refresherStyle = 'none'
 // #endif
 
-// 站点统计与分类
+// 站点统计
 const stats = ref(null)
-const categories = ref([])
 // 题库题量（来自面试题分页接口 total）
 const questionCount = ref(0)
 
@@ -220,28 +148,6 @@ const questionCount = ref(0)
 const latestLoading = ref(true)
 const latestFailed = ref(false)
 const latestArticles = ref([])
-
-// 筛选项
-const activeCategoryId = ref(null)
-const activeType = ref(null)
-
-// 搜索状态
-const searchKeyword = ref('')
-const isSearching = ref(false)
-const searchTotal = ref(0)
-
-// 请求序列号：快速切换分类/搜索时丢弃过期响应，避免数据错位
-let fetchSeq = 0
-
-// 首次加载或切换筛选时显示骨架
-const showSkeleton = computed(() => loading.value && list.value.length === 0)
-
-// 分类 chips：全部 + 接口分类
-const categoryChips = computed(() => {
-  return [{ label: '全部', value: null }].concat(
-    categories.value.map(c => ({ label: c.name, value: c.id }))
-  )
-})
 
 // Hero 主行统计文本："12 篇文章 · 1.2k 浏览"
 const statsText = computed(() => {
@@ -273,71 +179,6 @@ const formatCount = (n) => {
     return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k'
   }
   return String(n)
-}
-
-// 拉取文章列表 / 搜索结果
-const fetchData = async () => {
-  // 离线模式：不发请求，第一页读缓存降级（无缓存则展示空态）
-  if (offlineMode.value) {
-    if (page.value === 1) {
-      const cached = getCachedArticleList()
-      list.value = cached || []
-      hasMore.value = false
-      uni.showToast({ title: '已进入离线阅读模式', icon: 'none' })
-    }
-    return
-  }
-  if (!hasMore.value) return
-  const seq = ++fetchSeq
-  loading.value = true
-  try {
-    let res
-    if (isSearching.value) {
-      res = await api.searchArticles({
-        keyword: searchKeyword.value,
-        current: page.value,
-        size: 10
-      })
-    } else {
-      const params = { current: page.value, size: 10 }
-      // null 参数不发送，避免后端收到字符串 "null"
-      if (activeCategoryId.value != null) params.categoryId = activeCategoryId.value
-      if (activeType.value != null) params.type = activeType.value
-      res = await api.getArticles(params)
-    }
-    // 被后续请求取代时丢弃结果
-    if (seq !== fetchSeq) return
-    const records = (res.data && res.data.records) || []
-    if (page.value === 1) {
-      list.value = records
-      // 成功拿到第一页数据后写入离线缓存
-      cacheArticleList(records)
-    } else {
-      list.value = list.value.concat(records)
-    }
-    hasMore.value = records.length === 10
-    if (isSearching.value && page.value === 1) {
-      searchTotal.value = (res.data && res.data.total) || records.length
-    }
-  } catch (e) {
-    if (seq === fetchSeq) {
-      // 网络类失败：尝试离线缓存降级
-      if (page.value === 1) {
-        const cached = getCachedArticleList()
-        if (cached && cached.length) {
-          list.value = cached
-          hasMore.value = false
-          uni.showToast({ title: '已进入离线阅读模式', icon: 'none' })
-          return
-        }
-      }
-      uni.showToast({ title: '加载失败', icon: 'none' })
-    }
-  } finally {
-    if (seq === fetchSeq) {
-      loading.value = false
-    }
-  }
 }
 
 // 拉取站点统计
@@ -384,69 +225,6 @@ const loadLatest = async () => {
 // 最新文章封面：相对路径拼接 origin + 命中 CDN 时追加压缩参数
 const latestCover = (item) => optimizeImageUrl(resolveFileUrl(item && item.coverImage), 120)
 
-// 拉取分类列表
-const loadCategories = async () => {
-  try {
-    const res = await api.getCategories()
-    categories.value = res.data || []
-  } catch (e) {
-    categories.value = []
-  }
-}
-
-// 搜索栏输入：清空时退出搜索
-const onSearchInput = (val) => {
-  searchKeyword.value = val
-  if (!val && isSearching.value) {
-    exitSearch()
-  }
-}
-
-// 搜索栏 confirm：进入搜索
-const onSearch = (val) => {
-  const kw = (val || '').trim()
-  if (!kw) {
-    if (isSearching.value) exitSearch()
-    return
-  }
-  isSearching.value = true
-  searchKeyword.value = kw
-  page.value = 1
-  hasMore.value = true
-  list.value = []
-  fetchData()
-}
-
-// 退出搜索，恢复普通列表
-const exitSearch = () => {
-  isSearching.value = false
-  searchKeyword.value = ''
-  page.value = 1
-  hasMore.value = true
-  list.value = []
-  fetchData()
-}
-
-// 切换分类
-const onCategoryChange = (val) => {
-  if (activeCategoryId.value === val) return
-  activeCategoryId.value = val
-  page.value = 1
-  hasMore.value = true
-  list.value = []
-  fetchData()
-}
-
-// 切换类型
-const onTypeChange = (val) => {
-  if (activeType.value === val) return
-  activeType.value = val
-  page.value = 1
-  hasMore.value = true
-  list.value = []
-  fetchData()
-}
-
 // 跳转文章详情
 const goDetail = (id) => {
   uni.navigateTo({ url: `/pages/article/detail?id=${id}` })
@@ -466,33 +244,20 @@ const goModule = (url) => {
 onShow(() => applyNavBarTheme())
 watch(isDark, () => applyNavBarTheme())
 
-// 页面加载：初始化网络监听，并行拉取统计、题量、分类、最新文章、文章
+// 页面加载：初始化网络监听，并行拉取统计、题量、最新文章
 onLoad(() => {
   initNetworkWatch()
   loadStats()
   loadQuestionCount()
-  loadCategories()
   loadLatest()
-  fetchData()
 })
 
-// scroll-view 触底加载更多
-const onLoadMore = () => {
-  if (loading.value || !hasMore.value) return
-  page.value++
-  fetchData()
-}
-
-// 自定义下拉刷新：重置分页后重新拉取，同时刷新统计与最新文章
+// 自定义下拉刷新：重新拉取统计、题量与最新文章
 const onRefresh = async () => {
   refreshing.value = true
-  page.value = 1
-  hasMore.value = true
-  list.value = []
   loadStats()
   loadQuestionCount()
-  loadLatest()
-  await fetchData()
+  await loadLatest()
   refreshing.value = false
 }
 </script>
@@ -630,7 +395,7 @@ const onRefresh = async () => {
 }
 
 .module-item {
-  width: 25%;
+  width: 33.33%;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -655,18 +420,13 @@ const onRefresh = async () => {
   margin-bottom: $spacing-xs;
 }
 
-/* 八个模块依次配色（浅色底 + 品牌色图标） */
+/* 六个模块依次配色（浅色底 + 品牌色图标） */
 .m-0 { background: rgba($color-primary, 0.12); color: $color-primary; }
 .m-1 { background: rgba($color-secondary, 0.12); color: $color-secondary; }
 .m-2 { background: rgba($color-accent, 0.12); color: $color-accent; }
 .m-3 { background: rgba($color-warning, 0.14); color: $color-warning; }
 .m-4 { background: rgba($color-primary-light, 0.12); color: $color-primary-light; }
 .m-5 { background: rgba($color-success, 0.12); color: $color-success; }
-.m-6 { background: rgba($color-accent, 0.12); color: $color-accent; }
-.m-7 {
-  background: rgba($color-text-secondary, 0.15);
-  color: var(--app-text-secondary, #64748B);
-}
 
 .module-name {
   font-size: 12px;
@@ -766,67 +526,5 @@ const onRefresh = async () => {
 .latest-date {
   font-size: 11px;
   color: var(--app-text-tertiary, #94A3B8);
-}
-
-/* ===== 搜索栏 ===== */
-.search-wrap {
-  margin: $spacing-md $spacing-lg 0;
-  position: relative;
-  z-index: 5;
-}
-/* 让 SearchBar 呈白底浮动卡片效果，避免与页面灰底融为一体 */
-.search-wrap :deep(.search-bar) {
-  background: var(--app-bg-card, #FFFFFF);
-  box-shadow: $shadow-floating;
-}
-
-/* ===== 搜索结果数 ===== */
-.search-info {
-  padding: 12px 16px 0;
-}
-
-.search-info-text {
-  font-size: 13px;
-  color: var(--app-text-secondary, #64748B);
-}
-
-/* ===== 分类 chips（两行，gap 8px） ===== */
-.chips-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-top: 12px;
-}
-
-/* ===== 文章列表 ===== */
-.list {
-  padding: 12px 16px;
-}
-
-/* 空状态 */
-.empty {
-  padding: 56px 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: var(--app-text-tertiary, #94A3B8);
-}
-
-.empty-icon {
-  margin-bottom: 12px;
-  opacity: 0.5;
-}
-
-.empty-text {
-  font-size: 14px;
-  color: var(--app-text-tertiary, #94A3B8);
-}
-
-/* 加载更多 / 没有更多 */
-.status {
-  text-align: center;
-  padding: 12px;
-  color: var(--app-text-tertiary, #94A3B8);
-  font-size: 12px;
 }
 </style>
