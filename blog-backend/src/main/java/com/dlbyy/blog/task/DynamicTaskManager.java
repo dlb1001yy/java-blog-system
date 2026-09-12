@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
 /**
  * 动态定时任务管理器。
@@ -47,6 +48,8 @@ public class DynamicTaskManager implements CommandLineRunner {
     private static final int STATUS_DISABLED = 0;
     /** 错误信息回写数据库时的最大长度（超出截断） */
     private static final int ERROR_MAX_LENGTH = 1000;
+    /** 任务标识格式：字母开头的字母/数字/中划线（与前端校验一致） */
+    private static final Pattern TASK_KEY_PATTERN = Pattern.compile("^[a-zA-Z][a-zA-Z0-9-]*$");
 
     private final List<ScheduledTaskSpi> taskSpis;
     private final ScheduledTaskMapper scheduledTaskMapper;
@@ -334,6 +337,10 @@ public class DynamicTaskManager implements CommandLineRunner {
         if (taskKey == null || taskKey.isBlank()) {
             throw new BusinessException("任务标识不能为空");
         }
+        // 格式与前端校验一致：字母开头的字母/数字/中划线（保证 UI 编辑时 disabled 字段校验可过）
+        if (!TASK_KEY_PATTERN.matcher(taskKey).matches()) {
+            throw new BusinessException("任务标识仅支持字母开头的字母/数字/中划线: " + taskKey);
+        }
         if (!CronExpression.isValidExpression(cron)) {
             throw new BusinessException("cron 表达式非法: " + cron);
         }
@@ -364,17 +371,25 @@ public class DynamicTaskManager implements CommandLineRunner {
     }
 
     /**
-     * 编辑定时任务基本信息（name/描述/cron，null 字段不更新）。
+     * 编辑定时任务（name/描述/cron/状态，null 字段不更新）。
      * <p>
-     * 记录处于启用状态且 cron 变更时按新 cron 重新调度；暂停状态不调度。
+     * 调度同步按「最终状态 finalStatus（status==null ? 旧状态 : status）」
+     * 与「最终 cron finalCron（cron==null ? 旧 cron : cron）」计算，保证组合场景正确：
+     * <ul>
+     *     <li>finalStatus=0（暂停）：无论 cron 是否变更一律 cancel，暂停态不保留调度；</li>
+     *     <li>finalStatus=1（启用）且（cron 变更或旧状态非启用，即原本未注册）：
+     *         按最终 cron 重新注册（schedule 内部先 cancel 再注册，幂等）；</li>
+     *     <li>其余情况（保持启用且 cron 未变）：调度不动。</li>
+     * </ul>
      *
      * @param id          任务记录主键
      * @param taskName    任务名称（null 不更新）
      * @param description 任务描述（null 不更新）
      * @param cron        新 cron 表达式（null 不更新）
+     * @param status      状态 1:启用 0:暂停（null 不更新）
      * @return 更新后的任务记录
      */
-    public ScheduledTask update(Long id, String taskName, String description, String cron) {
+    public ScheduledTask update(Long id, String taskName, String description, String cron, Integer status) {
         ScheduledTask record = scheduledTaskMapper.selectById(id);
         if (record == null) {
             throw new BusinessException("任务不存在: id=" + id);
@@ -382,7 +397,13 @@ public class DynamicTaskManager implements CommandLineRunner {
         if (cron != null && !CronExpression.isValidExpression(cron)) {
             throw new BusinessException("cron 表达式非法: " + cron);
         }
+        if (status != null && status != STATUS_ENABLED && status != STATUS_DISABLED) {
+            throw new BusinessException("status 非法: " + status);
+        }
         boolean cronChanged = cron != null && !cron.equals(record.getCronExpression());
+        Integer oldStatus = record.getStatus();
+        Integer finalStatus = status == null ? oldStatus : status;
+        String finalCron = cron == null ? record.getCronExpression() : cron;
         LambdaUpdateWrapper<ScheduledTask> wrapper = new LambdaUpdateWrapper<ScheduledTask>()
                 .eq(ScheduledTask::getId, id);
         if (taskName != null) {
@@ -394,10 +415,16 @@ public class DynamicTaskManager implements CommandLineRunner {
         if (cron != null) {
             wrapper.set(ScheduledTask::getCronExpression, cron);
         }
+        if (status != null) {
+            wrapper.set(ScheduledTask::getStatus, status);
+        }
         scheduledTaskMapper.update(null, wrapper);
-        // 启用状态下 cron 变更才重新调度；暂停状态仅更新记录
-        if (cronChanged && record.getStatus() != null && record.getStatus() == STATUS_ENABLED) {
-            schedule(record.getTaskKey(), cron);
+        // 调度同步：暂停态一律无调度；启用态且 cron 变更或原本未启用时按最终 cron 注册
+        if (finalStatus != null && finalStatus == STATUS_DISABLED) {
+            cancel(record.getTaskKey());
+        } else if (finalStatus != null && finalStatus == STATUS_ENABLED
+                && (cronChanged || oldStatus == null || oldStatus != STATUS_ENABLED)) {
+            schedule(record.getTaskKey(), finalCron);
         }
         log.info("[DynamicTaskManager] 已编辑定时任务: id={} taskKey={}", id, record.getTaskKey());
         return scheduledTaskMapper.selectById(id);

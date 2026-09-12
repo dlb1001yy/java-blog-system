@@ -124,8 +124,8 @@ public class AdminTaskController {
     @Admin("编辑定时任务")
     @Operation(summary = "编辑定时任务")
     public Result<ScheduledTask> update(@PathVariable Long id, @RequestBody TaskUpdateDTO dto) {
-        // 按记录主键更新，body 中 taskKey 仅用于前端回显，不参与定位
-        ScheduledTask task = dynamicTaskManager.update(id, dto.taskName(), dto.description(), dto.cronExpression());
+        // 按记录主键更新，任务标识不可修改
+        ScheduledTask task = dynamicTaskManager.update(id, dto.taskName(), dto.description(), dto.cronExpression(), dto.status());
         return Result.success(task);
     }
 
@@ -149,14 +149,14 @@ public class AdminTaskController {
      * 编辑定时任务请求体（null 字段不更新）
      */
     public record TaskUpdateDTO(
-            /** 任务唯一标识（回显用，不参与更新） */
-            String taskKey,
             /** 任务名称 */
             String taskName,
             /** 任务描述 */
             String description,
             /** cron 表达式（Spring CronExpression 格式） */
-            String cronExpression) {
+            String cronExpression,
+            /** 状态 1:启用 0:暂停（null 不更新） */
+            Integer status) {
     }
 
     @Data

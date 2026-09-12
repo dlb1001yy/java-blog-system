@@ -80,8 +80,8 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="!isEdit" label="任务标识" prop="taskKey">
-          <el-input v-model="form.taskKey" placeholder="如 databaseBackup-daily（类型-后缀，同类型可建多个）" />
+        <el-form-item label="任务标识" prop="taskKey">
+          <el-input v-model="form.taskKey" :disabled="isEdit" placeholder="如 databaseBackup-daily（类型-后缀，同类型可建多个）" />
         </el-form-item>
         <el-form-item label="任务名" prop="taskName">
           <el-input v-model="form.taskName" placeholder="请输入任务名" />
@@ -103,7 +103,7 @@
             <div class="cron-tip">格式：秒 分 时 日 月 周（Spring 6 段）</div>
           </div>
         </el-form-item>
-        <el-form-item v-if="!isEdit" label="状态">
+        <el-form-item label="状态">
           <el-switch v-model="form.status" :active-value="1" :inactive-value="0" active-text="启用" inactive-text="暂停" />
         </el-form-item>
       </el-form>
@@ -199,6 +199,7 @@ const openDialog = (edit, row) => {
     form.description = row.description || ''
     form.cron = row.cronExpression || ''
     form.status = row.status ?? 1
+    fillSpiKey()
   } else {
     Object.assign(form, { id: null, spiKey: '', taskKey: '', taskName: '', description: '', cron: '', status: 1 })
   }
@@ -206,7 +207,21 @@ const openDialog = (edit, row) => {
   cronKey.value++ // 重挂载 cron 组件以同步初始表达式
   dialogVisible.value = true
   nextTick(() => formRef.value?.clearValidate())
-  if (!spiLoaded.value) fetchSpis().catch(() => {})
+  // 类型列表懒加载，加载完成后再补一次类型回显
+  if (!spiLoaded.value) fetchSpis().then(() => fillSpiKey()).catch(() => {})
+}
+
+// 编辑回填：按 taskKey 与类型列表做最长 "-" 前缀匹配推导类型（对齐后端 resolveSpi 语义）
+const fillSpiKey = () => {
+  if (!isEdit.value) return
+  let best = ''
+  for (const spi of spiList.value) {
+    const k = spi.taskKey
+    if ((form.taskKey === k || form.taskKey.startsWith(k + '-')) && k.length > best.length) {
+      best = k
+    }
+  }
+  form.spiKey = best
 }
 
 const handleAdd = () => openDialog(false)
@@ -244,7 +259,8 @@ const handleSave = async () => {
       cronExpression: form.cron.trim()
     }
     if (isEdit.value) {
-      await taskApi.updateTask(form.id, payload)
+      // 编辑时 taskKey 不可改，仅同步任务名/描述/cron/状态
+      await taskApi.updateTask(form.id, { ...payload, status: form.status })
     } else {
       await taskApi.createTask({ taskKey: form.taskKey.trim(), status: form.status, ...payload })
     }
