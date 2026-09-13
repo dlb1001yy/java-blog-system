@@ -95,6 +95,11 @@ blog-backend/
 │   │   ├── JwtAuthenticationFilter.java
 │   │   ├── JwtAuthenticationEntryPoint.java
 │   │   └── CustomUserDetailsService.java
+│   ├── task/                         # 动态定时任务
+│   │   ├── ScheduledTaskSpi.java      # 任务 SPI 接口（新任务类型实现此接口）
+│   │   ├── DynamicTaskManager.java    # 动态调度管理器
+│   │   ├── DatabaseBackupTask.java    # 内置任务：数据库备份
+│   │   └── OperationLogCleanTask.java # 内置任务：操作日志清理
 │   └── utils/                        # 工具类
 ├── src/main/resources/
 │   ├── application.yaml              # 配置文件
@@ -133,6 +138,8 @@ blog-admin/
 │   │   ├── MessageList.vue            # 留言管理
 │   │   ├── LinkList.vue               # 友链管理
 │   │   ├── ResumeEdit.vue             # 简历编辑
+│   │   ├── TaskManage.vue            # 定时任务管理
+│   │   ├── BackupManage.vue          # 数据备份管理
 │   │   ├── Settings.vue               # 站点设置
 │   │   └── Login.vue                  # 登录
 │   ├── components/                   # 公共组件
@@ -325,6 +332,9 @@ npm run dev
 | storage.type | STORAGE_TYPE | local | 文件存储策略：local（本地磁盘，默认）\| minio（MinIO 对象存储）\| oss（阿里云 OSS） |
 | storage.minio.* | MINIO_ENDPOINT 等 | 见 application.yaml | MinIO 五项配置（STORAGE_TYPE=minio 时生效） |
 | storage.oss.* | OSS_ENDPOINT 等 | （空） | 阿里云 OSS 五项配置（STORAGE_TYPE=oss 时需显式配置） |
+| blog.backup.dir | — | ./backups（Docker 固定 /app/backups） | 数据库备份文件目录（Docker 挂载 blog_backup_data 卷持久化） |
+| blog.backup.retention-days | — | 30 | 备份保留天数，超期自动清理 |
+| blog.cleanup.retention-days | — | 90 | 操作日志保留天数（定时任务 operationLogClean），超期自动清理 |
 | file.upload-path | — | — | 文件上传目录 |
 
 ### 前端配置（vite.config.js）
@@ -463,6 +473,43 @@ Authorization: Bearer <token>
 | GET | /portal/music/playlists | 歌单分页 |
 | GET | /portal/music/playlists/{id} | 歌单详情（含歌曲列表） |
 
+### 定时任务接口（/admin/tasks，需 Token）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | /admin/tasks/page | 任务分页（含最近执行时间/状态/错误信息） |
+| GET | /admin/tasks/spis | 可用任务类型列表（下拉选项数据源） |
+| POST | /admin/tasks | 新增任务（选任务类型 + 自定义任务标识与 cron） |
+| PUT | /admin/tasks/{id} | 修改任务（cron 表达式即时生效，无需重启） |
+| PUT | /admin/tasks/{id}/pause | 暂停任务 |
+| PUT | /admin/tasks/{id}/resume | 恢复任务 |
+| POST | /admin/tasks/{id}/run | 立即执行一次 |
+
+### 数据备份接口（/admin/backups，需 Token）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | /admin/backups/page | 备份记录分页 |
+| POST | /admin/backups | 立即手动备份（type=manual） |
+| DELETE | /admin/backups/{id} | 删除备份文件与记录 |
+| POST | /admin/backups/{id}/restore | 从备份还原数据库 |
+
+### 定时任务与数据备份说明
+
+- **动态调度框架**：任务以 Spring Bean 实现 `ScheduledTaskSpi` 接口注册，`sys_scheduled_task` 表持久化每个任务的 cron、状态与最近执行情况；[DynamicTaskManager](blog-backend/src/main/java/com/dlbyy/blog/task/DynamicTaskManager.java) 基于独立线程池（2 线程 + taskKey 防重入）支持运行期改 cron / 暂停 / 恢复 / 立即执行，改配置即时生效
+- **任务类型下拉来自代码而非数据库**：`GET /admin/tasks/spis` 自动收集容器内所有 SPI 实现。**新增任务类型只需新建类实现 `ScheduledTaskSpi` + `@Component`**，重启后自动出现在下拉框、自动播种任务记录并注册调度（内置任务见 `task/` 包：`DatabaseBackupTask`、`OperationLogCleanTask`）
+- **内置任务**：
+
+| taskKey | 任务 | 默认 cron | 说明 |
+|---------|------|-----------|------|
+| databaseBackup | 数据库备份 | `0 0 4 * * ?` | 每天凌晨 4 点纯 JDBC 全库逻辑备份（`SHOW CREATE TABLE` + 逐行 INSERT），gzip 为 `backup_yyyyMMdd_HHmmss.sql.gz`，不依赖 mysqldump；完成后自动清理超过保留期的旧备份 |
+| operationLogClean | 操作日志清理 | `0 30 3 * * ?` | 每天凌晨 3:30（错开备份）物理删除超过保留天数的 `sys_operation_log` 记录；保留天数非法（≤0）时跳过并告警 |
+
+- **备份配置**：`blog.backup.dir`（默认 `./backups`，Docker 挂载 `blog_backup_data` 卷持久化）、`blog.backup.retention-days`（默认 30）；操作日志清理配置 `blog.cleanup.retention-days`（默认 90）
+- **备份/还原互斥**：[BackupService](blog-backend/src/main/java/com/dlbyy/blog/service/BackupService.java) 用 AtomicBoolean 保证同一时刻仅一个备份或还原执行；备份记录在导出完成后插入，导出内容不含本次记录
+- **管理页面**：管理后台「系统管理 → 定时任务」（[TaskManage.vue](blog-admin/src/views/TaskManage.vue)）与「数据备份」（[BackupManage.vue](blog-admin/src/views/BackupManage.vue)）
+- 同一类型可建多个实例：新增任务时任务标识填 `{taskKey}-后缀`（如 `operationLogClean-weekly`）即可用不同 cron 跑多个任务
+
 ### 后台音乐接口（/admin/music，需 Token + 请求签名）
 
 | 方法 | 路径 | 说明 |
@@ -504,6 +551,9 @@ Authorization: Bearer <token>
 | blog_link | 友情链接 |
 | blog_resume_info | 简历信息 |
 | blog_config | 站点配置 |
+| sys_scheduled_task | 定时任务（task_key、cron、状态、最近执行情况） |
+| sys_backup_record | 数据库备份记录（文件名/大小/类型/状态/时间） |
+| sys_operation_log | 后台操作日志（定时任务 operationLogClean 自动清理超期记录） |
 
 ## 目录结构
 
@@ -761,6 +811,8 @@ docker volume inspect blog_mysql_data
 ```
 
 #### MySQL 备份与恢复
+
+系统已内置自动备份（见「定时任务与数据备份说明」）：每天凌晨 4 点自动全库备份到 `blog_backup_data` 卷，滚动保留 30 天，可在管理后台「数据备份」页手动备份/下载/还原。以下为卷级/物理备份的补充手段：
 
 ```bash
 # 备份数据库（导出到当前目录）
