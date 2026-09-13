@@ -141,3 +141,6 @@ blog:
   backup:
     dir: ./backups        # 备份文件存放目录（*.sql.gz）
     retention-days: 30    # 备份保留天数，超期自动清理
+  # 操作日志清理配置（配合定时任务 operationLogClean 使用）
+  cleanup:
+    retention-days: 90    # 操作日志保留天数，超期自动清理

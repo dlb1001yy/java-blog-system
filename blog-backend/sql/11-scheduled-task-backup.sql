@@ -52,3 +52,10 @@ SELECT 'databaseBackup', '数据库备份', '每天凌晨全库备份并压缩�
 WHERE NOT EXISTS (
     SELECT 1 FROM `sys_scheduled_task` WHERE `task_key` = 'databaseBackup'
 );
+
+INSERT INTO `sys_scheduled_task`
+    (`task_key`, `task_name`, `description`, `cron_expression`, `status`)
+SELECT 'operationLogClean', '操作日志清理', '每天凌晨清理超过保留天数的后台操作日志', '0 30 3 * * ?', 1
+WHERE NOT EXISTS (
+    SELECT 1 FROM `sys_scheduled_task` WHERE `task_key` = 'operationLogClean'
+);
