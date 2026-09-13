@@ -1,5 +1,5 @@
 <template>
-  <div class="latest-card card" @click="$router.push(`/articles/${article.id}`)">
+  <div class="latest-card card" @click="$router.push(`/article/${article.id}`)">
     <div class="cover-wrap">
       <img v-if="article.coverImage" :src="article.coverImage" class="cover" alt="cover" />
       <div v-else class="cover cover-placeholder"></div>
