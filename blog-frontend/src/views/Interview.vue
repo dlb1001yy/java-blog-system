@@ -8,8 +8,11 @@
           <div class="card">
             <h3 class="filter-title">技术方向</h3>
             <el-checkbox-group v-model="selectedCategories" @change="handleFilterChange">
-              <el-checkbox v-for="c in categories" :key="c.id" :label="c.name" :value="c.id">{{ c.name }}</el-checkbox>
+              <el-checkbox v-for="c in visibleCategories" :key="c.id" :label="c.name" :value="c.id">{{ c.name }}</el-checkbox>
             </el-checkbox-group>
+            <div v-if="categories.length > visibleCatCount" class="more-btn" @click="showMoreCategories">
+              更多 ({{ visibleCatCount }}/{{ categories.length }})
+            </div>
           </div>
           <div class="card">
             <h3 class="filter-title">难度</h3>
@@ -114,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Star, CircleClose, ArrowDown } from '@element-plus/icons-vue'
 import interviewApi from '@/api/interview'
@@ -132,6 +135,11 @@ const DEFAULT_CATEGORIES = [
 ]
 const categories = ref([...DEFAULT_CATEGORIES])
 const selectedCategories = ref([])
+// 技术方向分步显示：初始 8 个，点"更多"每次追加 8 个
+const STEP = 8
+const visibleCatCount = ref(STEP)
+const visibleCategories = computed(() => categories.value.slice(0, visibleCatCount.value))
+const showMoreCategories = () => { visibleCatCount.value += STEP }
 const difficulty = ref('')
 const status = ref('all')
 const keyword = ref('')
@@ -247,6 +255,14 @@ onMounted(() => {
 .page-title { margin-bottom: 20px; font-size: 20px; font-weight: 600; }
 .filter-sidebar { position: sticky; top: 84px; align-self: flex-start; }
 .filter-title { margin-bottom: 12px; font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.more-btn {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--primary-color);
+  cursor: pointer;
+  user-select: none;
+}
+.more-btn:hover { opacity: 0.8; }
 .question-card { cursor: pointer; }
 .question-header { display: flex; flex-direction: column; gap: 8px; }
 .question-meta { display: flex; gap: 8px; }

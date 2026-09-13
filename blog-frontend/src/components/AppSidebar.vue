@@ -30,14 +30,17 @@
         <el-icon><Folder /></el-icon> 分类
       </h4>
       <div class="tag-cloud">
-        <el-tag 
-          v-for="cat in categories" 
+        <el-tag
+          v-for="cat in visibleCategories"
           :key="cat.id"
           class="tag-item"
           @click="goCategory(cat.id)"
         >
           {{ cat.name }}
         </el-tag>
+      </div>
+      <div v-if="categories.length > catCount" class="more-btn" @click="showMoreCats">
+        更多 ({{ catCount }}/{{ categories.length }})
       </div>
     </div>
 
@@ -47,8 +50,8 @@
         <el-icon><PriceTag /></el-icon> 标签
       </h4>
       <div class="tag-cloud">
-        <el-tag 
-          v-for="tag in tags" 
+        <el-tag
+          v-for="tag in visibleTags"
           :key="tag.id"
           type="info"
           class="tag-item"
@@ -56,6 +59,9 @@
         >
           {{ tag.name }}
         </el-tag>
+      </div>
+      <div v-if="tags.length > tagCount" class="more-btn" @click="showMoreTags">
+        更多 ({{ tagCount }}/{{ tags.length }})
       </div>
     </div>
 
@@ -83,7 +89,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Star, Clock, Folder, PriceTag, Calendar, ArrowRight } from '@element-plus/icons-vue'
 import articleApi from '@/api/article'
@@ -95,6 +101,15 @@ const categories = ref([])
 const tags = ref([])
 // 归档数据：按年份分组，每年含各月篇数
 const archiveYears = ref([])
+
+// 分类/标签分步显示：初始 8 个，点"更多"每次追加 8 个
+const STEP = 8
+const catCount = ref(STEP)
+const tagCount = ref(STEP)
+const visibleCategories = computed(() => categories.value.slice(0, catCount.value))
+const visibleTags = computed(() => tags.value.slice(0, tagCount.value))
+const showMoreCats = () => { catCount.value += STEP }
+const showMoreTags = () => { tagCount.value += STEP }
 
 const goDetail = (id) => router.push(`/article/${id}`)
 const goCategory = (id) => router.push(`/category/${id}`)
@@ -182,6 +197,17 @@ onMounted(async () => {
 }
 .tag-item {
   cursor: pointer;
+}
+.more-btn {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--primary-color);
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+.more-btn:hover {
+  opacity: 0.8;
 }
 /* 归档模块样式 */
 .archive-year-header {
