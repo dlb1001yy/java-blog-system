@@ -48,8 +48,8 @@ const onTap = (value) => {
   padding: 6px 14px;
   border-radius: $radius-full;
   font-size: 13px;
-  background: var(--app-bg, #F1F5F9);
-  color: var(--app-text-secondary, #64748B);
+  background: var(--app-bg, #FAFAF9);
+  color: var(--app-text-secondary, #57534E);
   transition: all 0.2s;
   white-space: nowrap;
 }

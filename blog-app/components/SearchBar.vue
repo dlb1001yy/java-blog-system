@@ -56,7 +56,7 @@ const onClear = () => {
   display: flex;
   flex-direction: row;
   align-items: center;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   border-radius: $radius-full;
   padding: 0 14px;
   height: 40px;
@@ -75,13 +75,13 @@ const onClear = () => {
 .search-input {
   flex: 1;
   font-size: 14px;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   height: 100%;
 }
 
 /* placeholder 颜色（input 通过 placeholder-class 指定） */
 .placeholder {
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 /* 清除按钮 */

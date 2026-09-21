@@ -307,7 +307,7 @@ const onRefresh = async () => {
 /* 页面根节点：占满整屏，主题类挂在此处向 scroll-view 及内容级联 CSS 变量 */
 .page-root {
   height: 100vh;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
 }
 
 /* 滚动容器：占满根节点高度形成滚动区，底部留白（无 TabBar，预留 24px 即可） */
@@ -330,7 +330,7 @@ const onRefresh = async () => {
   width: 14rpx;
   height: 14rpx;
   border-radius: 50%;
-  background: var(--app-primary, #4F46E5);
+  background: var(--app-primary, #059669);
   animation: refresher-pulse 1.2s ease-in-out infinite;
 }
 
@@ -361,7 +361,7 @@ const onRefresh = async () => {
 
 .search-info-text {
   font-size: 13px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 /* ===== 分类 chips ===== */
@@ -380,7 +380,7 @@ const onRefresh = async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 .empty-icon {
@@ -390,14 +390,14 @@ const onRefresh = async () => {
 
 .empty-text {
   font-size: 14px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 /* 加载更多 / 没有更多 */
 .status {
   text-align: center;
   padding: 12px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
   font-size: 12px;
 }
 </style>

@@ -111,8 +111,8 @@ const drawPoster = () => {
 
   // ② 顶部 340x120 品牌渐变条 + 站点名 + 日期
   const grad = ctx.createLinearGradient(0, 0, canvasW, 120)
-  grad.addColorStop(0, '#4F46E5')
-  grad.addColorStop(1, '#06B6D4')
+  grad.addColorStop(0, '#059669')
+  grad.addColorStop(1, '#14B8A6')
   ctx.fillStyle = grad
   ctx.fillRect(0, 0, canvasW, 120)
   ctx.fillStyle = '#FFFFFF'
@@ -123,7 +123,7 @@ const drawPoster = () => {
   ctx.fillText(dateStr.value, 24, 80)
 
   // ③ 标题：16px 加粗，最多 3 行
-  ctx.fillStyle = '#0F172A'
+  ctx.fillStyle = '#1C1917'
   ctx.font = 'bold 16px sans-serif'
   let y = 158
   wrapText(ctx, props.article && props.article.title, canvasW - 48, 3)
@@ -132,23 +132,23 @@ const drawPoster = () => {
   // ④ 摘要：12px 最多 4 行（无摘要用类型文案兜底）
   const summary = (props.article && props.article.summary) ||
     `一篇${typeMap[props.article && props.article.type] || '原创'}技术文章，扫码即可阅读全文。`
-  ctx.fillStyle = '#64748B'
+  ctx.fillStyle = '#57534E'
   ctx.font = '12px sans-serif'
   y += 10
   wrapText(ctx, summary, canvasW - 48, 4)
     .forEach((line) => { ctx.fillText(line, 24, y); y += 19 })
 
   // ⑤ 分割线
-  ctx.fillStyle = '#E2E8F0'
+  ctx.fillStyle = '#E7E5E4'
   ctx.fillRect(24, canvasH - 154, canvasW - 48, 1)
 
   // ⑥ 底部：左侧二维码 + 右侧文案
   const matrix = createQrMatrix(articleLink.value)
   drawQrToCanvas(ctx, matrix, 24, canvasH - 134, 110)
-  ctx.fillStyle = '#0F172A'
+  ctx.fillStyle = '#1C1917'
   ctx.font = '13px sans-serif'
   ctx.fillText('扫码阅读全文', 150, canvasH - 134 + 48)
-  ctx.fillStyle = '#94A3B8'
+  ctx.fillStyle = '#A8A29E'
   ctx.font = '10px sans-serif'
   ctx.fillText('Java码农笔记 · 分享技术，记录成长', 150, canvasH - 134 + 70)
 
@@ -235,7 +235,7 @@ const copyLink = () => {
   display: block;
   font-size: 16px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   text-align: center;
   margin-bottom: $spacing-md;
 }
@@ -253,12 +253,12 @@ const copyLink = () => {
   align-items: center;
   justify-content: center;
   height: 240px;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   border-radius: $radius-md;
 }
 .poster-loading-text {
   font-size: 13px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 /* 底部按钮行 */
@@ -275,8 +275,8 @@ const copyLink = () => {
   text-align: center;
   font-size: 13px;
   border-radius: $radius-full;
-  border: 1px solid var(--app-border, #E2E8F0);
-  color: var(--app-text-secondary, #64748B);
+  border: 1px solid var(--app-border, #E7E5E4);
+  color: var(--app-text-secondary, #57534E);
   transition: transform 0.15s ease;
 }
 .poster-btn:active {

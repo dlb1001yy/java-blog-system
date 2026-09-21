@@ -73,7 +73,7 @@ const onTap = (item) => {
   height: 56px;
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--app-bg-card, #FFFFFF);
-  border-top: 1px solid var(--app-border, #E2E8F0);
+  border-top: 1px solid var(--app-border, #E7E5E4);
   box-shadow: 0 -1px 8px rgba(15, 23, 42, 0.04);
 }
 
@@ -86,7 +86,7 @@ const onTap = (item) => {
   justify-content: center;
   gap: 3px;
   /* 非激活态颜色 */
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
   transition: color 0.2s;
 
   .icon {

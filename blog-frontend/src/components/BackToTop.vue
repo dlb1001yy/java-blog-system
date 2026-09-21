@@ -25,7 +25,7 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   width: 44px; height: 44px;
   background: var(--primary-color); color: #fff;
   border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  cursor: pointer; box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
+  cursor: pointer; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
   z-index: 999; transition: transform 0.3s;
 }
 .back-to-top:hover { transform: scale(1.1); }

@@ -4,7 +4,7 @@
     <el-aside :width="appStore.sidebarCollapsed ? '64px' : '220px'" class="sidebar">
       <div class="logo">
         <template v-if="!appStore.sidebarCollapsed">
-          <span class="logo-text">Java 博客</span>
+          <span class="logo-text">Java码农笔记</span>
           <span class="logo-dot"></span>
         </template>
         <span v-else class="logo-text">JB</span>

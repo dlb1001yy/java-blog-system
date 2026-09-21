@@ -456,7 +456,7 @@ onLoad(() => {
 /* 页面根节点：占满整屏，主题类挂此处向滚动容器级联 CSS 变量 */
 .interview-page {
   height: 100vh;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
 }
 
 /* 滚动容器：占满根节点高度形成滚动区；底部留白避开固定 TabBar（56px + 安全区） */
@@ -479,7 +479,7 @@ onLoad(() => {
   align-items: center;
   justify-content: space-between;
   padding: $spacing-md $spacing-lg;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   transition: opacity 0.15s ease;
 }
 
@@ -496,7 +496,7 @@ onLoad(() => {
 .filter-title {
   font-size: 15px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 /* 激活筛选计数角标 */
@@ -515,7 +515,7 @@ onLoad(() => {
 .filter-arrow {
   display: flex;
   align-items: center;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
   transition: transform 0.3s ease;
 }
 
@@ -528,7 +528,7 @@ onLoad(() => {
   display: flex;
   flex-direction: column;
   gap: $spacing-md;
-  border-top: 1px solid var(--app-divider, #F1F5F9);
+  border-top: 1px solid var(--app-divider, #F5F5F4);
 }
 
 .filter-section {
@@ -540,7 +540,7 @@ onLoad(() => {
 .section-label {
   font-size: 13px;
   font-weight: 600;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 /* chips 多行 wrap */
@@ -555,8 +555,8 @@ onLoad(() => {
   border-radius: $radius-full;
   font-size: 13px;
   line-height: 1.4;
-  background: var(--app-bg, #F1F5F9);
-  color: var(--app-text-secondary, #64748B);
+  background: var(--app-bg, #FAFAF9);
+  color: var(--app-text-secondary, #57534E);
   transition: all 0.2s ease;
 }
 
@@ -607,8 +607,8 @@ onLoad(() => {
   border-radius: $radius-full;
   font-size: 11px;
   line-height: 1.5;
-  color: var(--app-primary, #4F46E5);
-  background: rgba(129, 140, 248, 0.14);
+  color: var(--app-primary, #059669);
+  background: rgba(52, 211, 153, 0.14);
 }
 
 /* 难度 tag：简单绿 / 中等橙 / 困难红浅底（底色由同名令牌色派生） */
@@ -638,7 +638,7 @@ onLoad(() => {
 .question-title {
   font-size: 15px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   line-height: 1.5;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -668,8 +668,8 @@ onLoad(() => {
   border-radius: $radius-full;
   font-size: 11px;
   line-height: 1.5;
-  color: var(--app-text-secondary, #64748B);
-  background: var(--app-bg, #F1F5F9);
+  color: var(--app-text-secondary, #57534E);
+  background: var(--app-bg, #FAFAF9);
 }
 
 .question-actions {
@@ -687,7 +687,7 @@ onLoad(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
   transition: transform 0.15s ease;
 }
 
@@ -706,14 +706,14 @@ onLoad(() => {
 
 /* 已加入错题本：主色 */
 .act-btn.wrong-active {
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
 }
 
 /* 展开箭头 */
 .expand-arrow {
   display: flex;
   align-items: center;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
   transition: transform 0.3s ease;
 }
 
@@ -725,24 +725,24 @@ onLoad(() => {
 .answer-panel {
   margin-top: $spacing-md;
   padding-top: $spacing-md;
-  border-top: 1px dashed var(--app-border, #E2E8F0);
+  border-top: 1px dashed var(--app-border, #E7E5E4);
 }
 
 .answer-loading {
   padding: $spacing-md 0;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 .answer-empty {
   font-size: 13px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 /* markdown 富文本：rich-text 渲染的节点需用 :deep() 穿透 */
 .markdown-body {
   font-size: 14px;
   line-height: 1.7;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 .markdown-body :deep(p) {
@@ -753,7 +753,7 @@ onLoad(() => {
 .markdown-body :deep(h2),
 .markdown-body :deep(h3) {
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   margin: 12px 0 8px;
   line-height: 1.4;
 }
@@ -763,7 +763,7 @@ onLoad(() => {
 .markdown-body :deep(h3) { font-size: 15px; }
 
 .markdown-body :deep(pre) {
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   padding: 10px;
   border-radius: $radius-md;
   font-family: 'Menlo', 'Consolas', monospace;
@@ -777,7 +777,7 @@ onLoad(() => {
 }
 
 .markdown-body :deep(:not(pre) > code) {
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   padding: 1px 5px;
   border-radius: $radius-sm;
   font-size: 12px;
@@ -794,15 +794,15 @@ onLoad(() => {
 }
 
 .markdown-body :deep(blockquote) {
-  border-left: 3px solid var(--app-primary, #4F46E5);
+  border-left: 3px solid var(--app-primary, #059669);
   padding-left: 10px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   margin: 0 0 12px 0;
   line-height: 1.6;
 }
 
 .markdown-body :deep(a) {
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
 }
 
 /* 解题思路提示面板：浅色左条 */
@@ -810,15 +810,15 @@ onLoad(() => {
   margin-top: $spacing-md;
   padding: $spacing-md;
   border-radius: $radius-md;
-  border-left: 3px solid var(--app-primary, #4F46E5);
-  background: rgba(129, 140, 248, 0.08);
+  border-left: 3px solid var(--app-primary, #059669);
+  background: rgba(52, 211, 153, 0.08);
 }
 
 .tips-title {
   display: block;
   font-size: 14px;
   font-weight: 600;
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
   margin-bottom: $spacing-sm;
 }
 
@@ -854,7 +854,7 @@ onLoad(() => {
 }
 
 .sk-block {
-  background: linear-gradient(90deg, var(--app-border, #E2E8F0) 25%, var(--app-bg, #F1F5F9) 50%, var(--app-border, #E2E8F0) 75%);
+  background: linear-gradient(90deg, var(--app-border, #E7E5E4) 25%, var(--app-bg, #FAFAF9) 50%, var(--app-border, #E7E5E4) 75%);
   background-size: 936px 100%;
   animation: sk-shimmer 1.5s infinite linear;
   border-radius: $radius-sm;
@@ -888,7 +888,7 @@ onLoad(() => {
 /* 空态图标：复用 Icon 组件按视图切换 */
 .empty-icon {
   display: flex;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
   opacity: 0.6;
 }
 
@@ -896,13 +896,13 @@ onLoad(() => {
   margin-top: $spacing-md;
   font-size: 15px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 .empty-sub {
   margin-top: $spacing-sm;
   font-size: 13px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   text-align: center;
   line-height: 1.6;
 }
@@ -913,7 +913,7 @@ onLoad(() => {
   align-items: center;
   justify-content: center;
   padding: $spacing-md;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
   font-size: 12px;
 }
 </style>

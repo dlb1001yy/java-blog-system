@@ -92,7 +92,7 @@ watch(isDark, () => applyNavBarTheme())
 /* 页面根节点：占满整屏，底部预留 24px（无 TabBar） */
 .tags-page {
   min-height: 100vh;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   padding: $spacing-xl $spacing-lg calc(24px + env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
@@ -109,7 +109,7 @@ watch(isDark, () => applyNavBarTheme())
 .tag {
   padding: 8px 18px;
   border-radius: $radius-full;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   line-height: 1.4;
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
@@ -127,7 +127,7 @@ watch(isDark, () => applyNavBarTheme())
 }
 
 .skeleton-block {
-  background: linear-gradient(90deg, var(--app-border, #E2E8F0) 25%, var(--app-bg, #F1F5F9) 50%, var(--app-border, #E2E8F0) 75%);
+  background: linear-gradient(90deg, var(--app-border, #E7E5E4) 25%, var(--app-bg, #FAFAF9) 50%, var(--app-border, #E7E5E4) 75%);
   background-size: 936px 100%;
   animation: shimmer 1.5s infinite linear;
   height: 34px;
@@ -145,7 +145,7 @@ watch(isDark, () => applyNavBarTheme())
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 .empty-icon {
@@ -155,6 +155,6 @@ watch(isDark, () => applyNavBarTheme())
 
 .empty-text {
   font-size: 14px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 </style>

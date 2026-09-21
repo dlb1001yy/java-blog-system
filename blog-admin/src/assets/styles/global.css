@@ -56,32 +56,6 @@ a {
   opacity: 0;
 }
 
-/* 路由切换动画 - 滑动淡入淡出 */
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition: all 0.3s ease;
-}
-
-.slide-fade-enter-from {
-  opacity: 0;
-  transform: translateY(12px);
-}
-
-.slide-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-12px);
-}
-
-/* 通用卡片 hover 工具类 */
-.hover-lift {
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
-}
-
-.hover-lift:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-}
-
 /* ---------------- View Transitions 主题切换扩散动画 ---------------- */
 /* 关闭默认淡入淡出动画，让自定义 clip-path 扩散动画接管 */
 ::view-transition-old(root),
@@ -97,4 +71,15 @@ a {
 
 ::view-transition-new(root) {
   z-index: 9999;
+}
+
+/* ---------------- Element Plus 表格全局样式 ---------------- */
+/* 表格行 hover 高亮（全局收敛，替代各视图内重复的 :deep 定义） */
+.el-table .el-table__row:hover > td.el-table__cell {
+  background-color: var(--el-color-primary-light-9) !important;
+}
+
+/* 单元格背景色过渡，保证 hover 高亮平滑 */
+.el-table .el-table__cell {
+  transition: background-color 0.25s ease;
 }

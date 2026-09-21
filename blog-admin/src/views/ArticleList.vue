@@ -233,10 +233,6 @@ onMounted(() => fetchData())
   transition: background var(--transition-base);
 }
 
-:deep(.el-table__row:hover > td.el-table__cell) {
-  background: var(--el-color-primary-light-9) !important;
-}
-
 :deep(.el-table .el-table__cell) {
   border-bottom: 1px solid var(--border-color);
 }

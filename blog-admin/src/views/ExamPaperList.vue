@@ -123,7 +123,7 @@
                 </div>
               </div>
             </div>
-            <el-empty v-if="!questionLoading && !questionList.length" description="暂无题目" :image-size="60" />
+            <el-empty v-if="!questionLoading && !questionList.length" description="暂无题目" :image-size="80" />
           </div>
           <el-pagination
             v-model:current-page="questionPage"
@@ -157,7 +157,7 @@
                 <el-button link type="danger" @click="removeSelected(q.id)">移除</el-button>
               </div>
             </div>
-            <el-empty v-if="!selectedQuestions.length" description="请从左侧选择题目" :image-size="60" />
+            <el-empty v-if="!selectedQuestions.length" description="请从左侧选择题目" :image-size="80" />
           </div>
         </div>
       </div>
@@ -469,10 +469,6 @@ onMounted(() => {
 
 :deep(.el-table tr) {
   transition: background var(--transition-base);
-}
-
-:deep(.el-table__row:hover > td.el-table__cell) {
-  background: var(--el-color-primary-light-9) !important;
 }
 
 :deep(.el-table .el-table__cell) {

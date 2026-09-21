@@ -12,11 +12,11 @@
         <text class="title">{{ article.title }}</text>
         <view class="meta">
           <view class="meta-item">
-            <Icon name="clock" :size="14" color="#94A3B8" />
+            <Icon name="clock" :size="14" color="#A8A29E" />
             <text class="meta-text">{{ formatRelativeTime(article.createTime) }}</text>
           </view>
           <view class="meta-item">
-            <Icon name="eye" :size="14" color="#94A3B8" />
+            <Icon name="eye" :size="14" color="#A8A29E" />
             <text class="meta-text">{{ article.viewCount }}</text>
           </view>
           <text :class="['type-badge', `type-${article.type}`]">{{ typeMap[article.type] }}</text>
@@ -391,7 +391,7 @@ watch(() => article.value?.id, async () => {
 /* 页面容器：灰底，底部留白避开浮动按钮 */
 .detail-page {
   min-height: 100vh;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   padding: $spacing-md;
   padding-bottom: calc(140px + env(safe-area-inset-bottom));
   box-sizing: border-box;
@@ -412,7 +412,7 @@ watch(() => article.value?.id, async () => {
   display: block;
   font-size: 22px;
   font-weight: 700;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   line-height: 1.4;
   margin-bottom: 12px;
 }
@@ -421,7 +421,7 @@ watch(() => article.value?.id, async () => {
   align-items: center;
   gap: 16px;
   font-size: 12px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 .meta-item {
   display: flex;
@@ -430,7 +430,7 @@ watch(() => article.value?.id, async () => {
 }
 .meta-text {
   font-size: 12px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 /* 类型徽章：胶囊形 */
 .type-badge {
@@ -458,9 +458,9 @@ watch(() => article.value?.id, async () => {
   padding: 0 16px;
   height: 32px;
   border-radius: $radius-full;
-  border: 1px solid var(--app-border, #E2E8F0);
+  border: 1px solid var(--app-border, #E7E5E4);
   background: transparent;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   transition: transform 0.15s ease;
 }
 .action-btn:active {
@@ -468,8 +468,8 @@ watch(() => article.value?.id, async () => {
 }
 /* 已加入稍后阅读：主色边框 + 主色文字高亮 */
 .action-btn.active {
-  border-color: var(--app-primary, #4F46E5);
-  color: var(--app-primary, #4F46E5);
+  border-color: var(--app-primary, #059669);
+  color: var(--app-primary, #059669);
 }
 .action-icon {
   flex-shrink: 0;
@@ -488,7 +488,7 @@ watch(() => article.value?.id, async () => {
 .markdown-body {
   font-size: 15px;
   line-height: 1.8;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 .markdown-body :deep(p) {
   margin: 0 0 16px 0;
@@ -497,7 +497,7 @@ watch(() => article.value?.id, async () => {
 .markdown-body :deep(h2),
 .markdown-body :deep(h3) {
   font-weight: 700;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   margin: 20px 0 12px;
   line-height: 1.4;
 }
@@ -505,11 +505,11 @@ watch(() => article.value?.id, async () => {
 .markdown-body :deep(h2) {
   font-size: 18px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--app-border, #E2E8F0);
+  border-bottom: 1px solid var(--app-border, #E7E5E4);
 }
 .markdown-body :deep(h3) { font-size: 16px; }
 .markdown-body :deep(pre) {
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   padding: 12px;
   border-radius: $radius-md;
   font-family: 'Menlo', 'Consolas', monospace;
@@ -525,7 +525,7 @@ watch(() => article.value?.id, async () => {
   padding: 0;
 }
 .markdown-body :deep(:not(pre) > code) {
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   padding: 2px 6px;
   border-radius: $radius-sm;
   font-size: 13px;
@@ -533,7 +533,7 @@ watch(() => article.value?.id, async () => {
 .markdown-body :deep(blockquote) {
   border-left: 4px solid $color-primary;
   padding-left: 12px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   margin: 0 0 16px 0;
   line-height: 1.6;
 }
@@ -548,7 +548,7 @@ watch(() => article.value?.id, async () => {
   width: 100%;
   border-radius: $radius-md;
   margin: 8px 0;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -577,7 +577,7 @@ watch(() => article.value?.id, async () => {
   height: 3px;
   width: 0;
   z-index: 900;
-  background: linear-gradient(90deg, #4F46E5, #6366F1, #06B6D4);
+  background: linear-gradient(90deg, #059669, #10B981, #14B8A6);
   border-radius: 0 3px 3px 0;
   transition: width 0.1s linear;
 }
@@ -599,11 +599,11 @@ watch(() => article.value?.id, async () => {
   transform: scale(0.98);
 }
 .nav-row + .nav-row {
-  border-top: 1px solid var(--app-divider, #F1F5F9);
+  border-top: 1px solid var(--app-divider, #F5F5F4);
 }
 /* 无上/下一篇：置灰不可点 */
 .nav-row.disabled {
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
   opacity: 0.7;
 }
 .nav-row.disabled:active {
@@ -611,29 +611,29 @@ watch(() => article.value?.id, async () => {
 }
 /* 图标跟随行内 currentColor：可用态为主题色，置灰态随行置灰（暗黑模式自动适配） */
 .nav-row:not(.disabled) {
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
 }
 .nav-label {
   flex-shrink: 0;
   font-size: 13px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 .nav-title {
   flex: 1;
   min-width: 0;
   font-size: 14px;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 /* 有文章时标题用主题色强调 */
 .nav-row:not(.disabled) .nav-title {
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
 }
 /* 无文章：整行置灰（含标题），叠在基础规则之上覆盖 */
 .nav-row.disabled .nav-title {
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 /* ===== 评论区 ===== */
@@ -645,7 +645,7 @@ watch(() => article.value?.id, async () => {
   display: block;
   font-size: 16px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   margin-bottom: $spacing-lg;
 }
 .comment-form {
@@ -656,22 +656,22 @@ watch(() => article.value?.id, async () => {
 }
 .form-textarea {
   width: 100%;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   border-radius: $radius-md;
   padding: 12px;
   min-height: 80px;
   font-size: 14px;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   box-sizing: border-box;
 }
 .form-input {
   width: 100%;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   border-radius: $radius-md;
   padding: 0 12px;
   height: 40px;
   font-size: 14px;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   box-sizing: border-box;
 }
 .form-submit {
@@ -695,7 +695,7 @@ watch(() => article.value?.id, async () => {
 }
 .comment-item {
   padding: $spacing-md 0;
-  border-bottom: 1px solid var(--app-divider, #F1F5F9);
+  border-bottom: 1px solid var(--app-divider, #F5F5F4);
 }
 .comment-item.last {
   border-bottom: none;
@@ -722,17 +722,17 @@ watch(() => article.value?.id, async () => {
   flex: 1;
   font-size: 14px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 .comment-time {
   font-size: 12px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 .comment-content {
   display: block;
   margin-top: $spacing-sm;
   font-size: 14px;
-  color: var(--app-text-secondary, #334155);
+  color: var(--app-text-secondary, #57534E);
   line-height: 1.6;
   word-break: break-word;
 }
@@ -742,7 +742,7 @@ watch(() => article.value?.id, async () => {
 }
 .empty-text {
   font-size: 13px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 /* ===== 相关文章区 ===== */
@@ -770,7 +770,7 @@ watch(() => article.value?.id, async () => {
   flex: 1;
   min-width: 0;
   font-size: 14px;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -784,7 +784,7 @@ watch(() => article.value?.id, async () => {
   height: 60px;
   border-radius: $radius-md;
   flex-shrink: 0;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
 }
 
 /* ===== 浮动点赞按钮 ===== */
@@ -796,7 +796,7 @@ watch(() => article.value?.id, async () => {
   height: 48px;
   border-radius: 50%;
   background: $color-primary;
-  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.3);
   display: flex;
   flex-direction: column;
   align-items: center;

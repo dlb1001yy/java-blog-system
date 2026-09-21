@@ -1,5 +1,5 @@
 :root {
-  --primary-color: #409eff;
+  --primary-color: #059669;
   --success-color: #67c23a;
   --warning-color: #e6a23c;
   --danger-color: #f56c6c;
@@ -10,11 +10,12 @@
   --border-color: #dcdfe6;
   --bg-color: #f5f7fa;
   --card-bg: #ffffff;
-  --shadow-light: 0 2px 12px 0 rgba(0,0,0,0.08);
-  --shadow-base: 0 2px 16px 0 rgba(0,0,0,0.1);
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --shadow-light: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-base: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --container-padding: clamp(16px, 5vw, 24px);
 
   /* ---- 与 blog-admin 对齐的语义化令牌（旧变量名为别名，保持兼容） ---- */
   --color-primary: var(--primary-color);
@@ -26,11 +27,17 @@
   --bg-card: var(--card-bg);
   --text-strong: var(--text-primary);
   /* 阴影令牌 */
-  --shadow-hover: 0 12px 24px -10px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0 12px 24px -10px rgba(15, 23, 42, 0.10);
   /* 毛玻璃导航背景 */
   --header-bg: rgba(255, 255, 255, 0.75);
-  /* Element Plus 主色对齐 */
+  /* Element Plus 主色对齐（翡翠绿体系，与 blog-admin tokens 一致） */
   --el-color-primary: var(--primary-color);
+  --el-color-primary-light-3: #34D399;
+  --el-color-primary-light-5: #6EE7B7;
+  --el-color-primary-light-7: #A7F3D0;
+  --el-color-primary-light-8: #D1FAE5;
+  --el-color-primary-light-9: #ECFDF5;
+  --el-color-primary-dark-2: #047857;
 }
 
 * {
@@ -40,8 +47,8 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
-               'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont,
+               'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
   color: var(--text-primary);
   background-color: var(--bg-color);
@@ -53,7 +60,7 @@ a {
   text-decoration: none;
   transition: color 0.3s;
 }
-a:hover { color: #66b1ff; }
+a:hover { color: #10B981; }
 
 .container {
   width: 1400px;

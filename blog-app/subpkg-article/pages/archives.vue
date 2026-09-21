@@ -108,7 +108,7 @@ watch(isDark, () => applyNavBarTheme())
 /* 页面根节点：占满整屏，主题类挂在此处向 scroll-view 及内容级联 CSS 变量 */
 .page-root {
   height: 100vh;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
 }
 
 /* 滚动容器：占满根节点高度形成滚动区，底部预留 24px（无 TabBar） */
@@ -142,12 +142,12 @@ watch(isDark, () => applyNavBarTheme())
 .month-text {
   font-size: 15px;
   font-weight: 700;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 .month-count {
   font-size: 12px;
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
 }
 
 /* 条目区：与头卡左对齐并内缩，形成层级 */
@@ -178,7 +178,7 @@ watch(isDark, () => applyNavBarTheme())
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--app-primary, #4F46E5);
+  background: var(--app-primary, #059669);
 }
 
 /* 竖线：从圆点下方延伸到条目底部（最后一条由 overflow 裁掉） */
@@ -188,7 +188,7 @@ watch(isDark, () => applyNavBarTheme())
   top: 17px;
   bottom: -8px;
   width: 2px;
-  background: var(--app-border, #E2E8F0);
+  background: var(--app-border, #E7E5E4);
 }
 
 .row:last-child .line-rail {
@@ -219,7 +219,7 @@ watch(isDark, () => applyNavBarTheme())
 /* 日期（MM-DD） */
 .row-date {
   font-size: 12px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
   flex-shrink: 0;
 }
 
@@ -228,7 +228,7 @@ watch(isDark, () => applyNavBarTheme())
   flex: 1;
   min-width: 0;
   font-size: 14px;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -241,7 +241,7 @@ watch(isDark, () => applyNavBarTheme())
 }
 
 .skeleton-block {
-  background: linear-gradient(90deg, var(--app-border, #E2E8F0) 25%, var(--app-bg, #F1F5F9) 50%, var(--app-border, #E2E8F0) 75%);
+  background: linear-gradient(90deg, var(--app-border, #E7E5E4) 25%, var(--app-bg, #FAFAF9) 50%, var(--app-border, #E7E5E4) 75%);
   background-size: 936px 100%;
   animation: shimmer 1.5s infinite linear;
   border-radius: $radius-md;
@@ -275,7 +275,7 @@ watch(isDark, () => applyNavBarTheme())
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 .empty-icon {
@@ -285,6 +285,6 @@ watch(isDark, () => applyNavBarTheme())
 
 .empty-text {
   font-size: 14px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 </style>

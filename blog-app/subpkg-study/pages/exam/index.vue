@@ -83,7 +83,7 @@ onShow(() => applyNavBarTheme())
 .exam-page {
   min-height: 100vh;
   padding: $spacing-lg;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   box-sizing: border-box;
 }
 
@@ -100,7 +100,7 @@ onShow(() => applyNavBarTheme())
   display: block;
   font-size: 20px;
   font-weight: 700;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   margin-bottom: $spacing-md;
 }
 
@@ -143,7 +143,7 @@ onShow(() => applyNavBarTheme())
   display: block;
   font-size: 16px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   margin-bottom: $spacing-sm;
 }
 
@@ -153,7 +153,7 @@ onShow(() => applyNavBarTheme())
   -webkit-box-orient: vertical;
   overflow: hidden;
   font-size: 13px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   line-height: 1.6;
   margin-bottom: $spacing-md;
 }
@@ -183,8 +183,8 @@ onShow(() => applyNavBarTheme())
 }
 
 .tag-info {
-  color: var(--app-text-secondary, #64748B);
-  background: var(--app-bg, #F1F5F9);
+  color: var(--app-text-secondary, #57534E);
+  background: var(--app-bg, #FAFAF9);
 }
 
 /* 开始考试按钮：主色 */
@@ -199,7 +199,7 @@ onShow(() => applyNavBarTheme())
   font-size: 13px;
   font-weight: 600;
   color: #FFFFFF;
-  background: var(--app-primary, #4F46E5);
+  background: var(--app-primary, #059669);
 }
 
 .start-btn:active {
@@ -217,6 +217,6 @@ onShow(() => applyNavBarTheme())
 
 .empty-text {
   font-size: 13px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 </style>

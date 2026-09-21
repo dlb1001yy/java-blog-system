@@ -2,7 +2,7 @@
 // 用于 Canvas 绘制文章分享海报二维码，无任何外部依赖，兼容 uni-app 旧版 canvas context 与标准 Canvas。
 // 用法：
 //   const matrix = createQrMatrix('https://example.com/a/1', { ecc: 'M' })
-//   drawQrToCanvas(ctx, matrix, x, y, size, { dark: '#0F172A' })
+//   drawQrToCanvas(ctx, matrix, x, y, size, { dark: '#1C1917' })
 
 // ---------- GF(256) 有限域运算（本原多项式 x^8+x^4+x^3+x^2+1，即 0x11d） ----------
 const GF_EXP = new Array(256)
@@ -388,10 +388,10 @@ export const createQrMatrix = (text, options = {}) => {
  * @param {number} x 目标区域左上角 x
  * @param {number} y 目标区域左上角 y
  * @param {number} size 目标区域边长（正方形）
- * @param {Object} options { dark = '#0F172A', light = '#FFFFFF', margin = true } margin 为 true 时四周补 2 模块静区
+ * @param {Object} options { dark = '#1C1917', light = '#FFFFFF', margin = true } margin 为 true 时四周补 2 模块静区
  */
 export const drawQrToCanvas = (ctx, matrix, x, y, size, options = {}) => {
-  const { dark = '#0F172A', light = '#FFFFFF', margin = true } = options
+  const { dark = '#1C1917', light = '#FFFFFF', margin = true } = options
   const n = matrix.length
   const m = size / (n + (margin ? 4 : 0)) // 单模块边长（允许浮点）
   const off = margin ? m * 2 : 0

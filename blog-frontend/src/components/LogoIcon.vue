@@ -23,7 +23,7 @@
     <!-- 咖啡蒸汽 -->
     <path
       d="M18 10c0-2 1-3 2-3s2 1 2 3M24 8c0-2 1-3 2-3s2 1 2 3"
-      stroke="#409eff"
+      stroke="#059669"
       stroke-width="1.5"
       stroke-linecap="round"
       fill="none"
@@ -53,12 +53,12 @@
     <!-- 渐变定义 -->
     <defs>
       <linearGradient id="cupGradient" x1="12" y1="14" x2="32" y2="42" gradientUnits="userSpaceOnUse">
-        <stop stop-color="#409eff" />
-        <stop offset="1" stop-color="#1a73e8" />
+        <stop stop-color="#059669" />
+        <stop offset="1" stop-color="#14B8A6" />
       </linearGradient>
       <linearGradient id="handleGradient" x1="32" y1="18" x2="40" y2="28" gradientUnits="userSpaceOnUse">
-        <stop stop-color="#409eff" />
-        <stop offset="1" stop-color="#1a73e8" />
+        <stop stop-color="#059669" />
+        <stop offset="1" stop-color="#14B8A6" />
       </linearGradient>
     </defs>
   </svg>

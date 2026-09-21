@@ -111,7 +111,7 @@ const goDetail = () => {
   height: 80px;
   border-radius: $radius-md;
   flex-shrink: 0;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -155,14 +155,14 @@ const goDetail = () => {
 /* 日期 */
 .date {
   font-size: 12px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 /* 标题：最多 2 行省略 */
 .title {
   font-size: 15px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -176,7 +176,7 @@ const goDetail = () => {
 .summary {
   margin-top: 6px;
   font-size: 13px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   line-height: 1.5;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -192,7 +192,7 @@ const goDetail = () => {
   gap: $spacing-md;
   margin-top: $spacing-sm;
   font-size: 11px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 .stat {
@@ -208,6 +208,6 @@ const goDetail = () => {
 
 .stat-text {
   font-size: 11px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 </style>

@@ -483,7 +483,7 @@ onUnload(cleanup)
 <style lang="scss" scoped>
 .taking-page {
   min-height: 100vh;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   box-sizing: border-box;
   padding-bottom: calc(64px + env(safe-area-inset-bottom));
 }
@@ -500,7 +500,7 @@ onUnload(cleanup)
   max-width: 30vw;
   font-size: 14px;
   font-weight: 700;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -517,7 +517,7 @@ onUnload(cleanup)
   font-size: 16px;
   font-weight: 700;
   font-family: 'Menlo', 'Consolas', monospace;
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
 }
 
 .countdown.danger {
@@ -536,7 +536,7 @@ onUnload(cleanup)
 
 .switch-text {
   font-size: 12px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 .switch-count.danger .switch-text {
@@ -546,7 +546,7 @@ onUnload(cleanup)
 
 .exit-btn {
   font-size: 13px;
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
 }
 
 /* ===== 状态行：已答统计 + 答题卡切换 ===== */
@@ -556,12 +556,12 @@ onUnload(cleanup)
   justify-content: space-between;
   padding: $spacing-sm $spacing-lg;
   background: var(--app-bg-card, #FFFFFF);
-  border-bottom: 1px solid var(--app-border, #E2E8F0);
+  border-bottom: 1px solid var(--app-border, #E7E5E4);
 }
 
 .status-text {
   font-size: 13px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 .card-toggle {
@@ -572,7 +572,7 @@ onUnload(cleanup)
 
 .toggle-text {
   font-size: 13px;
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
 }
 
 /* ===== 防作弊警示条：浅黄底 ===== */
@@ -605,13 +605,13 @@ onUnload(cleanup)
 
 .stats-text {
   font-size: 13px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 .stats-num {
   font-size: 18px;
   font-weight: 700;
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
 }
 
 .card-grid {
@@ -625,20 +625,20 @@ onUnload(cleanup)
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--app-border, #E2E8F0);
+  border: 1px solid var(--app-border, #E7E5E4);
   border-radius: $radius-md;
   background: var(--app-bg-card, #FFFFFF);
 }
 
 .card-item-text {
   font-size: 13px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 /* 三态：已答主色底 */
 .card-item.answered {
-  background: var(--app-primary, #4F46E5);
-  border-color: var(--app-primary, #4F46E5);
+  background: var(--app-primary, #059669);
+  border-color: var(--app-primary, #059669);
 }
 
 .card-item.answered .card-item-text {
@@ -652,11 +652,11 @@ onUnload(cleanup)
 
 /* 当前：主色描边 */
 .card-item.current {
-  border: 2px solid var(--app-primary, #4F46E5);
+  border: 2px solid var(--app-primary, #059669);
 }
 
 .card-item.current:not(.answered) .card-item-text {
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
   font-weight: 700;
 }
 
@@ -676,13 +676,13 @@ onUnload(cleanup)
   width: 10px;
   height: 10px;
   border-radius: 3px;
-  border: 1px solid var(--app-border, #E2E8F0);
+  border: 1px solid var(--app-border, #E7E5E4);
   background: var(--app-bg-card, #FFFFFF);
 }
 
 .dot-answered {
-  background: var(--app-primary, #4F46E5);
-  border-color: var(--app-primary, #4F46E5);
+  background: var(--app-primary, #059669);
+  border-color: var(--app-primary, #059669);
 }
 
 .dot-marked {
@@ -691,7 +691,7 @@ onUnload(cleanup)
 
 .legend-text {
   font-size: 11px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 /* ===== 主体 ===== */
@@ -709,7 +709,7 @@ onUnload(cleanup)
 
 .empty-text {
   font-size: 13px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 .question-card {
@@ -730,14 +730,14 @@ onUnload(cleanup)
   padding: 2px 8px;
   border-radius: $radius-sm;
   font-size: 11px;
-  color: var(--app-text-secondary, #64748B);
-  background: var(--app-bg, #F1F5F9);
+  color: var(--app-text-secondary, #57534E);
+  background: var(--app-bg, #FAFAF9);
 }
 
 /* 题型 tag 配色（参考 frontend typeTagType） */
 .type-1 {
-  color: var(--app-primary, #4F46E5);
-  background: rgba(79, 70, 229, 0.1);
+  color: var(--app-primary, #059669);
+  background: rgba(5, 150, 105, 0.1);
 }
 
 .type-2 {
@@ -746,8 +746,8 @@ onUnload(cleanup)
 }
 
 .type-3 {
-  color: var(--app-text-secondary, #64748B);
-  background: var(--app-bg, #F1F5F9);
+  color: var(--app-text-secondary, #57534E);
+  background: var(--app-bg, #FAFAF9);
 }
 
 .type-4 {
@@ -770,14 +770,14 @@ onUnload(cleanup)
 .question-index {
   margin-left: auto;
   font-size: 12px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 /* 题干 Markdown */
 .question-stem {
   font-size: 15px;
   line-height: 1.8;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   margin-bottom: $spacing-lg;
 }
 
@@ -786,7 +786,7 @@ onUnload(cleanup)
 }
 
 .question-stem :deep(pre) {
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   padding: 12px;
   border-radius: $radius-md;
   font-family: 'Menlo', 'Consolas', monospace;
@@ -800,7 +800,7 @@ onUnload(cleanup)
 }
 
 .question-stem :deep(:not(pre) > code) {
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   padding: 2px 6px;
   border-radius: $radius-sm;
   font-size: 13px;
@@ -828,15 +828,15 @@ onUnload(cleanup)
   align-items: flex-start;
   gap: 10px;
   padding: 12px 16px;
-  border: 1px solid var(--app-border, #E2E8F0);
+  border: 1px solid var(--app-border, #E7E5E4);
   border-radius: $radius-md;
   background: var(--app-bg-card, #FFFFFF);
 }
 
 /* 选中：主色边框 */
 .option-item.active {
-  border-color: var(--app-primary, #4F46E5);
-  background: rgba(79, 70, 229, 0.06);
+  border-color: var(--app-primary, #059669);
+  background: rgba(5, 150, 105, 0.06);
 }
 
 .radio,
@@ -845,7 +845,7 @@ onUnload(cleanup)
   width: 18px;
   height: 18px;
   margin-top: 1px;
-  border: 2px solid var(--app-border, #E2E8F0);
+  border: 2px solid var(--app-border, #E7E5E4);
   background: var(--app-bg-card, #FFFFFF);
   position: relative;
 }
@@ -860,8 +860,8 @@ onUnload(cleanup)
 
 .radio.checked,
 .checkbox.checked {
-  border-color: var(--app-primary, #4F46E5);
-  background: var(--app-primary, #4F46E5);
+  border-color: var(--app-primary, #059669);
+  background: var(--app-primary, #059669);
 }
 
 .radio.checked::after {
@@ -890,7 +890,7 @@ onUnload(cleanup)
 .option-key {
   flex-shrink: 0;
   font-weight: 700;
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
 }
 
 .option-text {
@@ -898,7 +898,7 @@ onUnload(cleanup)
   min-width: 0;
   font-size: 14px;
   line-height: 1.6;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   word-break: break-word;
 }
 
@@ -920,26 +920,26 @@ onUnload(cleanup)
   justify-content: center;
   gap: 6px;
   padding: 20px 0;
-  border: 1px solid var(--app-border, #E2E8F0);
+  border: 1px solid var(--app-border, #E7E5E4);
   border-radius: $radius-md;
   background: var(--app-bg-card, #FFFFFF);
 }
 
 .judge-btn.active {
-  border-color: var(--app-primary, #4F46E5);
-  background: rgba(79, 70, 229, 0.06);
+  border-color: var(--app-primary, #059669);
+  background: rgba(5, 150, 105, 0.06);
 }
 
 .judge-symbol {
   font-size: 22px;
   font-weight: 700;
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
 }
 
 .judge-label {
   font-size: 15px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 /* ===== 填空 / 简答 / 编程 ===== */
@@ -959,30 +959,30 @@ onUnload(cleanup)
   flex-shrink: 0;
   width: 52px;
   font-size: 13px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 .blank-input {
   flex: 1;
   height: 40px;
   padding: 0 12px;
-  border: 1px solid var(--app-border, #E2E8F0);
+  border: 1px solid var(--app-border, #E7E5E4);
   border-radius: $radius-md;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   font-size: 14px;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 .answer-textarea {
   width: 100%;
   min-height: 140px;
   padding: 12px;
-  border: 1px solid var(--app-border, #E2E8F0);
+  border: 1px solid var(--app-border, #E7E5E4);
   border-radius: $radius-md;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   font-size: 14px;
   line-height: 1.7;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   box-sizing: border-box;
 }
 
@@ -995,22 +995,22 @@ onUnload(cleanup)
 .lang-chip {
   padding: 5px 14px;
   border-radius: $radius-full;
-  border: 1px solid var(--app-border, #E2E8F0);
+  border: 1px solid var(--app-border, #E7E5E4);
   background: var(--app-bg-card, #FFFFFF);
 }
 
 .lang-chip.active {
-  border-color: var(--app-primary, #4F46E5);
-  background: rgba(79, 70, 229, 0.08);
+  border-color: var(--app-primary, #059669);
+  background: rgba(5, 150, 105, 0.08);
 }
 
 .lang-text {
   font-size: 12px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 .lang-chip.active .lang-text {
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
   font-weight: 600;
 }
 
@@ -1019,13 +1019,13 @@ onUnload(cleanup)
   width: 100%;
   min-height: 180px;
   padding: 12px;
-  border: 1px solid var(--app-border, #E2E8F0);
+  border: 1px solid var(--app-border, #E7E5E4);
   border-radius: $radius-md;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
   font-size: 13px;
   line-height: 1.7;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   box-sizing: border-box;
 }
 
@@ -1041,7 +1041,7 @@ onUnload(cleanup)
   padding: $spacing-sm $spacing-lg;
   padding-bottom: calc($spacing-sm + env(safe-area-inset-bottom));
   background: var(--app-bg-card, #FFFFFF);
-  border-top: 1px solid var(--app-border, #E2E8F0);
+  border-top: 1px solid var(--app-border, #E7E5E4);
   box-shadow: 0 -1px 8px rgba(15, 23, 42, 0.04);
 }
 
@@ -1051,7 +1051,7 @@ onUnload(cleanup)
   align-items: center;
   justify-content: center;
   height: 38px;
-  border: 1px solid var(--app-border, #E2E8F0);
+  border: 1px solid var(--app-border, #E7E5E4);
   border-radius: $radius-full;
   background: var(--app-bg-card, #FFFFFF);
 }
@@ -1062,7 +1062,7 @@ onUnload(cleanup)
 
 .bar-btn-text {
   font-size: 13px;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 /* 标记本题：橙色态 */
@@ -1080,7 +1080,7 @@ onUnload(cleanup)
 .submit-btn {
   flex: 1.3;
   border: none;
-  background: var(--app-primary, #4F46E5);
+  background: var(--app-primary, #059669);
 }
 
 .submit-text {

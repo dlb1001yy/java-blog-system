@@ -131,7 +131,7 @@ const submitMessage = async () => {
 }
 .module-item:hover {
   border-color: var(--primary-color);
-  background: rgba(64, 158, 255, 0.06);
+  background: rgba(5, 150, 105, 0.06);
   transform: translateY(-2px);
 }
 .module-name { font-size: 15px; font-weight: 600; color: var(--primary-color); margin-bottom: 6px; }

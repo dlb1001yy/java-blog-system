@@ -405,7 +405,7 @@ onUnload(() => {
 <style lang="scss" scoped>
 .scores-page {
   height: 100vh;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   box-sizing: border-box;
 }
 
@@ -454,7 +454,7 @@ onUnload(() => {
   min-width: 0;
   font-size: 15px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -470,7 +470,7 @@ onUnload(() => {
 .record-score {
   font-size: 15px;
   font-weight: 700;
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
 }
 
 .record-sub {
@@ -481,7 +481,7 @@ onUnload(() => {
 
 .sub-item {
   font-size: 12px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 /* 状态 tag：已发布绿 / 待批改橙 */
@@ -528,7 +528,7 @@ onUnload(() => {
 
 .empty-text {
   font-size: 13px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 .status-row {
@@ -536,12 +536,12 @@ onUnload(() => {
   align-items: center;
   justify-content: center;
   padding: $spacing-lg 0;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 .status-text {
   font-size: 12px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 /* ===== 详情头部 ===== */
@@ -556,12 +556,12 @@ onUnload(() => {
   display: flex;
   align-items: center;
   gap: 2px;
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
 }
 
 .back-text {
   font-size: 13px;
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
 }
 
 .detail-paper {
@@ -569,7 +569,7 @@ onUnload(() => {
   min-width: 0;
   font-size: 16px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -585,12 +585,12 @@ onUnload(() => {
   padding: 60px 20px;
   background: var(--app-bg-card, #FFFFFF);
   border-radius: $radius-lg;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 .judging-text {
   font-size: 14px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 /* ===== Hero 得分卡 ===== */
@@ -620,12 +620,12 @@ onUnload(() => {
   font-size: 44px;
   font-weight: 700;
   line-height: 1;
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
 }
 
 .hero-total {
   font-size: 14px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 .hero-tags {
@@ -669,12 +669,12 @@ onUnload(() => {
 
 .hero-label {
   font-size: 11px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 .hero-value {
   font-size: 13px;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 /* 待批改警示条 */
@@ -710,7 +710,7 @@ onUnload(() => {
   display: block;
   font-size: 15px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   margin-bottom: $spacing-lg;
 }
 
@@ -725,7 +725,7 @@ onUnload(() => {
   width: 56px;
   flex-shrink: 0;
   font-size: 12px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   text-align: right;
   white-space: nowrap;
 }
@@ -734,7 +734,7 @@ onUnload(() => {
   position: relative;
   flex: 1;
   height: 22px;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   border-radius: $radius-md;
   overflow: hidden;
 }
@@ -749,12 +749,12 @@ onUnload(() => {
 
 /* 应得分：主色浅底 */
 .bar-full {
-  background: rgba(79, 70, 229, 0.18);
+  background: rgba(5, 150, 105, 0.18);
 }
 
 /* 实得分：主色 */
 .bar-got {
-  background: var(--app-primary, #4F46E5);
+  background: var(--app-primary, #059669);
 }
 
 /* 掌握度：>=80 绿 / >=50 橙 / 其余红 */
@@ -774,7 +774,7 @@ onUnload(() => {
   width: 88px;
   flex-shrink: 0;
   font-size: 11px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 .chart-legend {
@@ -796,16 +796,16 @@ onUnload(() => {
 }
 
 .dot-full {
-  background: rgba(79, 70, 229, 0.3);
+  background: rgba(5, 150, 105, 0.3);
 }
 
 .dot-got {
-  background: var(--app-primary, #4F46E5);
+  background: var(--app-primary, #059669);
 }
 
 .legend-text {
   font-size: 11px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 /* ===== 逐题回顾 ===== */
@@ -813,7 +813,7 @@ onUnload(() => {
   display: block;
   font-size: 16px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   margin-bottom: $spacing-md;
 }
 
@@ -836,7 +836,7 @@ onUnload(() => {
 .item-index {
   font-size: 14px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 /* 题型 tag */
@@ -844,21 +844,21 @@ onUnload(() => {
   padding: 2px 8px;
   border-radius: $radius-sm;
   font-size: 11px;
-  color: var(--app-text-secondary, #64748B);
-  background: var(--app-bg, #F1F5F9);
+  color: var(--app-text-secondary, #57534E);
+  background: var(--app-bg, #FAFAF9);
   flex-shrink: 0;
 }
 
 .item-score {
   margin-left: auto;
   font-size: 12px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 .item-stem {
   font-size: 14px;
   line-height: 1.7;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   margin-bottom: $spacing-md;
 }
 
@@ -867,7 +867,7 @@ onUnload(() => {
 }
 
 .item-stem :deep(pre) {
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   padding: 12px;
   border-radius: $radius-md;
   font-family: 'Menlo', 'Consolas', monospace;
@@ -885,7 +885,7 @@ onUnload(() => {
   flex-direction: column;
   gap: $spacing-sm;
   padding-top: $spacing-md;
-  border-top: 1px dashed var(--app-border, #E2E8F0);
+  border-top: 1px dashed var(--app-border, #E7E5E4);
 }
 
 .answer-line {
@@ -897,7 +897,7 @@ onUnload(() => {
   flex-shrink: 0;
   width: 56px;
   font-size: 12px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   text-align: right;
 }
 
@@ -906,14 +906,14 @@ onUnload(() => {
   min-width: 0;
   font-size: 13px;
   line-height: 1.7;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   word-break: break-word;
   white-space: pre-wrap;
 }
 
 /* 正确答案 / 解析：主色文字 */
 .answer-value.correct {
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
 }
 
 .answer-value :deep(p) {
@@ -921,7 +921,7 @@ onUnload(() => {
 }
 
 .answer-value :deep(pre) {
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   padding: 10px;
   border-radius: $radius-md;
   font-family: 'Menlo', 'Consolas', monospace;

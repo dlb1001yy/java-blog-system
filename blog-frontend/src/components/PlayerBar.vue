@@ -368,7 +368,7 @@ const onCoverError = (e) => {
   font-size: 16px;
   transform: scale(1.05);
   transform-origin: left center;
-  background: rgba(64, 158, 255, 0.06);
+  background: rgba(5, 150, 105, 0.06);
 }
 
 .lyric-empty {
@@ -411,7 +411,7 @@ const onCoverError = (e) => {
   align-items: center;
   justify-content: center;
   color: #fff;
-  background: linear-gradient(135deg, var(--primary-color), #9b59b6);
+  background: linear-gradient(135deg, var(--primary-color), #14B8A6);
 }
 
 .meta {

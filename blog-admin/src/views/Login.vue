@@ -5,7 +5,7 @@
       <div class="brand-content">
         <div class="brand-logo">
           <span class="logo-dot"></span>
-          <span class="logo-text">Java 博客</span>
+          <span class="logo-text">Java码农笔记</span>
         </div>
         <h1 class="brand-title">现代化博客内容管理平台</h1>
         <p class="brand-desc">高效写作 · 智能管理 · 数据驱动<br/>让每一篇好内容被看见</p>

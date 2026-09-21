@@ -339,7 +339,7 @@ onLoad(() => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
 }
 
 /* ===== 正在播放大卡：白底卡片 + 主色轻渐变 ===== */
@@ -363,7 +363,7 @@ onLoad(() => {
   width: 88px;
   height: 88px;
   border-radius: $radius-lg;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
 }
 
 /* 无封面：主色渐变底 + music 图标 */
@@ -393,7 +393,7 @@ onLoad(() => {
   font-size: 17px;
   font-weight: 700;
   line-height: 1.3;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -402,7 +402,7 @@ onLoad(() => {
 .np-artist {
   font-size: 12px;
   line-height: 1.3;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -420,7 +420,7 @@ onLoad(() => {
   flex-shrink: 0;
   width: 38px;
   font-size: 11px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
   text-align: center;
 }
 
@@ -447,7 +447,7 @@ onLoad(() => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   transition: opacity 0.15s ease;
 
   &:active {
@@ -505,7 +505,7 @@ onLoad(() => {
   flex: 1;
   min-width: 0;
   font-size: 14px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 /* ===== 下方滚动区 ===== */
@@ -532,12 +532,12 @@ onLoad(() => {
 .section-title {
   font-size: 16px;
   font-weight: 700;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 .section-hint {
   font-size: 12px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 /* ===== 歌曲行 ===== */
@@ -574,7 +574,7 @@ onLoad(() => {
 
 .index-num {
   font-size: 13px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 /* 跳动均衡器：三竖条，暂停时停住 */
@@ -617,7 +617,7 @@ onLoad(() => {
   font-size: 14px;
   font-weight: 500;
   line-height: 1.3;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -632,7 +632,7 @@ onLoad(() => {
 .song-meta {
   font-size: 12px;
   line-height: 1.3;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -641,7 +641,7 @@ onLoad(() => {
 .song-duration {
   flex-shrink: 0;
   font-size: 12px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 /* 行尾播放按钮 */
@@ -686,7 +686,7 @@ onLoad(() => {
   padding-bottom: 100%; /* 1:1 正方形 */
   border-radius: $radius-lg;
   overflow: hidden;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   box-shadow: $shadow-card;
 }
 
@@ -721,7 +721,7 @@ onLoad(() => {
   display: block;
   margin-top: $spacing-sm;
   font-size: 13px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -733,7 +733,7 @@ onLoad(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 .empty-icon {
@@ -743,7 +743,7 @@ onLoad(() => {
 
 .empty-text {
   font-size: 14px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 .status {
@@ -751,7 +751,7 @@ onLoad(() => {
   align-items: center;
   justify-content: center;
   padding: $spacing-md;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
   font-size: 12px;
 }
 </style>

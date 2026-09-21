@@ -24,7 +24,10 @@
     <!-- 顶部 Hero 区：渐变按主题切换 -->
     <view class="hero" :style="{ background: isDark ? darkColors.gradientHero : colors.gradientHero }">
       <view class="hero-content">
-        <text class="site-title">Java码农笔记</text>
+        <view class="hero-brand">
+          <image class="hero-logo" src="/static/logo.png" mode="aspectFit" />
+          <text class="site-title">Java码农笔记</text>
+        </view>
         <text class="site-subtitle">分享技术，记录成长</text>
       </view>
       <view v-if="statsText" class="hero-stats">
@@ -57,8 +60,8 @@
       </view>
     </view>
 
-    <!-- 最新文章区：失败静默隐藏 -->
-    <view v-if="showLatestSection" class="latest-section">
+    <!-- 最新文章区：加载中骨架 / 失败重试空态 / 空数据文案 / 正常列表 -->
+    <view class="latest-section">
       <view class="section-head">
         <text class="section-title">最新文章</text>
         <view class="section-more" @click="goArticleList">
@@ -68,6 +71,20 @@
       </view>
       <!-- 加载中骨架 -->
       <Skeleton v-if="latestLoading" type="article" :count="3" />
+      <!-- 加载失败空态：图标 + 文案 + 重试 -->
+      <view v-else-if="latestFailed" class="latest-empty">
+        <svg class="latest-empty-icon" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <text class="latest-empty-text">最新文章加载失败</text>
+        <view class="latest-retry" @click="loadLatest">重试</view>
+      </view>
+      <!-- 空数据态：非失败的空列表 -->
+      <view v-else-if="latestArticles.length === 0" class="latest-empty">
+        <text class="latest-empty-text">暂无文章</text>
+      </view>
       <template v-else>
         <view
           v-for="item in latestArticles"
@@ -164,11 +181,6 @@ const statItems = computed(() => [
   { label: '题量', value: formatCount(questionCount.value) }
 ])
 
-// 最新文章区显隐：加载中或加载成功且有数据时显示，失败静默隐藏
-const showLatestSection = computed(() => {
-  return latestLoading.value || (!latestFailed.value && latestArticles.value.length > 0)
-})
-
 // 数字格式化：>=10000 显示 1.2w，>=1000 显示 1.2k
 const formatCount = (n) => {
   if (n == null) return '0'
@@ -202,7 +214,7 @@ const loadQuestionCount = async () => {
   }
 }
 
-// 拉取最新文章：取前 3 篇，失败静默隐藏该区
+// 拉取最新文章：取前 3 篇，失败置失败态展示重试空态
 const loadLatest = async () => {
   if (offlineMode.value) {
     latestLoading.value = false
@@ -210,11 +222,11 @@ const loadLatest = async () => {
     return
   }
   latestLoading.value = true
+  latestFailed.value = false
   try {
     const res = await api.getLatestArticles()
     const records = Array.isArray(res.data) ? res.data : []
     latestArticles.value = records.slice(0, 3)
-    if (latestArticles.value.length === 0) latestFailed.value = true
   } catch (e) {
     latestFailed.value = true
   } finally {
@@ -266,7 +278,7 @@ const onRefresh = async () => {
 /* 页面根节点：占满整屏，主题类挂在此处向 scroll-view 及内容级联 CSS 变量 */
 .page-root {
   height: 100vh;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
 }
 
 /* 滚动容器：占满根节点高度形成滚动区，底部留白避开 PlayerBar + TabBar */
@@ -289,7 +301,7 @@ const onRefresh = async () => {
   width: 14rpx;
   height: 14rpx;
   border-radius: 50%;
-  background: var(--app-primary, #4F46E5);
+  background: var(--app-primary, #059669);
   animation: refresher-pulse 1.2s ease-in-out infinite;
 }
 
@@ -315,6 +327,20 @@ const onRefresh = async () => {
   flex-direction: column;
   position: relative;
   overflow: hidden;
+}
+
+/* 品牌行：logo 图形与站名水平排列 */
+.hero-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 品牌图形：48px 咖啡杯 + 代码符号 */
+.hero-logo {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
 }
 
 .site-title {
@@ -349,7 +375,7 @@ const onRefresh = async () => {
   margin: -32px $spacing-lg 0;
   padding: $spacing-md 0;
   background: var(--app-bg-card, #FFFFFF);
-  border-radius: 14px;
+  border-radius: $radius-lg;
   box-shadow: $shadow-floating;
   position: relative;
   z-index: 5;
@@ -365,19 +391,19 @@ const onRefresh = async () => {
 
 /* 相邻项之间细分隔线 */
 .stat-item + .stat-item {
-  border-left: 1px solid var(--app-divider, #F1F5F9);
+  border-left: 1px solid var(--app-divider, #F5F5F4);
 }
 
 .stat-num {
   font-size: 18px;
   font-weight: 700;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   line-height: 1.2;
 }
 
 .stat-label {
   font-size: 11px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 /* ===== 功能模块入口：4 列 2 行 ===== */
@@ -385,7 +411,7 @@ const onRefresh = async () => {
   margin: $spacing-md $spacing-lg 0;
   padding: $spacing-lg $spacing-xs $spacing-sm;
   background: var(--app-bg-card, #FFFFFF);
-  border-radius: 14px;
+  border-radius: $radius-lg;
   box-shadow: $shadow-card;
 }
 
@@ -401,12 +427,13 @@ const onRefresh = async () => {
   flex-direction: column;
   align-items: center;
   padding: $spacing-sm 0;
-  transition: opacity 0.15s ease;
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
-/* 按压反馈 */
+/* 按压反馈：与 ArticleItem 一致的缩放 + 半透明 */
 .module-item:active {
-  opacity: 0.6;
+  transform: scale(0.98);
+  opacity: 0.9;
 }
 
 /* 圆形浅色底图标容器：Icon 颜色继承容器 color */
@@ -430,7 +457,7 @@ const onRefresh = async () => {
 
 .module-name {
   font-size: 12px;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   line-height: 1.4;
 }
 
@@ -450,19 +477,61 @@ const onRefresh = async () => {
 .section-title {
   font-size: 16px;
   font-weight: 700;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 .section-more {
   display: flex;
   align-items: center;
   gap: 2px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 .more-text {
   font-size: 12px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
+}
+
+/* 最新文章空态：失败重试 / 空数据文案，白底圆角卡片居中 */
+.latest-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 0 $spacing-lg;
+  padding: 28px $spacing-md;
+  background: var(--app-bg-card, #FFFFFF);
+  border-radius: $radius-md;
+  box-shadow: $shadow-card;
+}
+
+/* 失败图标：与归档页空态同款自绘 SVG，继承容器色半透明 */
+.latest-empty-icon {
+  margin-bottom: 4px;
+  color: var(--app-text-secondary, #57534E);
+  opacity: 0.5;
+}
+
+.latest-empty-text {
+  font-size: 14px;
+  color: var(--app-text-secondary, #57534E);
+}
+
+/* 重试按钮：品牌色描边小按钮 */
+.latest-retry {
+  margin-top: 4px;
+  padding: 6px 24px;
+  font-size: 13px;
+  color: var(--app-primary, #059669);
+  border: 1px solid var(--app-primary, #059669);
+  border-radius: 999px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+/* 按压反馈 */
+.latest-retry:active {
+  transform: scale(0.98);
+  opacity: 0.9;
 }
 
 /* 紧凑最新卡：60x60 缩略 + 标题 2 行 + 日期 */
@@ -473,13 +542,15 @@ const onRefresh = async () => {
   margin: 0 $spacing-lg $spacing-sm;
   padding: $spacing-md;
   background: var(--app-bg-card, #FFFFFF);
-  border-radius: 10px;
+  border-radius: $radius-md;
   box-shadow: $shadow-card;
-  transition: opacity 0.15s ease;
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
+/* 按压反馈：与 ArticleItem 一致的缩放 + 半透明 */
 .latest-item:active {
-  opacity: 0.85;
+  transform: scale(0.98);
+  opacity: 0.9;
 }
 
 .latest-item:last-child {
@@ -491,7 +562,7 @@ const onRefresh = async () => {
   height: 60px;
   border-radius: $radius-md;
   flex-shrink: 0;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
 }
 
 /* 无封面：浅底 + document 图标占位 */
@@ -499,7 +570,7 @@ const onRefresh = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 .latest-info {
@@ -513,7 +584,7 @@ const onRefresh = async () => {
 .latest-title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -525,6 +596,6 @@ const onRefresh = async () => {
 
 .latest-date {
   font-size: 11px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 </style>

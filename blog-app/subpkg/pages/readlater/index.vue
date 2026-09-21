@@ -107,7 +107,7 @@ watch(isDark, () => applyNavBarTheme())
 /* 页面容器 */
 .readlater-page {
   min-height: 100vh;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   padding: 12px 16px calc(24px + env(safe-area-inset-bottom));
 }
 
@@ -138,7 +138,7 @@ watch(isDark, () => applyNavBarTheme())
 .item-title {
   font-size: 15px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -152,7 +152,7 @@ watch(isDark, () => applyNavBarTheme())
 .item-summary {
   margin-top: 6px;
   font-size: 13px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   line-height: 1.5;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -173,7 +173,7 @@ watch(isDark, () => applyNavBarTheme())
 /* 日期 */
 .item-date {
   font-size: 12px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 /* 类型徽章：胶囊形白字 */
@@ -185,7 +185,7 @@ watch(isDark, () => applyNavBarTheme())
   line-height: 1.4;
 }
 /* 原创 -> 主色（暗色下由 --app-primary 自适应） */
-.type-0 { background: var(--app-primary, #4F46E5); }
+.type-0 { background: var(--app-primary, #059669); }
 /* 转载 -> 警告色 */
 .type-1 { background: #F59E0B; }
 /* 翻译 -> 成功色 */
@@ -220,20 +220,20 @@ watch(isDark, () => applyNavBarTheme())
 }
 
 .empty-icon {
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 .empty-title {
   margin-top: $spacing-lg;
   font-size: 15px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 .empty-sub {
   margin-top: $spacing-sm;
   font-size: 13px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   line-height: 1.6;
   text-align: center;
 }

@@ -68,7 +68,7 @@
 .shimmer {
   position: relative;
   overflow: hidden;
-  background-color: #e8ebf0;
+  background-color: var(--border-color);
 }
 
 .shimmer::after {

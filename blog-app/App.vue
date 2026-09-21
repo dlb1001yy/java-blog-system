@@ -23,21 +23,21 @@ export default {
 
 /* 亮色主题 CSS 变量令牌（与 common/theme.js 亮色值保持一致） */
 page {
-  --app-primary: #4F46E5;
-  --app-primary-light: #6366F1;
-  --app-secondary: #06B6D4;
-  --app-bg: #F1F5F9;
+  --app-primary: #059669;
+  --app-primary-light: #10B981;
+  --app-secondary: #0D9488;
+  --app-bg: #FAFAF9;
   --app-bg-card: #FFFFFF;
-  --app-text: #0F172A;
-  --app-text-secondary: #64748B;
-  --app-text-tertiary: #94A3B8;
-  --app-border: #E2E8F0;
-  --app-divider: #F1F5F9;
+  --app-text: #1C1917;
+  --app-text-secondary: #57534E;
+  --app-text-tertiary: #A8A29E;
+  --app-border: #E7E5E4;
+  --app-divider: #F5F5F4;
   --app-mask: rgba(0, 0, 0, 0.4);
   /* 底部安全区域（iPhone 刘海屏/Home 条） */
   --app-safe-bottom: env(safe-area-inset-bottom);
 
-  background-color: var(--app-bg, #F1F5F9);
+  background-color: var(--app-bg, #FAFAF9);
   font-size: 14px;
   color: var(--app-text, #303133);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -45,16 +45,16 @@ page {
 
 /* 暗色变量集合（mixin）：页面根 view 的 .theme-dark 类与 H5 端 body 主题类复用 */
 @mixin theme-dark-vars {
-  --app-primary: #818CF8;
-  --app-primary-light: #6366F1;
-  --app-secondary: #22D3EE;
-  --app-bg: #0B1220;
-  --app-bg-card: #1E293B;
-  --app-text: #E2E8F0;
-  --app-text-secondary: #94A3B8;
-  --app-text-tertiary: #64748B;
-  --app-border: #334155;
-  --app-divider: #1E293B;
+  --app-primary: #34D399;
+  --app-primary-light: #6EE7B7;
+  --app-secondary: #14B8A6;
+  --app-bg: #0B0F0E;
+  --app-bg-card: #131A18;
+  --app-text: #F5F7F6;
+  --app-text-secondary: #C3CDC9;
+  --app-text-tertiary: #7E8C87;
+  --app-border: #24302C;
+  --app-divider: #1A2321;
   --app-mask: rgba(0, 0, 0, 0.6);
 }
 

@@ -171,7 +171,6 @@ onMounted(() => fetchData())
 :deep(.el-table) { border-radius: var(--radius-md); }
 :deep(.el-table th.el-table__cell) { background: var(--bg-subtle); color: var(--text-regular); font-weight: 600; }
 :deep(.el-table tr) { transition: background var(--transition-base); }
-:deep(.el-table__row:hover > td.el-table__cell) { background: var(--el-color-primary-light-9) !important; }
 :deep(.el-table .el-table__cell) { border-bottom: 1px solid var(--border-color); }
 :deep(.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell) { background: var(--bg-subtle); }
 

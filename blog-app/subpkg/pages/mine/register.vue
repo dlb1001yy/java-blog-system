@@ -13,7 +13,7 @@
         <view class="form">
           <!-- 用户名 -->
           <view class="input-item">
-            <Icon name="user" :size="18" color="#94A3B8" class="input-icon" />
+            <Icon name="user" :size="18" color="#A8A29E" class="input-icon" />
             <input
               v-model="form.username"
               placeholder="请输入用户名"
@@ -24,7 +24,7 @@
 
           <!-- 邮箱 -->
           <view class="input-item">
-            <Icon name="mail" :size="18" color="#94A3B8" class="input-icon" />
+            <Icon name="mail" :size="18" color="#A8A29E" class="input-icon" />
             <input
               v-model="form.email"
               type="text"
@@ -42,7 +42,7 @@
                 width="18"
                 height="18"
                 fill="none"
-                stroke="#94A3B8"
+                stroke="#A8A29E"
                 stroke-width="1.8"
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -68,7 +68,7 @@
                 width="18"
                 height="18"
                 fill="none"
-                stroke="#94A3B8"
+                stroke="#A8A29E"
                 stroke-width="1.8"
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -203,7 +203,7 @@ const handleRegister = async () => {
   background: var(--app-bg-card, #FFFFFF);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
-  border: 1px solid var(--app-border, #E2E8F0);
+  border: 1px solid var(--app-border, #E7E5E4);
   border-radius: 24px;
   padding: 40px 28px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
@@ -219,14 +219,14 @@ const handleRegister = async () => {
   display: block;
   font-size: 26px;
   font-weight: 700;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 .subtitle {
   display: block;
   margin-top: 6px;
   font-size: 13px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 // 表单
@@ -240,7 +240,7 @@ const handleRegister = async () => {
 .input-item {
   display: flex;
   align-items: center;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   border-radius: $radius-lg;
   padding: 0 14px;
   height: 48px;
@@ -250,7 +250,7 @@ const handleRegister = async () => {
   &:focus-within {
     background: var(--app-bg-card, #FFFFFF);
     border-color: $color-primary;
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
   }
 }
 
@@ -269,12 +269,12 @@ const handleRegister = async () => {
 .input {
   flex: 1;
   font-size: 15px;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   height: 100%;
 }
 
 .placeholder {
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 // 注册按钮
@@ -287,7 +287,7 @@ const handleRegister = async () => {
   font-weight: 600;
   border: none;
   margin-top: 8px;
-  box-shadow: 0 8px 16px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 8px 16px rgba(5, 150, 105, 0.3);
   transition: transform 0.1s;
 
   &:active {
@@ -310,7 +310,7 @@ const handleRegister = async () => {
 
 .tip-text {
   font-size: 12px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 .tip-link {

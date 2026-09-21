@@ -116,7 +116,7 @@ const handleSubmit = async () => {
 /* 页面容器 */
 .message-page {
   min-height: 100vh;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
 }
 
@@ -132,7 +132,7 @@ const handleSubmit = async () => {
   display: block;
   font-size: 20px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 .desc {
@@ -140,7 +140,7 @@ const handleSubmit = async () => {
   margin-top: 8px;
   margin-bottom: 20px;
   font-size: 13px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 /* 表单 */
@@ -166,7 +166,7 @@ const handleSubmit = async () => {
 .label {
   font-size: 14px;
   font-weight: 500;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 /* 必填红星 */
@@ -178,23 +178,23 @@ const handleSubmit = async () => {
 /* 选填灰字 */
 .optional {
   font-size: 12px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 /* 输入框 */
 .input {
   height: 44px;
   padding: 0 14px;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   border-radius: $radius-lg;
   font-size: 14px;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 /* 多行文本容器 */
 .textarea-wrap {
   position: relative;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   border-radius: $radius-lg;
   padding: 12px 14px 26px;
 }
@@ -204,7 +204,7 @@ const handleSubmit = async () => {
   min-height: 110px;
   font-size: 14px;
   line-height: 1.6;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 /* 字数统计：右下角 */
@@ -213,11 +213,11 @@ const handleSubmit = async () => {
   right: 14px;
   bottom: 8px;
   font-size: 11px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 .placeholder {
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 /* 提交按钮 */
@@ -230,7 +230,7 @@ const handleSubmit = async () => {
   font-weight: 600;
   border: none;
   margin-top: 4px;
-  box-shadow: 0 8px 16px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 8px 16px rgba(5, 150, 105, 0.3);
   transition: transform 0.1s;
 
   &:active {

@@ -458,7 +458,7 @@ onBeforeUnmount(cleanup)
   font-size: 20px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--primary-color, #409eff);
+  color: var(--primary-color, #059669);
 }
 
 .countdown.danger {
@@ -525,7 +525,7 @@ onBeforeUnmount(cleanup)
 }
 
 .card-stats .answered {
-  color: var(--primary-color, #409eff);
+  color: var(--primary-color, #059669);
   font-size: 16px;
 }
 
@@ -547,8 +547,8 @@ onBeforeUnmount(cleanup)
 }
 
 .card-item.answered {
-  background: var(--primary-color, #409eff);
-  border-color: var(--primary-color, #409eff);
+  background: var(--primary-color, #059669);
+  border-color: var(--primary-color, #059669);
   color: #fff;
 }
 
@@ -557,13 +557,13 @@ onBeforeUnmount(cleanup)
 }
 
 .card-item.current {
-  border: 2px solid var(--primary-color, #409eff);
+  border: 2px solid var(--primary-color, #059669);
   font-weight: 700;
 }
 
 .card-item.current:not(.answered) {
-  background: rgba(64, 158, 255, 0.08);
-  color: var(--primary-color, #409eff);
+  background: rgba(5, 150, 105, 0.08);
+  color: var(--primary-color, #059669);
 }
 
 .card-legend {
@@ -589,7 +589,7 @@ onBeforeUnmount(cleanup)
   background: #fff;
 }
 
-.dot.answered { background: var(--primary-color, #409eff); border-color: var(--primary-color, #409eff); }
+.dot.answered { background: var(--primary-color, #059669); border-color: var(--primary-color, #059669); }
 .dot.marked { border: 2px solid var(--el-color-warning, #e6a23c); }
 
 /* 答题区 */
@@ -648,23 +648,23 @@ onBeforeUnmount(cleanup)
 }
 
 .option-item:hover {
-  border-color: var(--primary-color, #409eff);
+  border-color: var(--primary-color, #059669);
 }
 
 .option-item.active {
-  border-color: var(--primary-color, #409eff);
-  background: rgba(64, 158, 255, 0.06);
+  border-color: var(--primary-color, #059669);
+  background: rgba(5, 150, 105, 0.06);
 }
 
 .option-item input {
   margin-top: 4px;
-  accent-color: var(--primary-color, #409eff);
+  accent-color: var(--primary-color, #059669);
   cursor: pointer;
 }
 
 .option-key {
   font-weight: 700;
-  color: var(--primary-color, #409eff);
+  color: var(--primary-color, #059669);
 }
 
 .option-text {

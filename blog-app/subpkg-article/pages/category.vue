@@ -89,7 +89,7 @@ watch(isDark, () => applyNavBarTheme())
 /* 页面根节点：占满整屏，底部预留 24px（无 TabBar） */
 .category-page {
   min-height: 100vh;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   padding: 12px 16px calc(24px + env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
@@ -127,7 +127,7 @@ watch(isDark, () => applyNavBarTheme())
   height: 40px;
   border-radius: $radius-md;
   background: rgba($color-primary, 0.12);
-  color: var(--app-primary, #4F46E5);
+  color: var(--app-primary, #059669);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -145,7 +145,7 @@ watch(isDark, () => applyNavBarTheme())
 .name {
   font-size: 14px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -155,12 +155,12 @@ watch(isDark, () => applyNavBarTheme())
 .count {
   margin-top: 4px;
   font-size: 12px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 /* 右侧箭头 */
 .arrow {
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
   flex-shrink: 0;
 }
 
@@ -171,7 +171,7 @@ watch(isDark, () => applyNavBarTheme())
 }
 
 .skeleton-block {
-  background: linear-gradient(90deg, var(--app-border, #E2E8F0) 25%, var(--app-bg, #F1F5F9) 50%, var(--app-border, #E2E8F0) 75%);
+  background: linear-gradient(90deg, var(--app-border, #E7E5E4) 25%, var(--app-bg, #FAFAF9) 50%, var(--app-border, #E7E5E4) 75%);
   background-size: 936px 100%;
   animation: shimmer 1.5s infinite linear;
   border-radius: $radius-md;
@@ -206,7 +206,7 @@ watch(isDark, () => applyNavBarTheme())
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 
 .empty-icon {
@@ -216,6 +216,6 @@ watch(isDark, () => applyNavBarTheme())
 
 .empty-text {
   font-size: 14px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 </style>

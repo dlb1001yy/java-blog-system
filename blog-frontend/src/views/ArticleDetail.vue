@@ -240,7 +240,7 @@ onBeforeUnmount(() => {
   height: 3px;
   width: 0;
   z-index: 2000;
-  background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+  background: linear-gradient(90deg, #059669, #10B981, #2DD4BF);
   transition: width 0.1s linear;
 }
 

@@ -261,7 +261,7 @@ onLoad(async () => {
 
 <style lang="scss" scoped>
 .resume-page {
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   min-height: 100vh;
   padding-bottom: calc(56px + env(safe-area-inset-bottom) + 12px);
 }
@@ -346,7 +346,7 @@ onLoad(async () => {
     gap: 8px;
     font-size: 16px;
     font-weight: 600;
-    color: var(--app-text, #0F172A);
+    color: var(--app-text, #1C1917);
     margin-bottom: 16px;
     padding-bottom: 12px;
     border-bottom: 2px solid $color-primary;
@@ -372,17 +372,17 @@ onLoad(async () => {
 
     /* 浅色底改为低透明度主色，亮暗模式下均可读 */
     &.skill-tag--primary {
-      background: rgba(79, 70, 229, 0.12);
+      background: rgba(5, 150, 105, 0.12);
       color: $color-primary;
     }
 
     &.skill-tag--secondary {
-      background: rgba(6, 182, 212, 0.12);
+      background: rgba(13, 148, 136, 0.12);
       color: $color-secondary;
     }
 
     &.skill-tag--accent {
-      background: rgba(139, 92, 246, 0.12);
+      background: rgba(20, 184, 166, 0.12);
       color: $color-accent;
     }
   }
@@ -405,7 +405,7 @@ onLoad(async () => {
       display: block;
       font-size: 15px;
       font-weight: 600;
-      color: var(--app-text, #0F172A);
+      color: var(--app-text, #1C1917);
     }
 
     .timeline-date {
@@ -414,7 +414,7 @@ onLoad(async () => {
       gap: 4px;
       margin-top: 4px;
       font-size: 12px;
-      color: var(--app-text-tertiary, #94A3B8);
+      color: var(--app-text-tertiary, #A8A29E);
     }
 
     .timeline-sub {
@@ -439,7 +439,7 @@ onLoad(async () => {
 .projects-list {
   .project-item {
     background: var(--app-bg-card, #FFFFFF);
-    border: 1px solid var(--app-border, #E2E8F0);
+    border: 1px solid var(--app-border, #E7E5E4);
     border-radius: $radius-lg;
     padding: 16px;
     margin-bottom: 12px;
@@ -458,12 +458,12 @@ onLoad(async () => {
         flex: 1;
         font-size: 15px;
         font-weight: 600;
-        color: var(--app-text, #0F172A);
+        color: var(--app-text, #1C1917);
       }
 
       .project-date {
         font-size: 12px;
-        color: var(--app-text-tertiary, #94A3B8);
+        color: var(--app-text-tertiary, #A8A29E);
         flex-shrink: 0;
       }
     }
@@ -492,7 +492,7 @@ onLoad(async () => {
 
       .tag {
         /* 低透明度主色底，亮暗模式下均可读 */
-        background: rgba(79, 70, 229, 0.12);
+        background: rgba(5, 150, 105, 0.12);
         color: $color-primary;
         padding: 3px 10px;
         border-radius: $radius-full;
@@ -509,7 +509,7 @@ onLoad(async () => {
   align-items: center;
   justify-content: center;
   padding: 80px 20px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
   font-size: 14px;
 }
 
@@ -530,13 +530,13 @@ onLoad(async () => {
 
     .info-label {
       font-size: 11px;
-      color: var(--app-text-tertiary, #94A3B8);
+      color: var(--app-text-tertiary, #A8A29E);
     }
 
     .info-value {
       font-size: 13px;
       font-weight: 500;
-      color: var(--app-text, #0F172A);
+      color: var(--app-text, #1C1917);
     }
   }
 }

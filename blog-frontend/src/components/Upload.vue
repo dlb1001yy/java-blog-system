@@ -105,8 +105,8 @@ const handleRemove = () => {
 }
 
 .upload-placeholder:hover {
-  border-color: var(--primary-color, #409eff);
-  color: var(--primary-color, #409eff);
+  border-color: var(--primary-color, #059669);
+  color: var(--primary-color, #059669);
 }
 
 .upload-preview {

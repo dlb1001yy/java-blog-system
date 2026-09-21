@@ -44,7 +44,7 @@ defineProps({
 
 /* 骨架块基础样式：灰底 + 渐变扫光（颜色跟随主题变量） */
 .skeleton-block {
-  background: linear-gradient(90deg, var(--app-border, #E2E8F0) 25%, var(--app-bg, #F1F5F9) 50%, var(--app-border, #E2E8F0) 75%);
+  background: linear-gradient(90deg, var(--app-border, #E7E5E4) 25%, var(--app-bg, #FAFAF9) 50%, var(--app-border, #E7E5E4) 75%);
   background-size: 936px 100%;
   animation: shimmer 1.5s infinite linear;
   border-radius: $radius-md;

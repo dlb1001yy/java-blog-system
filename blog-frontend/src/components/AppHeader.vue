@@ -133,12 +133,12 @@ const handleSearch = () => {
 
 .nav-item:hover {
   color: var(--primary-color);
-  background: rgba(64, 158, 255, 0.08);
+  background: rgba(5, 150, 105, 0.08);
 }
 
 .nav-item.router-link-exact-active {
   color: var(--primary-color);
-  background: rgba(64, 158, 255, 0.1);
+  background: rgba(5, 150, 105, 0.1);
 }
 
 .header-right {

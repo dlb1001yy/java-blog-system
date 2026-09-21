@@ -229,7 +229,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 24px;
-  background: linear-gradient(135deg, var(--card-bg) 60%, rgba(64, 158, 255, 0.08));
+  background: linear-gradient(135deg, var(--card-bg) 60%, rgba(5, 150, 105, 0.08));
 }
 
 .np-cover {
@@ -246,7 +246,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   color: #fff;
-  background: linear-gradient(135deg, var(--primary-color), #9b59b6);
+  background: linear-gradient(135deg, var(--primary-color), #14B8A6);
 }
 
 .np-info {
@@ -362,11 +362,11 @@ onMounted(() => {
 }
 
 .song-table :deep(.el-table__row:hover) {
-  background: rgba(64, 158, 255, 0.05);
+  background: rgba(5, 150, 105, 0.05);
 }
 
 .song-table :deep(.current-row) {
-  background: rgba(64, 158, 255, 0.1);
+  background: rgba(5, 150, 105, 0.1);
 }
 
 .song-cell {
@@ -388,7 +388,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   color: #fff;
-  background: linear-gradient(135deg, var(--primary-color), #9b59b6);
+  background: linear-gradient(135deg, var(--primary-color), #14B8A6);
   flex-shrink: 0;
 }
 
@@ -460,7 +460,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   color: #fff;
-  background: linear-gradient(135deg, var(--primary-color), #9b59b6);
+  background: linear-gradient(135deg, var(--primary-color), #14B8A6);
 }
 
 .playlist-item:hover .playlist-cover {

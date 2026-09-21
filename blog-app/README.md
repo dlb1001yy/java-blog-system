@@ -108,16 +108,19 @@ blog-app/
 
 ```js
 export const colors = {
-  primary: '#4F46E5',      // 靛蓝主色
-  secondary: '#06B6D4',    // 青色辅色
-  gradientHero: '...',      // hero 渐变
-  gradientButton: '...',    // 按钮渐变
+  primary: '#059669',        // 翡翠绿主色
+  primaryLight: '#10B981',
+  primaryDark: '#047857',
+  secondary: '#0D9488',      // 青绿辅色
+  secondaryLight: '#2DD4BF',
+  accent: '#14B8A6',         // 青绿强调（用于技能标签等）
+  bg: '#FAFAF9',             // 页面背景
   // ...
 }
 
-export const spacing = { xs: 8, sm: 12, md: 16, lg: 24, xl: 32 }
-export const radius = { sm: 8, md: 12, lg: 16, xl: 24, full: 9999 }
-export const shadow = { sm: '...', md: '...', lg: '...' }
+export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, xxxl: 32 }
+export const radii = { sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, full: 999 }
+export const shadows = { card: '...', cardHover: '...', floating: '...', tabbar: '...' }
 ```
 
 `uni.scss` 同步导出 SCSS 变量供样式使用。
@@ -176,9 +179,9 @@ export const shadow = { sm: '...', md: '...', lg: '...' }
 | 约定 | 说明 |
 |------|------|
 | TabBar 图标 | 内联 SVG，24x24 viewBox，2px stroke width |
-| TabBar 颜色 | 默认 #909399，激活 #409eff |
+| TabBar 颜色 | 默认 #A8A29E，激活 #059669（--app-primary） |
 | TabBar 定位 | fixed bottom，padding-bottom: env(safe-area-inset-bottom) |
 | Tab 切换 | 使用 uni.reLaunch 避免页面栈累积 |
 | 页面生命周期 | `<script setup>` 中需从 `@dcloudio/uni-app` 显式 import onLoad/onShow 等 |
 | 页面底部留白 | TabBar 高度 56px + safe-area，页面底部需留相应 padding |
-| 配色 | 主色 #4F46E5，辅色 #06B6D4，统一使用 theme.js 令牌 |
+| 配色 | 主色 #059669，辅色 #0D9488，统一使用 theme.js 令牌 |

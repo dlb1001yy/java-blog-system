@@ -219,7 +219,7 @@
               <span class="activity-uri">{{ item.method }} {{ item.uri }}</span>
             </el-timeline-item>
           </el-timeline>
-          <el-empty v-else description="暂无操作记录" :image-size="60" />
+          <el-empty v-else description="暂无操作记录" :image-size="80" />
         </div>
       </el-col>
       <el-col :xs="24" :lg="10">

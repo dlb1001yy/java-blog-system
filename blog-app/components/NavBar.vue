@@ -57,7 +57,7 @@ const goBack = () => {
 /* 根节点：卡片底色 + 底边分割线（跟随主题 CSS 变量） */
 .nav-bar {
   background: var(--app-bg-card, #FFFFFF);
-  border-bottom: 1px solid var(--app-border, #E2E8F0);
+  border-bottom: 1px solid var(--app-border, #E7E5E4);
 }
 
 /* 透明模式：不画背景与底边 */
@@ -87,7 +87,7 @@ const goBack = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   flex-shrink: 0;
 }
 
@@ -109,7 +109,7 @@ const goBack = () => {
   max-width: 100%;
   font-size: 16px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

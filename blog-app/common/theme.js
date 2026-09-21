@@ -4,59 +4,59 @@ import { ref } from 'vue'
 
 // 颜色
 export const colors = {
-  primary: '#4F46E5',        // 靛蓝主色
-  primaryLight: '#6366F1',
-  primaryDark: '#4338CA',
-  secondary: '#06B6D4',      // 青色辅色
-  secondaryLight: '#22D3EE',
-  accent: '#8B5CF6',         // 紫色强调（用于技能标签等）
-  bg: '#F1F5F9',             // 页面背景
+  primary: '#059669',        // 翡翠绿主色
+  primaryLight: '#10B981',
+  primaryDark: '#047857',
+  secondary: '#0D9488',      // 青绿辅色
+  secondaryLight: '#2DD4BF',
+  accent: '#14B8A6',         // 青绿强调（用于技能标签等）
+  bg: '#FAFAF9',             // 页面背景
   bgCard: '#FFFFFF',
-  text: '#0F172A',           // 主文字
-  textSecondary: '#64748B',  // 次要文字
-  textTertiary: '#94A3B8',   // 三级文字
-  border: '#E2E8F0',
-  divider: '#F1F5F9',
+  text: '#1C1917',           // 主文字
+  textSecondary: '#57534E',  // 次要文字
+  textTertiary: '#A8A29E',   // 三级文字
+  border: '#E7E5E4',
+  divider: '#F5F5F4',
   success: '#10B981',
   warning: '#F59E0B',
   danger: '#EF4444',
   // 文章类型徽章配色
-  typeOriginal: '#4F46E5',
+  typeOriginal: '#059669',
   typeReproduced: '#F59E0B',
   typeTranslated: '#10B981',
   // 渐变
-  gradientPrimary: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)',
-  gradientHero: 'linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)',
-  gradientMesh: 'radial-gradient(at 0% 0%, #4F46E5 0%, transparent 50%), radial-gradient(at 100% 0%, #06B6D4 0%, transparent 50%), radial-gradient(at 50% 100%, #8B5CF6 0%, transparent 50%)',
+  gradientPrimary: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+  gradientHero: 'linear-gradient(135deg, #047857 0%, #14B8A6 100%)',
+  gradientMesh: 'radial-gradient(at 0% 0%, #059669 0%, transparent 50%), radial-gradient(at 100% 0%, #0D9488 0%, transparent 50%), radial-gradient(at 50% 100%, #14B8A6 0%, transparent 50%)',
 }
 
 // 暗黑模式颜色（与 App.vue 中 .theme-dark 的 CSS 变量保持一致）
 export const darkColors = {
-  primary: '#818CF8',
-  primaryLight: '#6366F1',
-  primaryDark: '#A5B4FC',
-  secondary: '#22D3EE',
-  secondaryLight: '#67E8F9',
-  accent: '#A78BFA',
-  bg: '#0B1220',
-  bgCard: '#1E293B',
-  text: '#E2E8F0',
-  textSecondary: '#94A3B8',
-  textTertiary: '#64748B',
-  border: '#334155',
-  divider: '#1E293B',
+  primary: '#34D399',
+  primaryLight: '#6EE7B7',
+  primaryDark: '#059669',
+  secondary: '#14B8A6',
+  secondaryLight: '#5EEAD4',
+  accent: '#2DD4BF',
+  bg: '#0B0F0E',
+  bgCard: '#131A18',
+  text: '#F5F7F6',
+  textSecondary: '#C3CDC9',
+  textTertiary: '#7E8C87',
+  border: '#24302C',
+  divider: '#1A2321',
   success: '#34D399',
   warning: '#FBBF24',
   danger: '#F87171',
-  gradientPrimary: 'linear-gradient(135deg,#4F46E5 0%,#6366F1 100%)',
-  gradientHero: 'linear-gradient(135deg,#3730A3 0%,#0E7490 100%)',
+  gradientPrimary: 'linear-gradient(135deg,#34D399 0%,#6EE7B7 100%)',
+  gradientHero: 'linear-gradient(135deg,#064E3B 0%,#0F766E 100%)',
 }
 
 // 间距（数字，单位 px）
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, xxxl: 32 }
 
 // 圆角
-export const radii = { sm: 4, md: 8, lg: 12, xl: 16, xxl: 20, full: 999 }
+export const radii = { sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, full: 999 }
 
 // 阴影
 export const shadows = {
@@ -169,7 +169,7 @@ export function applyNavBarTheme() {
   try {
     uni.setNavigationBarColor({
       frontColor: '#ffffff',
-      backgroundColor: isDark.value ? '#1E293B' : '#4F46E5',
+      backgroundColor: isDark.value ? '#0B0F0E' : '#059669',
       fail: () => {}
     })
   } catch (e) {

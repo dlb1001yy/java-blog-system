@@ -273,7 +273,7 @@ onMounted(() => {
   padding: 2px 10px;
   font-size: 12px;
   color: var(--primary-color);
-  background: rgba(64, 158, 255, 0.08);
+  background: rgba(5, 150, 105, 0.08);
   border-radius: 999px;
 }
 .question-actions { display: flex; align-items: center; gap: 4px; }
@@ -286,7 +286,7 @@ onMounted(() => {
   margin-top: 16px;
   padding: 12px 16px;
   border-left: 3px solid var(--primary-color);
-  background: rgba(64, 158, 255, 0.05);
+  background: rgba(5, 150, 105, 0.05);
   border-radius: var(--radius-sm, 6px);
 }
 .tips-title { margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--primary-color); }

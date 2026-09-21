@@ -95,7 +95,7 @@ const onPrev = () => prev()
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
 }
 
 /* 无封面：主色渐变底 + music 图标 */
@@ -118,7 +118,7 @@ const onPrev = () => prev()
   font-size: 13px;
   font-weight: 600;
   line-height: 1.3;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -127,7 +127,7 @@ const onPrev = () => prev()
 .artist {
   font-size: 11px;
   line-height: 1.3;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -149,7 +149,7 @@ const onPrev = () => prev()
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 
   &:active {
     opacity: 0.6;
@@ -179,7 +179,7 @@ const onPrev = () => prev()
   right: 0;
   bottom: 0;
   height: 2px;
-  background: var(--app-divider, #F1F5F9);
+  background: var(--app-divider, #F5F5F4);
 }
 
 .progress-filled {

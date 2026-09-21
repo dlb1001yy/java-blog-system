@@ -165,7 +165,7 @@ const openGitee = () => {
 /* 页面容器 */
 .about-page {
   min-height: 100vh;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
 }
 
@@ -182,7 +182,7 @@ const openGitee = () => {
   display: block;
   font-size: 18px;
   font-weight: 700;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   margin-bottom: 14px;
 }
 
@@ -201,14 +201,14 @@ const openGitee = () => {
 .txt {
   font-size: 14px;
   line-height: 1.8;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 .strong {
   font-size: 14px;
   line-height: 1.8;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 /* 区块小标题 */
@@ -217,7 +217,7 @@ const openGitee = () => {
   margin: 22px 0 12px;
   font-size: 16px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 /* 功能模块网格：两列 */
@@ -229,7 +229,7 @@ const openGitee = () => {
 
 .module-item {
   padding: 14px;
-  border: 1px solid var(--app-border, #E2E8F0);
+  border: 1px solid var(--app-border, #E7E5E4);
   border-radius: $radius-lg;
   transition: transform 0.15s ease, opacity 0.15s ease;
 
@@ -251,7 +251,7 @@ const openGitee = () => {
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: rgba(79, 70, 229, 0.12);
+  background: rgba(5, 150, 105, 0.12);
   color: $color-primary;
   display: flex;
   align-items: center;
@@ -267,7 +267,7 @@ const openGitee = () => {
 .module-desc {
   font-size: 12px;
   line-height: 1.6;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 /* 技术栈 */
@@ -288,7 +288,7 @@ const openGitee = () => {
   width: 36px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   line-height: 24px;
 }
 
@@ -302,8 +302,8 @@ const openGitee = () => {
 .tech-tag {
   padding: 3px 10px;
   font-size: 12px;
-  color: var(--app-text, #0F172A);
-  background: var(--app-bg, #F1F5F9);
+  color: var(--app-text, #1C1917);
+  background: var(--app-bg, #FAFAF9);
   border-radius: $radius-sm;
 }
 
@@ -312,7 +312,7 @@ const openGitee = () => {
   display: flex;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid var(--app-divider, #F1F5F9);
+  border-bottom: 1px solid var(--app-divider, #F5F5F4);
   transition: transform 0.15s ease, opacity 0.15s ease;
 
   &:active {
@@ -334,7 +334,7 @@ const openGitee = () => {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: rgba(79, 70, 229, 0.12);
+  background: rgba(5, 150, 105, 0.12);
   color: $color-primary;
   display: flex;
   align-items: center;
@@ -353,12 +353,12 @@ const openGitee = () => {
 .contact-label {
   font-size: 13px;
   font-weight: 500;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 .contact-value {
   font-size: 12px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
   word-break: break-all;
 }
 
@@ -370,6 +370,6 @@ const openGitee = () => {
   flex-shrink: 0;
   margin-left: 8px;
   font-size: 12px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 </style>

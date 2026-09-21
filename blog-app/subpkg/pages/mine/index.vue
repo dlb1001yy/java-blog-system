@@ -193,13 +193,13 @@ const handleLogout = () => {
 // 页面容器
 .mine-page {
   min-height: 100vh;
-  background: var(--app-bg, #F1F5F9);
+  background: var(--app-bg, #FAFAF9);
   padding-bottom: calc(56px + env(safe-area-inset-bottom) + 12px);
 }
 
 // Hero 区：内联 style 注入主题渐变，此处仅作兜底色
 .hero {
-  background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
+  background: linear-gradient(135deg, #059669 0%, #14B8A6 100%);
   padding: 48px 20px 32px;
   border-radius: 0 0 24px 24px;
   display: flex;
@@ -264,13 +264,13 @@ const handleLogout = () => {
 .stat-num {
   font-size: 20px;
   font-weight: 700;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
 }
 
 .stat-label {
   margin-top: 4px;
   font-size: 12px;
-  color: var(--app-text-secondary, #64748B);
+  color: var(--app-text-secondary, #57534E);
 }
 
 // 菜单列表
@@ -287,7 +287,7 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   padding: 16px;
-  border-bottom: 1px solid var(--app-divider, #F1F5F9);
+  border-bottom: 1px solid var(--app-divider, #F5F5F4);
   transition: transform 0.15s ease, opacity 0.15s ease;
 
   &:active {
@@ -306,7 +306,7 @@ const handleLogout = () => {
   height: 32px;
   border-radius: 8px;
   /* 低透明度主色底，亮暗模式下均可读 */
-  background: rgba(79, 70, 229, 0.12);
+  background: rgba(5, 150, 105, 0.12);
   color: $color-primary;
   display: flex;
   align-items: center;
@@ -317,7 +317,7 @@ const handleLogout = () => {
 .menu-text {
   flex: 1;
   font-size: 14px;
-  color: var(--app-text, #0F172A);
+  color: var(--app-text, #1C1917);
   margin-left: 12px;
 }
 
@@ -328,7 +328,7 @@ const handleLogout = () => {
   padding: 0 6px;
   margin-right: 8px;
   border-radius: $radius-full;
-  background: var(--app-primary, #4F46E5);
+  background: var(--app-primary, #059669);
   color: #fff;
   font-size: 11px;
   line-height: 18px;
@@ -339,6 +339,6 @@ const handleLogout = () => {
 .menu-value {
   margin-right: 8px;
   font-size: 12px;
-  color: var(--app-text-tertiary, #94A3B8);
+  color: var(--app-text-tertiary, #A8A29E);
 }
 </style>

@@ -395,8 +395,8 @@ onBeforeUnmount(() => {
 .bar-label { width: 64px; flex-shrink: 0; font-size: 13px; color: var(--text-regular); text-align: right; }
 .bar-track { flex: 1; position: relative; height: 26px; background: var(--bg-color, #f5f7fa); border-radius: 6px; overflow: hidden; }
 .bar { position: absolute; top: 0; left: 0; height: 100%; border-radius: 6px; }
-.bar-full { background: rgba(64, 158, 255, 0.18); }
-.bar-got { background: linear-gradient(90deg, var(--primary-color), #79bbff); }
+.bar-full { background: rgba(5, 150, 105, 0.18); }
+.bar-got { background: linear-gradient(90deg, var(--primary-color), #14B8A6); }
 .bar-rate { background: var(--primary-color); }
 .rate-good { background: #67c23a; }
 .rate-mid { background: #e6a23c; }
@@ -405,7 +405,7 @@ onBeforeUnmount(() => {
 .chart-legend { display: flex; gap: 16px; margin-top: 8px; font-size: 12px; color: var(--text-secondary); }
 .legend-item { display: flex; align-items: center; gap: 4px; }
 .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }
-.dot-full { background: rgba(64, 158, 255, 0.3); }
+.dot-full { background: rgba(5, 150, 105, 0.3); }
 .dot-got { background: var(--primary-color); }
 
 /* 答题回顾 */

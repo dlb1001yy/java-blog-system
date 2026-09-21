@@ -45,7 +45,7 @@ const formatDate = (d) => {
 
 .latest-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-hover);
 }
 
 .cover-wrap {
@@ -61,7 +61,7 @@ const formatDate = (d) => {
 }
 
 .cover-placeholder {
-  background: linear-gradient(135deg, var(--primary-color), #9b59b6);
+  background: linear-gradient(135deg, var(--primary-color), #14B8A6);
 }
 
 .body {
