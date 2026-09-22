@@ -360,10 +360,13 @@ const readProgress = ref(0)
 // 可滚动总距离 = 页面内容总高 - 视口高（px）
 let scrollableHeight = 0
 
+// 组件实例代理：setup 同步阶段获取，避免 onPageScroll 回调时 getCurrentInstance() 已返回 null
+const instance = getCurrentInstance()
+
 // 测量 .detail-page 内容总高并缓存（文章加载完成后/图片高度变化时重测）
 const measureScrollableHeight = () => {
   uni.createSelectorQuery()
-    .in(getCurrentInstance().proxy)
+    .in(instance?.proxy)
     .select('.detail-page')
     .boundingClientRect((rect) => {
       if (rect && rect.height > 0) {
