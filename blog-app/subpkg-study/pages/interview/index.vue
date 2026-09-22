@@ -18,16 +18,31 @@
         </view>
 
         <view v-show="filterExpanded" class="filter-body">
-          <!-- 技术方向：多选 -->
+          <!-- 技术方向：多选（限高折叠，避免 chips 铺满把列表挤出首屏） -->
           <view class="filter-section">
             <text class="section-label">技术方向（多选）</text>
-            <view class="chip-row">
+            <view class="chip-row" :class="{ collapsed: !catsExpanded }">
               <view
                 v-for="c in categories"
                 :key="c.id"
                 :class="['chip', selectedCategoryIds.indexOf(c.id) > -1 ? 'active' : '']"
                 @click="toggleCategory(c.id)"
               >{{ c.name }}</view>
+            </view>
+            <!-- 展开开关：仅当方向数量超出折叠阈值时渲染 -->
+            <view
+              v-if="categories.length > CAT_COLLAPSE_COUNT"
+              class="collapse-toggle"
+              @click="catsExpanded = !catsExpanded"
+            >
+              <text>{{ catsExpanded ? '收起' : `展开 ${categories.length - CAT_COLLAPSE_COUNT} 个` }}</text>
+              <view :class="['collapse-arrow', catsExpanded ? 'expanded' : '']">
+                <Icon name="chevron-down" :size="14" />
+              </view>
+            </view>
+            <!-- 折叠时已选摘要：避免选中项被藏起不可见 -->
+            <view v-if="!catsExpanded && selectedCategoryIds.length" class="selected-summary">
+              已选 {{ selectedCategoryIds.length }} 个方向
             </view>
           </view>
 
@@ -88,8 +103,8 @@
             <!-- 卡片头：点击展开/收起 -->
             <view class="question-header" @click="toggleExpand(q)">
               <view class="question-meta">
-                <text v-if="q.categoryName || q.category" class="cat-tag">{{ q.categoryName || q.category }}</text>
-                <text v-if="q.difficulty" :class="['diff-tag', difficultyClass(q.difficulty)]">{{ q.difficulty }}</text>
+                <view v-if="q.categoryName || q.category" class="cat-tag"><text>{{ q.categoryName || q.category }}</text></view>
+                <view v-if="q.difficulty" :class="['diff-tag', difficultyClass(q.difficulty)]"><text>{{ q.difficulty }}</text></view>
               </view>
               <text class="question-title">{{ q.title }}</text>
               <view class="question-footer">
@@ -200,7 +215,11 @@ const activeView = ref('all')
 const keyword = ref('')
 
 // 筛选面板展开态
-const filterExpanded = ref(true)
+const filterExpanded = ref(false)
+
+// 技术方向折叠：折叠态以限高 + 底缘渐隐模拟"2 行"展示（无需 JS 测量）
+const CAT_COLLAPSE_COUNT = 8   // 约 2 行 chips 数量阈值
+const catsExpanded = ref(false)
 
 // 列表与分页状态
 const list = ref([])
@@ -569,6 +588,43 @@ onLoad(() => {
   color: #fff;
 }
 
+/* 折叠态：max-height 约 2 行 chips（行高 28px + gap 8px ≈ 64px），底缘渐隐提示可展开 */
+.chip-row.collapsed {
+  max-height: 64px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+}
+
+/* 展开开关：次级文字按钮，弱化于 chips */
+.collapse-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: $spacing-xs;
+  color: var(--app-primary, #059669);
+  font-size: 12px;
+}
+
+.collapse-toggle:active {
+  opacity: 0.7;
+}
+
+.collapse-arrow {
+  display: flex;
+  transition: transform 0.3s ease; /* 与 .filter-arrow 同规范 */
+}
+
+.collapse-arrow.expanded {
+  transform: rotate(180deg);
+}
+
+/* 折叠时已选摘要：小字提示，防止选中项隐藏后不可见 */
+.selected-summary {
+  margin-top: $spacing-xs;
+  font-size: 12px;
+  color: var(--app-text-tertiary, #A8A29E);
+}
+
 /* ===== 题目列表 ===== */
 .list {
   display: flex;
@@ -601,36 +657,68 @@ onLoad(() => {
   gap: $spacing-sm;
 }
 
-/* 分类 tag：主色浅底 */
+/* 分类 tag：主色浅底；view 胶囊包裹 text，view 端 flex 布局可靠，避免 text 组件背景与文字分离。
+   字体属性置于 view，经继承作用于内层 text，规避 uni-app text 元素选择器跨端不生效问题 */
 .cat-tag {
-  padding: 2px 10px;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 10px;
   border-radius: $radius-full;
   font-size: 11px;
-  line-height: 1.5;
   color: var(--app-primary, #059669);
   background: rgba(52, 211, 153, 0.14);
 }
 
-/* 难度 tag：简单绿 / 中等橙 / 困难红浅底（底色由同名令牌色派生） */
-.diff-tag {
-  padding: 2px 10px;
-  border-radius: $radius-full;
-  font-size: 11px;
-  line-height: 1.5;
+.cat-tag text {
+  line-height: 1;
 }
 
+/* 难度 tag：简单绿 / 中等橙 / 困难红浅底；小字号加粗提升可读性 */
+.diff-tag {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 20px;
+  padding: 0 10px;
+  border-radius: $radius-full;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.diff-tag text {
+  line-height: 0;
+}
+
+/* 亮色：文字取深阶色（emerald-700 / amber-700 / red-700），白卡片上对比度 ≥ 4.5:1 */
 .diff-easy {
-  color: $color-success;
-  background: rgba(52, 211, 153, 0.16);
+  color: #047857;
+  background: rgba(16, 185, 129, 0.12);
 }
 
 .diff-medium {
-  color: $color-warning;
-  background: rgba(251, 191, 36, 0.18);
+  color: #B45309;
+  background: rgba(245, 158, 11, 0.14);
 }
 
 .diff-hard {
-  color: $color-danger;
+  color: #B91C1C;
+  background: rgba(239, 68, 68, 0.12);
+}
+
+/* 暗色：换 theme.js darkColors 亮阶，深色卡片上保持可读 */
+.theme-dark .diff-easy {
+  color: #34D399;
+  background: rgba(52, 211, 153, 0.16);
+}
+
+.theme-dark .diff-medium {
+  color: #FBBF24;
+  background: rgba(251, 191, 36, 0.16);
+}
+
+.theme-dark .diff-hard {
+  color: #F87171;
   background: rgba(248, 113, 113, 0.16);
 }
 
@@ -664,10 +752,13 @@ onLoad(() => {
 }
 
 .tag-chip {
-  padding: 1px 8px;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
   border-radius: $radius-full;
   font-size: 11px;
-  line-height: 1.5;
+  line-height: 20px;
   color: var(--app-text-secondary, #57534E);
   background: var(--app-bg, #FAFAF9);
 }
