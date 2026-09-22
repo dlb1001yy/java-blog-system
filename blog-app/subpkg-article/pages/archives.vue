@@ -3,6 +3,8 @@
   <view :class="['page-root', isDark ? 'theme-dark' : '']">
     <!-- 整页 scroll-view 滚动 -->
     <scroll-view class="container" scroll-y>
+      <!-- 内容包裹层：padding 置于内层，App 端 scroll-view 宿主 padding 不计入滚动高度，会导致内容被切/底部死区空白 -->
+      <view class="scroll-content">
       <!-- 首次加载骨架：月份头横条 + 若干行横条 × 3 组 -->
       <view v-if="loading" class="timeline">
         <view v-for="g in 3" :key="'sg' + g" class="month-block">
@@ -57,6 +59,7 @@
           <text class="empty-text">暂无归档</text>
         </view>
       </template>
+      </view>
     </scroll-view>
 
     <!-- 全局迷你播放条：fixed 定位，无 TabBar 页面贴近底部 -->
@@ -115,9 +118,13 @@ watch(isDark, () => applyNavBarTheme())
   background: var(--app-bg, #FAFAF9);
 }
 
-/* 滚动容器：占满根节点高度形成滚动区，底部留白避开 PlayerBar（无 TabBar，12px 偏移 + 56px 播放条） */
+/* 滚动容器：占满根节点高度形成滚动区；底部留白见内层 .scroll-content（避开 PlayerBar，无 TabBar 页面） */
 .container {
   height: 100%;
+}
+
+/* 内容包裹层：padding 计入滚动内容高度，滚动底界正常，内容不被切 */
+.scroll-content {
   box-sizing: border-box;
   padding-bottom: calc(88px + env(safe-area-inset-bottom));
 }

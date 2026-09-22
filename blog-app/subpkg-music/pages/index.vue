@@ -77,6 +77,8 @@
 
     <!-- ===== 下方滚动区：歌曲列表 + 推荐歌单 ===== -->
     <scroll-view class="scroll-area" scroll-y @scrolltolower="onLoadMore">
+      <!-- 内容包裹层：padding 置于内层，App 端 scroll-view 宿主 padding 不计入滚动高度，会导致内容被切/底部死区空白 -->
+      <view class="scroll-content">
       <!-- 歌曲列表区 -->
       <view class="section">
         <view class="section-head">
@@ -158,6 +160,7 @@
             <text class="playlist-name">{{ pl.name }}</text>
           </view>
         </view>
+      </view>
       </view>
     </scroll-view>
 
@@ -513,7 +516,10 @@ onLoad(() => {
   flex: 1;
   min-height: 0;
   box-sizing: border-box;
-  /* 底部留白避开 TabBar（56px + 安全区），本页不挂 PlayerBar */
+}
+
+/* 内容包裹层：padding 计入滚动内容高度，滚动底界正常，内容不被切；底部留白避开 TabBar（56px + 安全区） */
+.scroll-content {
   padding-bottom: calc(64px + env(safe-area-inset-bottom));
 }
 

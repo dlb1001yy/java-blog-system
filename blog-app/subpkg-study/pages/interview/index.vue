@@ -3,6 +3,8 @@
   <view :class="['interview-page', isDark ? 'theme-dark' : '']">
     <!-- 整页滚动容器：触底分页 -->
     <scroll-view class="container" scroll-y lower-threshold="100" @scrolltolower="onLoadMore">
+      <!-- 内容包裹层：padding 置于内层，App 端 scroll-view 宿主 padding 不计入滚动高度，会导致内容被切/底部死区空白 -->
+      <view class="scroll-content">
 
       <!-- ===== 筛选面板（可折叠） ===== -->
       <view class="filter-card">
@@ -166,6 +168,7 @@
           </view>
           <view v-if="list.length > 0 && !loading && !hasMore" class="status">没有更多了</view>
         </template>
+      </view>
       </view>
     </scroll-view>
 
@@ -482,9 +485,13 @@ onLoad(() => {
   background: var(--app-bg, #FAFAF9);
 }
 
-/* 滚动容器：占满根节点高度形成滚动区；底部留白避开固定 TabBar（56px + 安全区）与 PlayerBar（追加 64px） */
+/* 滚动容器：占满根节点高度形成滚动区；底部留白见内层 .scroll-content（避开固定 TabBar 与 PlayerBar） */
 .container {
   height: 100%;
+}
+
+/* 内容包裹层：padding 计入滚动内容高度，滚动底界正常，内容不被切 */
+.scroll-content {
   box-sizing: border-box;
   padding: $spacing-md $spacing-lg calc(144px + env(safe-area-inset-bottom));
 }

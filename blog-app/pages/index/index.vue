@@ -21,6 +21,9 @@
       </template>
       <!-- #endif -->
 
+      <!-- 内容包裹层：padding 置于内层，App 端 scroll-view 宿主 padding 不计入滚动高度，会导致内容被切/底部死区空白 -->
+      <view class="scroll-content">
+
     <!-- 顶部 Hero 区：渐变按主题切换 -->
     <view class="hero" :style="{ background: isDark ? darkColors.gradientHero : colors.gradientHero }">
       <view class="hero-content">
@@ -109,6 +112,7 @@
           </view>
         </view>
       </template>
+    </view>
     </view>
 
     </scroll-view>
@@ -281,9 +285,13 @@ const onRefresh = async () => {
   background: var(--app-bg, #FAFAF9);
 }
 
-/* 滚动容器：占满根节点高度形成滚动区，底部留白避开 PlayerBar + TabBar */
+/* 滚动容器：占满根节点高度形成滚动区；底部留白见内层 .scroll-content（避开 PlayerBar + TabBar） */
 .container {
   height: 100%;
+}
+
+/* 内容包裹层：padding 计入滚动内容高度，滚动底界正常，内容不被切 */
+.scroll-content {
   box-sizing: border-box;
   padding-bottom: calc(140px + env(safe-area-inset-bottom));
 }
