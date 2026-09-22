@@ -171,6 +171,9 @@
 
     <!-- 底部 TabBar：tab 主页面常驻导航 -->
     <TabBar current="/subpkg-study/pages/interview/index" />
+
+    <!-- 全局迷你播放条：fixed 定位，置于 TabBar 之上 -->
+    <PlayerBar />
   </view>
 </template>
 
@@ -185,6 +188,7 @@ import Icon from '@/components/Icon.vue'
 import LoadingDots from '@/components/LoadingDots.vue'
 import SearchBar from '@/components/SearchBar.vue'
 import TabBar from '@/components/TabBar.vue'
+import PlayerBar from '@/components/PlayerBar.vue'
 
 const PAGE_SIZE = 10
 
@@ -478,11 +482,11 @@ onLoad(() => {
   background: var(--app-bg, #FAFAF9);
 }
 
-/* 滚动容器：占满根节点高度形成滚动区；底部留白避开固定 TabBar（56px + 安全区） */
+/* 滚动容器：占满根节点高度形成滚动区；底部留白避开固定 TabBar（56px + 安全区）与 PlayerBar（追加 64px） */
 .container {
   height: 100%;
   box-sizing: border-box;
-  padding: $spacing-md $spacing-lg calc(80px + env(safe-area-inset-bottom));
+  padding: $spacing-md $spacing-lg calc(144px + env(safe-area-inset-bottom));
 }
 
 /* ===== 筛选面板 ===== */

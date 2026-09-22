@@ -71,6 +71,9 @@
         </template>
       </view>
     </scroll-view>
+
+    <!-- 全局迷你播放条：fixed 定位，无 TabBar 页面贴近底部 -->
+    <PlayerBar :has-tab-bar="false" />
   </view>
 </template>
 
@@ -84,6 +87,7 @@ import SearchBar from '@/components/SearchBar.vue'
 import CategoryChips from '@/components/CategoryChips.vue'
 import Skeleton from '@/components/Skeleton.vue'
 import LoadingDots from '@/components/LoadingDots.vue'
+import PlayerBar from '@/components/PlayerBar.vue'
 
 // 页面模式：'all' 全部 | 'category' 分类 | 'tag' 标签 | 'search' 搜索
 const mode = ref('all')
@@ -310,11 +314,11 @@ const onRefresh = async () => {
   background: var(--app-bg, #FAFAF9);
 }
 
-/* 滚动容器：占满根节点高度形成滚动区，底部留白（无 TabBar，预留 24px 即可） */
+/* 滚动容器：占满根节点高度形成滚动区，底部留白避开 PlayerBar（无 TabBar，12px 偏移 + 56px 播放条） */
 .container {
   height: 100%;
   box-sizing: border-box;
-  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
 }
 
 /* ===== 自定义下拉刷新区：三个品牌色圆点脉冲 ===== */

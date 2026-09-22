@@ -44,6 +44,9 @@
       <text class="empty-title">还没有稍后阅读的文章</text>
       <text class="empty-sub">在文章详情页点击「稍后阅读」即可离线收藏</text>
     </view>
+
+    <!-- 全局迷你播放条：fixed 定位，无 TabBar 页贴近底部 -->
+    <PlayerBar :has-tab-bar="false" />
   </view>
 </template>
 
@@ -53,6 +56,7 @@ import { onLoad, onShow } from '@dcloudio/uni-app'
 import { isDark, applyNavBarTheme } from '@/common/theme.js'
 import { getReadLaterList, removeReadLater } from '@/common/offline.js'
 import SwipeCell from '@/components/SwipeCell.vue'
+import PlayerBar from '@/components/PlayerBar.vue'
 
 // 稍后阅读列表（元素为完整文章对象，来自 storage）
 const list = ref(getReadLaterList() || [])
@@ -108,7 +112,7 @@ watch(isDark, () => applyNavBarTheme())
 .readlater-page {
   min-height: 100vh;
   background: var(--app-bg, #FAFAF9);
-  padding: 12px 16px calc(24px + env(safe-area-inset-bottom));
+  padding: 12px 16px calc(88px + env(safe-area-inset-bottom));
 }
 
 /* 每个 SwipeCell 条目间距 */

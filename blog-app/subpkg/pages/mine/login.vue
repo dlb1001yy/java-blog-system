@@ -90,6 +90,9 @@
       </view>
       </view>
     </view>
+
+    <!-- 全局迷你播放条：fixed 定位，无 TabBar 页贴近底部 -->
+    <PlayerBar :has-tab-bar="false" />
   </view>
 </template>
 
@@ -101,6 +104,7 @@ import api, { getCaptcha } from '@/common/api.js'
 import { isDark } from '@/common/theme.js'
 import Icon from '@/components/Icon.vue'
 import NavBar from '@/components/NavBar.vue'
+import PlayerBar from '@/components/PlayerBar.vue'
 
 const form = ref({
   username: '',
@@ -205,13 +209,15 @@ const handleLogin = async () => {
     radial-gradient(at 50% 100%, $color-accent 0%, transparent 50%);
 }
 
-// 卡片区域：占满导航栏以外的剩余空间并居中
+// 卡片区域：占满导航栏以外的剩余空间并居中（底部多留 64px 避开播放条）
 .login-main {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  padding-bottom: calc(64px + 20px);
+  box-sizing: border-box;
 }
 
 // 玻璃拟态登录卡片：背景用主题卡片色（高不透明度），确保暗色下可读

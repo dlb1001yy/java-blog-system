@@ -153,6 +153,9 @@
 
     <!-- 分享海报弹层（文章存在时才挂载） -->
     <SharePoster v-if="article" :article="article" v-model:show="showShare" />
+
+    <!-- 全局迷你播放条：fixed 定位，无 TabBar 页贴近底部 -->
+    <PlayerBar :has-tab-bar="false" />
   </view>
 </template>
 
@@ -176,6 +179,7 @@ import {
 import Icon from '@/components/Icon.vue'
 import Skeleton from '@/components/Skeleton.vue'
 import SharePoster from '@/components/SharePoster.vue'
+import PlayerBar from '@/components/PlayerBar.vue'
 
 // 文章类型映射
 const typeMap = { 0: '原创', 1: '转载', 2: '翻译' }
@@ -393,7 +397,7 @@ watch(() => article.value?.id, async () => {
   min-height: 100vh;
   background: var(--app-bg, #FAFAF9);
   padding: $spacing-md;
-  padding-bottom: calc(140px + env(safe-area-inset-bottom));
+  padding-bottom: calc(144px + env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
 

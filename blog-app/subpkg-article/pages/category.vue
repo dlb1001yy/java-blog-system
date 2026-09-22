@@ -42,6 +42,9 @@
         </view>
       </template>
     </view>
+
+    <!-- 全局迷你播放条：fixed 定位，无 TabBar 页面贴近底部 -->
+    <PlayerBar :has-tab-bar="false" />
   </view>
 </template>
 
@@ -51,6 +54,7 @@ import { onLoad, onShow } from '@dcloudio/uni-app'
 import api from '@/common/api.js'
 import { isDark, applyNavBarTheme } from '@/common/theme.js'
 import Icon from '@/components/Icon.vue'
+import PlayerBar from '@/components/PlayerBar.vue'
 
 // 分类列表
 const categories = ref([])
@@ -86,11 +90,11 @@ watch(isDark, () => applyNavBarTheme())
 </script>
 
 <style lang="scss" scoped>
-/* 页面根节点：占满整屏，底部预留 24px（无 TabBar） */
+/* 页面根节点：占满整屏，底部留白避开 PlayerBar（无 TabBar，12px 偏移 + 56px 播放条） */
 .category-page {
   min-height: 100vh;
   background: var(--app-bg, #FAFAF9);
-  padding: 12px 16px calc(24px + env(safe-area-inset-bottom));
+  padding: 12px 16px calc(88px + env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
 

@@ -72,6 +72,9 @@
         <text class="contact-action">复制</text>
       </view>
     </view>
+
+    <!-- 全局迷你播放条：fixed 定位，无 TabBar 页贴近底部 -->
+    <PlayerBar :has-tab-bar="false" />
   </view>
 </template>
 
@@ -79,6 +82,7 @@
 import { onShow } from '@dcloudio/uni-app'
 import { isDark, applyNavBarTheme } from '@/common/theme.js'
 import Icon from '@/components/Icon.vue'
+import PlayerBar from '@/components/PlayerBar.vue'
 
 // 联系方式（文案取自 Web 端 AboutSite.vue）
 const CONTACT = {
@@ -166,7 +170,7 @@ const openGitee = () => {
 .about-page {
   min-height: 100vh;
   background: var(--app-bg, #FAFAF9);
-  padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+  padding: 16px 16px calc(88px + env(safe-area-inset-bottom));
 }
 
 /* 通用卡片 */

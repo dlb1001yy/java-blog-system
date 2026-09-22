@@ -1,50 +1,90 @@
 <template>
-  <!-- 迷你播放条：仅在有当前曲目时渲染，浮于底部 TabBar 之上 -->
-  <view v-if="song" class="player-bar">
-    <!-- 左：封面 + 歌曲信息（点击预留） -->
-    <view class="song-info">
+  <!-- 双形态播放器：仅在有当前曲目时渲染，展开态为迷你播放条，收起态为右侧悬浮球 -->
+  <view v-if="song">
+    <!-- 展开态：迷你播放条 -->
+    <view v-if="!state.collapsed" class="player-bar" :style="{ bottom: barBottom }">
+      <!-- 左：封面 + 歌曲信息（点击预留） -->
+      <view class="song-info">
+        <image
+          v-if="song.cover"
+          class="cover"
+          :src="resolveFileUrl(song.cover)"
+          mode="aspectFill"
+        />
+        <view v-else class="cover cover-placeholder">
+          <Icon name="music" :size="18" color="#FFFFFF" />
+        </view>
+        <view class="meta">
+          <text class="title">{{ song.title }}</text>
+          <text class="artist">{{ song.artist }}</text>
+        </view>
+      </view>
+
+      <!-- 右：控制按钮组 -->
+      <view class="controls">
+        <view class="ctrl-btn" @click.stop="onPrev">
+          <Icon name="prev" :size="20" />
+        </view>
+        <view class="play-btn" @click.stop="onToggle">
+          <Icon :name="state.isPlaying ? 'pause' : 'play'" :size="16" color="#FFFFFF" />
+        </view>
+        <view class="ctrl-btn" @click.stop="onNext">
+          <Icon name="next" :size="20" />
+        </view>
+        <!-- 收起为悬浮球 -->
+        <view class="ctrl-btn collapse-btn" @click.stop="onToggleCollapsed">
+          <Icon name="chevron-right" :size="18" />
+        </view>
+      </view>
+
+      <!-- 底部 2px 进度条 -->
+      <view class="progress">
+        <view class="progress-filled" :style="{ width: progressPercent + '%' }"></view>
+      </view>
+    </view>
+
+    <!-- 收起态：右侧悬浮球（点击展开），封面播放中旋转、暂停静止；播放中外圈主色呼吸光晕 -->
+    <view
+      v-else
+      :class="['player-fab', state.isPlaying ? 'playing' : '']"
+      @click.stop="onToggleCollapsed"
+    >
       <image
         v-if="song.cover"
-        class="cover"
+        class="fab-cover"
+        :class="state.isPlaying ? 'spinning' : 'spinning paused'"
         :src="resolveFileUrl(song.cover)"
         mode="aspectFill"
       />
-      <view v-else class="cover cover-placeholder">
-        <Icon name="music" :size="18" color="#FFFFFF" />
+      <view v-else class="fab-cover fab-placeholder" :class="state.isPlaying ? 'spinning' : 'spinning paused'">
+        <Icon name="music" :size="22" color="#FFFFFF" />
       </view>
-      <view class="meta">
-        <text class="title">{{ song.title }}</text>
-        <text class="artist">{{ song.artist }}</text>
-      </view>
-    </view>
-
-    <!-- 右：控制按钮组 -->
-    <view class="controls">
-      <view class="ctrl-btn" @click.stop="onPrev">
-        <Icon name="prev" :size="20" />
-      </view>
-      <view class="play-btn" @click.stop="onToggle">
-        <Icon :name="state.isPlaying ? 'pause' : 'play'" :size="16" color="#FFFFFF" />
-      </view>
-      <view class="ctrl-btn" @click.stop="onNext">
-        <Icon name="next" :size="20" />
-      </view>
-    </view>
-
-    <!-- 底部 2px 进度条 -->
-    <view class="progress">
-      <view class="progress-filled" :style="{ width: progressPercent + '%' }"></view>
     </view>
   </view>
 </template>
 
 <script setup>
 import { computed } from 'vue'
-import { state, currentSong, toggle, next, prev } from '@/common/player.js'
+import { state, currentSong, toggle, next, prev, toggleCollapsed } from '@/common/player.js'
 import { resolveFileUrl } from '@/common/config.js'
 import Icon from '@/components/Icon.vue'
 
+const props = defineProps({
+  // 当前页面是否有自定义 TabBar（决定展开态底部偏移）
+  hasTabBar: { type: Boolean, default: true },
+  // 直接覆盖 bottom 定位（如答题页避开固定交卷栏），如 'calc(64px + env(safe-area-inset-bottom))'
+  bottom: { type: String, default: '' }
+})
+
 const song = currentSong
+
+// 展开态定位：bottom prop 优先；否则按是否有 TabBar 决定（TabBar 56px + 安全区 / 12px + 安全区）
+const barBottom = computed(() => {
+  if (props.bottom) return props.bottom
+  return props.hasTabBar
+    ? 'calc(56px + env(safe-area-inset-bottom))'
+    : 'calc(12px + env(safe-area-inset-bottom))'
+})
 
 const progressPercent = computed(() => {
   if (!state.duration) return 0
@@ -54,15 +94,15 @@ const progressPercent = computed(() => {
 const onToggle = () => toggle()
 const onNext = () => next()
 const onPrev = () => prev()
+const onToggleCollapsed = () => toggleCollapsed()
 </script>
 
 <style lang="scss" scoped>
-/* 全局迷你播放条：fixed 于底部 TabBar（56px + 安全区）之上 */
+/* 展开态：全局迷你播放条，bottom 由内联 style 提供（TabBar 之上 / 无 TabBar 页面贴近底部） */
 .player-bar {
   position: fixed;
   left: 12px;
   right: 12px;
-  bottom: calc(56px + env(safe-area-inset-bottom));
   z-index: 998;
   box-sizing: border-box;
   height: 56px;
@@ -156,6 +196,11 @@ const onPrev = () => prev()
   }
 }
 
+/* 收起按钮：复用 ctrl-btn，紧随 next 之后 */
+.collapse-btn {
+  margin-left: 2px;
+}
+
 /* 播放/暂停：主色圆形底（跟随主题变量） */
 .play-btn {
   display: flex;
@@ -186,5 +231,71 @@ const onPrev = () => prev()
   height: 100%;
   border-radius: 0 1px 1px 0;
   background: linear-gradient(90deg, var(--app-primary, $color-primary), var(--app-primary-light, $color-primary-light));
+}
+
+/* ===== 收起态：右侧悬浮球 ===== */
+/* 白色实描边 + 双层投影：任何背景（含浅色封面/暗色主题）下轮廓一眼可识别 */
+.player-fab {
+  position: fixed;
+  right: 8px;
+  top: 45%;
+  z-index: 998;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2.5px solid #FFFFFF;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08), 0 6px 18px rgba(15, 23, 42, 0.35);
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+/* 播放中：主色呼吸光晕（暂停时静止，仅保留白边轮廓） */
+.player-fab.playing {
+  animation: fab-glow 2s ease-in-out infinite;
+}
+
+.fab-cover {
+  width: 100%;
+  height: 100%;
+
+  /* 播放中旋转，暂停时静止（animation-play-state） */
+  &.spinning {
+    animation: fab-rotate 12s linear infinite;
+  }
+
+  &.spinning.paused {
+    animation-play-state: paused;
+  }
+}
+
+/* 无封面：主色渐变底 + music 图标居中 */
+.fab-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, $color-primary, $color-accent);
+}
+
+@keyframes fab-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fab-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08), 0 6px 18px rgba(15, 23, 42, 0.35),
+      0 0 0 6px rgba(5, 150, 105, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08), 0 6px 18px rgba(15, 23, 42, 0.35),
+      0 0 0 11px rgba(5, 150, 105, 0.12);
+  }
 }
 </style>

@@ -28,6 +28,9 @@
         <text class="empty-text">暂无标签</text>
       </view>
     </template>
+
+    <!-- 全局迷你播放条：fixed 定位，无 TabBar 页面贴近底部 -->
+    <PlayerBar :has-tab-bar="false" />
   </view>
 </template>
 
@@ -36,6 +39,7 @@ import { ref, watch } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import api from '@/common/api.js'
 import { isDark, applyNavBarTheme } from '@/common/theme.js'
+import PlayerBar from '@/components/PlayerBar.vue'
 
 // 标签列表
 const tags = ref([])
@@ -89,11 +93,11 @@ watch(isDark, () => applyNavBarTheme())
 </script>
 
 <style lang="scss" scoped>
-/* 页面根节点：占满整屏，底部预留 24px（无 TabBar） */
+/* 页面根节点：占满整屏，底部留白避开 PlayerBar（无 TabBar，12px 偏移 + 56px 播放条） */
 .tags-page {
   min-height: 100vh;
   background: var(--app-bg, #FAFAF9);
-  padding: $spacing-xl $spacing-lg calc(24px + env(safe-area-inset-bottom));
+  padding: $spacing-xl $spacing-lg calc(88px + env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
 

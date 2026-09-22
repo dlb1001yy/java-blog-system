@@ -32,7 +32,8 @@ const state = reactive({
   duration: 0,    // 秒
   volume: prefs.volume != null ? Number(prefs.volume) : 0.8,
   repeat: ['none', 'all', 'one'].indexOf(prefs.repeat) > -1 ? prefs.repeat : 'none',
-  shuffle: !!prefs.shuffle
+  shuffle: !!prefs.shuffle,
+  collapsed: prefs.collapsed === true
 })
 
 // 当前歌曲：索引越界时返回 null
@@ -46,7 +47,8 @@ const savePrefs = () => {
     uni.setStorageSync(PREFS_KEY, {
       volume: state.volume,
       repeat: state.repeat,
-      shuffle: state.shuffle
+      shuffle: state.shuffle,
+      collapsed: state.collapsed
     })
   } catch (e) {
     // 写入失败不影响本次会话生效
@@ -224,6 +226,12 @@ const toggleShuffle = () => {
   savePrefs()
 }
 
+// 收起/展开播放条（悬浮球 <-> 展开条），随偏好持久化
+const toggleCollapsed = () => {
+  state.collapsed = !state.collapsed
+  savePrefs()
+}
+
 // 播完回调：单曲循环回到开头重播，否则交给 next() 处理边界
 const handleEnded = () => {
   if (state.repeat === 'one') {
@@ -247,5 +255,6 @@ export {
   seek,
   setVolume,
   toggleRepeat,
-  toggleShuffle
+  toggleShuffle,
+  toggleCollapsed
 }

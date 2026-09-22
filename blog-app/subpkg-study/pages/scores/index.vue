@@ -211,6 +211,9 @@
         </view>
       </view>
     </view>
+
+    <!-- 全局迷你播放条：fixed 定位，无 TabBar 页面贴近底部 -->
+    <PlayerBar :has-tab-bar="false" />
   </view>
 </template>
 
@@ -224,6 +227,7 @@ import { parseMarkdown } from '@/utils/markdown.js'
 import Icon from '@/components/Icon.vue'
 import Skeleton from '@/components/Skeleton.vue'
 import LoadingDots from '@/components/LoadingDots.vue'
+import PlayerBar from '@/components/PlayerBar.vue'
 
 // 题型映射（与 frontend Scores TYPE_MAP 一致）
 const TYPE_MAP = { 1: '单选题', 2: '多选题', 3: '判断题', 4: '填空题', 5: '简答题', 6: '编程题' }
@@ -415,16 +419,17 @@ onUnload(() => {
   box-sizing: border-box;
 }
 
+/* 列表态：底部留白追加 PlayerBar 高度（无 TabBar，12px 偏移 + 56px 播放条） */
 .list-body {
   padding: $spacing-lg;
-  padding-bottom: calc($spacing-xl + env(safe-area-inset-bottom));
+  padding-bottom: calc($spacing-xl + 64px + env(safe-area-inset-bottom));
 }
 
 /* 详情态：页面级滚动，带同样留白 */
 .detail-body {
   min-height: 100%;
   padding: $spacing-lg;
-  padding-bottom: calc($spacing-xl + env(safe-area-inset-bottom));
+  padding-bottom: calc($spacing-xl + 64px + env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
 

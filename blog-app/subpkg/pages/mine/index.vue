@@ -83,6 +83,9 @@
       </view>
     </view>
 
+    <!-- 全局迷你播放条：fixed 定位，置于 TabBar 之上 -->
+    <PlayerBar />
+
     <TabBar current="/subpkg/pages/mine/index" />
   </view>
 </template>
@@ -95,6 +98,7 @@ import api from '@/common/api.js'
 import { colors, darkColors, isDark, applyNavBarTheme, themeMode, setThemeMode } from '@/common/theme.js'
 import { readLaterIds } from '@/common/offline.js'
 import Icon from '@/components/Icon.vue'
+import PlayerBar from '@/components/PlayerBar.vue'
 import TabBar from '@/components/TabBar.vue'
 
 // 外观设置三态选项（数组顺序与 ActionSheet 下标对应）
@@ -194,7 +198,7 @@ const handleLogout = () => {
 .mine-page {
   min-height: 100vh;
   background: var(--app-bg, #FAFAF9);
-  padding-bottom: calc(56px + env(safe-area-inset-bottom) + 12px);
+  padding-bottom: calc(56px + env(safe-area-inset-bottom) + 76px);
 }
 
 // Hero 区：内联 style 注入主题渐变，此处仅作兜底色

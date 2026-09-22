@@ -164,9 +164,16 @@
       <text class="section-content">{{ resume.interests }}</text>
     </view>
 
+    <!-- 全局迷你播放条：fixed 定位，置于 TabBar 之上 -->
+    <PlayerBar />
+
     <TabBar current="/subpkg/pages/resume/index" />
   </view>
-  <view v-else :class="['empty-state', isDark ? 'theme-dark' : '']"><text>暂无简历信息</text></view>
+  <view v-else :class="['empty-state', isDark ? 'theme-dark' : '']">
+    <text>暂无简历信息</text>
+    <!-- 空态无 TabBar，播放条贴近底部 -->
+    <PlayerBar :has-tab-bar="false" />
+  </view>
 </template>
 
 <script setup>
@@ -177,6 +184,7 @@ import { BASE_URL } from '@/common/config.js'
 import { colors, isDark, applyNavBarTheme } from '@/common/theme.js'
 import TabBar from '@/components/TabBar.vue'
 import Icon from '@/components/Icon.vue'
+import PlayerBar from '@/components/PlayerBar.vue'
 
 const resume = ref(null)
 
@@ -263,7 +271,7 @@ onLoad(async () => {
 .resume-page {
   background: var(--app-bg, #FAFAF9);
   min-height: 100vh;
-  padding-bottom: calc(56px + env(safe-area-inset-bottom) + 12px);
+  padding-bottom: calc(56px + env(safe-area-inset-bottom) + 76px);
 }
 
 /* === Hero 卡片 === */

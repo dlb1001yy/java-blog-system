@@ -104,6 +104,9 @@
         </view>
       </view>
     </view>
+
+    <!-- 全局迷你播放条：fixed 定位，无 TabBar 页贴近底部 -->
+    <PlayerBar :has-tab-bar="false" />
   </view>
 </template>
 
@@ -113,6 +116,7 @@ import { onShow } from '@dcloudio/uni-app'
 import api from '@/common/api.js'
 import { isDark, applyNavBarTheme } from '@/common/theme.js'
 import Icon from '@/components/Icon.vue'
+import PlayerBar from '@/components/PlayerBar.vue'
 
 // 邮箱格式校验正则
 const EMAIL_RE = /^[\w.+-]+@[\w-]+(\.[\w-]+)+$/
@@ -187,13 +191,15 @@ const handleRegister = async () => {
     radial-gradient(at 50% 100%, $color-accent 0%, transparent 50%);
 }
 
-// 卡片区域：垂直居中
+// 卡片区域：垂直居中（底部多留 64px 避开播放条）
 .register-main {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  padding-bottom: calc(64px + 20px);
+  box-sizing: border-box;
 }
 
 // 玻璃拟态注册卡片

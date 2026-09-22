@@ -58,6 +58,9 @@
         </view>
       </template>
     </scroll-view>
+
+    <!-- 全局迷你播放条：fixed 定位，无 TabBar 页面贴近底部 -->
+    <PlayerBar :has-tab-bar="false" />
   </view>
 </template>
 
@@ -66,6 +69,7 @@ import { ref, watch } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import api from '@/common/api.js'
 import { isDark, applyNavBarTheme } from '@/common/theme.js'
+import PlayerBar from '@/components/PlayerBar.vue'
 
 // 归档数据：[{ month:'YYYY-MM', count, articles:[{ id, date, title }] }]
 const archives = ref([])
@@ -111,11 +115,11 @@ watch(isDark, () => applyNavBarTheme())
   background: var(--app-bg, #FAFAF9);
 }
 
-/* 滚动容器：占满根节点高度形成滚动区，底部预留 24px（无 TabBar） */
+/* 滚动容器：占满根节点高度形成滚动区，底部留白避开 PlayerBar（无 TabBar，12px 偏移 + 56px 播放条） */
 .container {
   height: 100%;
   box-sizing: border-box;
-  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
 }
 
 /* 时间线容器 */

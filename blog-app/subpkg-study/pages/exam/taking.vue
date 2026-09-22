@@ -206,6 +206,9 @@
         <text class="bar-btn-text submit-text">交卷</text>
       </view>
     </view>
+
+    <!-- 全局迷你播放条：fixed 定位，悬浮于固定交卷栏之上 -->
+    <PlayerBar bottom="calc(80px + env(safe-area-inset-bottom))" />
   </view>
 </template>
 
@@ -219,6 +222,7 @@ import { parseMarkdown } from '@/utils/markdown.js'
 import NavBar from '@/components/NavBar.vue'
 import Icon from '@/components/Icon.vue'
 import Skeleton from '@/components/Skeleton.vue'
+import PlayerBar from '@/components/PlayerBar.vue'
 
 // 题型映射（与 frontend ExamTaking TYPE_LABELS 一致：1单选 2多选 3判断 4填空 5简答 6编程）
 const TYPE_LABELS = { 1: '单选题', 2: '多选题', 3: '判断题', 4: '填空题', 5: '简答题', 6: '编程题' }
@@ -485,7 +489,8 @@ onUnload(cleanup)
   min-height: 100vh;
   background: var(--app-bg, #FAFAF9);
   box-sizing: border-box;
-  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  /* 底部留白避开固定交卷栏（约 64px + 安全区）与悬浮 PlayerBar（追加 80px） */
+  padding-bottom: calc(144px + env(safe-area-inset-bottom));
 }
 
 /* ===== 导航栏内嵌信息 ===== */

@@ -64,6 +64,9 @@
         </button>
       </view>
     </view>
+
+    <!-- 全局迷你播放条：fixed 定位，无 TabBar 页贴近底部 -->
+    <PlayerBar :has-tab-bar="false" />
   </view>
 </template>
 
@@ -72,6 +75,7 @@ import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import api from '@/common/api.js'
 import { isDark, applyNavBarTheme } from '@/common/theme.js'
+import PlayerBar from '@/components/PlayerBar.vue'
 
 const form = ref({
   nickname: '',
@@ -117,7 +121,7 @@ const handleSubmit = async () => {
 .message-page {
   min-height: 100vh;
   background: var(--app-bg, #FAFAF9);
-  padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+  padding: 16px 16px calc(88px + env(safe-area-inset-bottom));
 }
 
 /* 表单卡片 */

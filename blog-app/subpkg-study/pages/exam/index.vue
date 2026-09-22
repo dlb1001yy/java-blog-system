@@ -36,6 +36,9 @@
         </view>
       </template>
     </view>
+
+    <!-- 全局迷你播放条：fixed 定位，无 TabBar 页面贴近底部 -->
+    <PlayerBar :has-tab-bar="false" />
   </view>
 </template>
 
@@ -47,6 +50,7 @@ import { isDark, applyNavBarTheme } from '@/common/theme.js'
 import { requireLogin, buildLoginRedirect } from '@/common/auth.js'
 import Icon from '@/components/Icon.vue'
 import Skeleton from '@/components/Skeleton.vue'
+import PlayerBar from '@/components/PlayerBar.vue'
 
 const loading = ref(false)
 const papers = ref([])
@@ -80,9 +84,11 @@ onShow(() => applyNavBarTheme())
 </script>
 
 <style lang="scss" scoped>
+/* 页面根节点：底部留白避开 PlayerBar（无 TabBar，12px 偏移 + 56px 播放条） */
 .exam-page {
   min-height: 100vh;
   padding: $spacing-lg;
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
   background: var(--app-bg, #FAFAF9);
   box-sizing: border-box;
 }
