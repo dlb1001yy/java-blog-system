@@ -25,18 +25,11 @@
       <!-- 底部 footer：浏览数 + 分类 -->
       <view class="footer">
         <view class="stat">
-          <!-- 内联 SVG eye 图标 16x16 stroke 1.8 currentColor -->
-          <svg class="stat-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
+          <Icon name="eye" :size="16" :stroke="1.8" class="stat-icon" />
           <text class="stat-text">{{ article.viewCount }}</text>
         </view>
         <view v-if="article.categoryName" class="stat">
-          <!-- 内联 SVG folder 图标 16x16 stroke 1.8 currentColor -->
-          <svg class="stat-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-          </svg>
+          <Icon name="folder" :size="16" :stroke="1.8" class="stat-icon" />
           <text class="stat-text">{{ article.categoryName }}</text>
         </view>
       </view>
@@ -48,6 +41,7 @@
 import { computed, ref, watch } from 'vue'
 import { resolveFileUrl } from '@/common/config.js'
 import { optimizeImageUrl } from '@/common/imageUrl.js'
+import Icon from '@/components/Icon.vue'
 
 const props = defineProps({ article: Object })
 const emit = defineEmits(['click'])

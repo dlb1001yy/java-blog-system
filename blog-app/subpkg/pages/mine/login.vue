@@ -25,22 +25,10 @@
           />
         </view>
 
-        <!-- 密码输入项（内联锁 SVG，避免修改 Icon.vue） -->
+        <!-- 密码输入项（锁图标） -->
         <view class="input-item">
           <view class="input-icon lock-icon">
-            <svg
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              fill="none"
-              stroke="#A8A29E"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
+            <Icon name="lock" :size="18" :stroke="1.8" color="#A8A29E" />
           </view>
           <input
             v-model="form.password"

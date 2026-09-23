@@ -1,18 +1,6 @@
 <template>
-  <view class="icon" :style="{ width: sizeUnit, height: sizeUnit, color: color }">
-    <!-- 内联 SVG，v-html 注入 path（H5 端可用） -->
-    <svg
-      viewBox="0 0 24 24"
-      :width="size"
-      :height="size"
-      fill="none"
-      :stroke="color"
-      :stroke-width="stroke"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      v-html="path"
-    ></svg>
-  </view>
+  <!-- 跨端图标：App 端不渲染 <svg> 标签与 v-html，改用 CSS mask + SVG data URI（形状遮罩 + 背景色上色） -->
+  <view class="icon" :style="iconStyle"></view>
 </template>
 
 <script setup>
@@ -60,13 +48,13 @@ const icons = {
   // 编辑
   edit: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
   // 播放（填充型三角）
-  play: '<polygon points="6 4 20 12 6 20" fill="currentColor" stroke="none"/>',
+  play: '<polygon points="6 4 20 12 6 20" fill="#000" stroke="none"/>',
   // 暂停（填充型双竖条）
-  pause: '<rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/>',
+  pause: '<rect x="6" y="4" width="4" height="16" rx="1" fill="#000" stroke="none"/><rect x="14" y="4" width="4" height="16" rx="1" fill="#000" stroke="none"/>',
   // 下一首
-  next: '<polygon points="5 4 15 12 5 20" fill="currentColor" stroke="none"/><line x1="19" y1="5" x2="19" y2="19"/>',
+  next: '<polygon points="5 4 15 12 5 20" fill="#000" stroke="none"/><line x1="19" y1="5" x2="19" y2="19"/>',
   // 上一首
-  prev: '<polygon points="19 4 9 12 19 20" fill="currentColor" stroke="none"/><line x1="5" y1="5" x2="5" y2="19"/>',
+  prev: '<polygon points="19 4 9 12 19 20" fill="#000" stroke="none"/><line x1="5" y1="5" x2="5" y2="19"/>',
   // 列表循环
   repeat: '<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
   // 单曲循环
@@ -100,20 +88,55 @@ const icons = {
   // 删除
   trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
   // 实心点赞
-  'heart-filled': '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor"/>',
+  'heart-filled': '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="#000"/>',
   // 旗帜（举报）
   flag: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
   // 筛选
-  filter: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>'
+  filter: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
+  // 书签
+  bookmark: '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
+  // 感叹号圆圈（加载失败）
+  'alert-circle': '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+  // 锁
+  lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  // 标签
+  tag: '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>',
+  // 删除（带桶内竖线变体）
+  'trash-2': '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>'
 }
 
-// 根据 name 返回对应 path 字符串，未匹配返回空
-const path = computed(() => icons[props.name] || '')
+// 拼装 SVG data URI（外层 svg 属性与原 <svg> 标签一致；填充型 path 自带 fill/stroke 覆盖属性）
+// mask 只取 SVG 的 alpha 通道，内部颜色不参与显示，颜色统一由 background-color 决定
+const iconDataUri = computed(() => {
+  const content = icons[props.name] || ''
+  if (!content) return ''
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="${props.stroke}" stroke-linecap="round" stroke-linejoin="round">${content}</svg>`
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
+})
 
 // 尺寸单位处理：数字补 px，字符串原样使用
 const sizeUnit = computed(() => {
   const s = props.size
   return typeof s === 'number' ? `${s}px` : s
+})
+
+// 内联样式：尺寸 + 颜色（currentColor 由浏览器/WebView 解析为自身 color）+ mask 五件套
+const iconStyle = computed(() => {
+  const mask = iconDataUri.value
+  return {
+    width: sizeUnit.value,
+    height: sizeUnit.value,
+    color: props.color,
+    backgroundColor: props.color,
+    WebkitMaskImage: mask,
+    maskImage: mask,
+    WebkitMaskSize: '100% 100%',
+    maskSize: '100% 100%',
+    WebkitMaskRepeat: 'no-repeat',
+    maskRepeat: 'no-repeat',
+    WebkitMaskPosition: 'center',
+    maskPosition: 'center'
+  }
 })
 </script>
 
@@ -123,9 +146,6 @@ const sizeUnit = computed(() => {
   align-items: center;
   justify-content: center;
   line-height: 1;
-}
-
-.icon svg {
-  display: block;
+  /* 无匹配图标时 data URI 为空串，maskImage 空值不产生遮罩，view 保持透明 */
 }
 </style>

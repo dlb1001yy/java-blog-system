@@ -6,10 +6,11 @@
       <!-- 左：封面 + 歌曲信息（点击预留） -->
       <view class="song-info">
         <image
-          v-if="song.cover"
+          v-if="song.cover && !coverError"
           class="cover"
           :src="resolveFileUrl(song.cover)"
           mode="aspectFill"
+          @error="coverError = true"
         />
         <view v-else class="cover cover-placeholder">
           <Icon name="music" :size="18" color="#FFFFFF" />
@@ -50,11 +51,12 @@
       @click.stop="onToggleCollapsed"
     >
       <image
-        v-if="song.cover"
+        v-if="song.cover && !coverError"
         class="fab-cover"
         :class="state.isPlaying ? 'spinning' : 'spinning paused'"
         :src="resolveFileUrl(song.cover)"
         mode="aspectFill"
+        @error="coverError = true"
       />
       <view v-else class="fab-cover fab-placeholder" :class="state.isPlaying ? 'spinning' : 'spinning paused'">
         <Icon name="music" :size="22" color="#FFFFFF" />
@@ -64,7 +66,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { state, currentSong, toggle, next, prev, toggleCollapsed } from '@/common/player.js'
 import { resolveFileUrl } from '@/common/config.js'
 import Icon from '@/components/Icon.vue'
@@ -77,6 +79,10 @@ const props = defineProps({
 })
 
 const song = currentSong
+
+// 封面加载失败标记：失败后回退渐变占位（避免灰块），切歌时重置重试新封面
+const coverError = ref(false)
+watch(() => song.value?.id, () => { coverError.value = false })
 
 // 展开态定位：bottom prop 优先；否则按是否有 TabBar 决定（TabBar 56px + 安全区 / 12px + 安全区）
 const barBottom = computed(() => {

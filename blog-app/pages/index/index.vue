@@ -76,11 +76,7 @@
       <Skeleton v-if="latestLoading" type="article" :count="3" />
       <!-- 加载失败空态：图标 + 文案 + 重试 -->
       <view v-else-if="latestFailed" class="latest-empty">
-        <svg class="latest-empty-icon" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="12" />
-          <line x1="12" y1="16" x2="12.01" y2="16" />
-        </svg>
+        <Icon name="alert-circle" :size="48" :stroke="1.5" class="latest-empty-icon" />
         <text class="latest-empty-text">最新文章加载失败</text>
         <view class="latest-retry" @click="loadLatest">重试</view>
       </view>

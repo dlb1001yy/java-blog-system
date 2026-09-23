@@ -50,12 +50,7 @@
 
         <!-- 空状态 -->
         <view v-if="archives.length === 0" class="empty">
-          <svg class="empty-icon" viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="4" width="18" height="18" rx="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
-          </svg>
+          <Icon name="calendar" :size="56" :stroke="1.5" class="empty-icon" />
           <text class="empty-text">暂无归档</text>
         </view>
       </template>
@@ -69,6 +64,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import Icon from '@/components/Icon.vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import api from '@/common/api.js'
 import { isDark, applyNavBarTheme } from '@/common/theme.js'

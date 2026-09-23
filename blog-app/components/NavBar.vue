@@ -4,11 +4,9 @@
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
     <!-- 导航行：高 44px，左返回 / 中标题 / 右插槽 -->
     <view class="nav-row">
-      <!-- 左侧返回按钮 -->
+      <!-- 左侧返回按钮（跨端 Icon，CSS mask 渲染） -->
       <view v-if="showBack" class="nav-back" @click="goBack">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M15 18 L9 12 L15 6" />
-        </svg>
+        <Icon name="chevron-left" :size="24" />
       </view>
       <!-- 中间标题：优先 title prop，否则用 name="title" 插槽 -->
       <view class="nav-title">
@@ -25,6 +23,8 @@
 
 <script setup>
 // 自定义导航栏：状态栏占位 + 44px 导航行，普通流式布局（非 fixed）
+
+import Icon from '@/components/Icon.vue'
 
 defineProps({
   // 标题文字（传入时优先于 title 插槽）

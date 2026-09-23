@@ -57,13 +57,7 @@
           />
           <!-- 空状态 -->
           <view v-if="list.length === 0" class="empty">
-            <svg class="empty-icon" viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <path d="M14 2v6h6" />
-              <path d="M16 13H8" />
-              <path d="M16 17H8" />
-              <path d="M10 9H8" />
-            </svg>
+            <Icon name="document" :size="56" :stroke="1.5" class="empty-icon" />
             <text class="empty-text">暂无文章</text>
           </view>
           <!-- 加载更多（三点跳动动画）/ 没有更多 -->
@@ -83,6 +77,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import Icon from '@/components/Icon.vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import api from '@/common/api.js'
 import { isDark, applyNavBarTheme } from '@/common/theme.js'

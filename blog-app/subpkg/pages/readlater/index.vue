@@ -22,13 +22,7 @@
         <!-- 右侧操作区：删除按钮（宽 = actionWidth 72px） -->
         <template #actions>
           <view class="del-btn" @click="onDelete(item)">
-            <!-- 内联 SVG trash 图标 20x20 stroke 1.8 currentColor -->
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-              <line x1="10" y1="11" x2="10" y2="17" />
-              <line x1="14" y1="11" x2="14" y2="17" />
-            </svg>
+            <Icon name="trash-2" :size="20" :stroke="1.8" />
             <text class="del-text">删除</text>
           </view>
         </template>
@@ -37,10 +31,7 @@
 
     <!-- 空状态 -->
     <view v-else class="empty">
-      <!-- 内联 SVG 书签图标 56x56 -->
-      <svg class="empty-icon" viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-      </svg>
+      <Icon name="bookmark" :size="56" :stroke="1.5" class="empty-icon" />
       <text class="empty-title">还没有稍后阅读的文章</text>
       <text class="empty-sub">在文章详情页点击「稍后阅读」即可离线收藏</text>
     </view>
@@ -52,6 +43,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import Icon from '@/components/Icon.vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import { isDark, applyNavBarTheme } from '@/common/theme.js'
 import { getReadLaterList, removeReadLater } from '@/common/offline.js'

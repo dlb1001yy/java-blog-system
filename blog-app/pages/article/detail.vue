@@ -25,22 +25,12 @@
         <!-- 操作条：稍后阅读 + 分享海报 -->
         <view class="action-bar">
           <view :class="['action-btn', isSaved ? 'active' : '']" @click="onToggleReadLater">
-            <!-- 内联 bookmark SVG 图标 16x16 -->
-            <svg class="action-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-            </svg>
+            <Icon name="bookmark" :size="16" :stroke="1.8" class="action-icon" />
             <text class="action-text">{{ isSaved ? '已收藏' : '稍后阅读' }}</text>
           </view>
           <!-- 第二个操作按钮：分享海报 -->
           <view class="action-btn" @click="showShare = true">
-            <!-- 内联 share SVG 图标 16x16 -->
-            <svg class="action-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="18" cy="5" r="3" />
-              <circle cx="6" cy="12" r="3" />
-              <circle cx="18" cy="19" r="3" />
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-            </svg>
+            <Icon name="share" :size="16" :stroke="1.8" class="action-icon" />
             <text class="action-text">分享海报</text>
           </view>
         </view>
