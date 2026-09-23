@@ -1,6 +1,6 @@
 // 轻量级 Markdown 解析器（无外部依赖）
 // 支持：标题、粗体、斜体、行内代码、代码块、链接、图片、引用、
-// 有序/无序列表、分割线、GFM 换行、段落。输出 HTML 字符串。
+// 有序/无序列表、分割线、GFM 换行、GFM 表格（含对齐）、段落。输出 HTML 字符串。
 // 注：替换原 marked 依赖，避免 HBuilderX uni-app 项目无 node_modules 时 500 报错。
 
 // HTML 转义，防止注入
@@ -50,6 +50,30 @@ const parseInline = (text) => {
   text = text.replace(/\u0000(\d+)\u0000/g, (_, i) => placeholders[Number(i)])
 
   return text
+}
+
+// ===== GFM 表格辅助函数 =====
+// 候选表格行：trim 后含 |（GFM 表格行至少含一个竖线）
+const isTableRow = (line) => line.includes('|')
+
+// 分隔行：| --- | :---: | ---: |，首尾竖线可省略，支持冒号对齐标记
+const isTableDivider = (line) =>
+  /^\s*\|?\s*:?-{1,}:?\s*(\|\s*:?-{1,}:?\s*)+\|?\s*$/.test(line)
+
+// 拆分表格行为单元格数组：去掉首尾竖线后按 | 分割，各单元格 trim
+const splitTableRow = (line) => {
+  let s = line.trim()
+  if (s.startsWith('|')) s = s.slice(1)
+  if (s.endsWith('|')) s = s.slice(0, -1)
+  return s.split('|').map((c) => c.trim())
+}
+
+// 分隔行单元格 → 对齐方式：:--- 左 / :---: 中 / ---: 右
+const dividerAlign = (cell) => {
+  const c = cell.trim()
+  if (c.startsWith(':') && c.endsWith(':')) return 'center'
+  if (c.endsWith(':')) return 'right'
+  return 'left'
 }
 
 /**
@@ -138,6 +162,32 @@ export const parseMarkdown = (markdownText) => {
         continue
       }
 
+      // 表格：当前行含 | 且下一行是分隔行 → 表头 + 分隔行 + 连续数据行
+      if (isTableRow(line) && i + 1 < lines.length && isTableDivider(lines[i + 1])) {
+        const headerCells = splitTableRow(line)
+        const aligns = splitTableRow(lines[i + 1]).map(dividerAlign)
+        i += 2
+        const thHtml = headerCells
+          .map((cell, idx) => {
+            const align = aligns[idx] && aligns[idx] !== 'left' ? ` style="text-align:${aligns[idx]}"` : ''
+            return `<th${align}>${parseInline(cell)}</th>`
+          })
+          .join('')
+        const rowsHtml = []
+        while (i < lines.length && lines[i].includes('|') && !/^\s*$/.test(lines[i])) {
+          const cells = splitTableRow(lines[i])
+          rowsHtml.push(
+            `<tr>${cells.map((cell, idx) => {
+              const align = aligns[idx] && aligns[idx] !== 'left' ? ` style="text-align:${aligns[idx]}"` : ''
+              return `<td${align}>${parseInline(cell)}</td>`
+            }).join('')}</tr>`
+          )
+          i++
+        }
+        html.push(`<table><thead><tr>${thHtml}</tr></thead><tbody>${rowsHtml.join('')}</tbody></table>`)
+        continue
+      }
+
       // 普通段落：连续非空、非块级标记的行合并，GFM 单换行转 <br>
       const paraLines = []
       while (
@@ -148,7 +198,8 @@ export const parseMarkdown = (markdownText) => {
         !/^\s*([-*_])\1{2,}\s*$/.test(lines[i]) &&
         !/^>\s?/.test(lines[i]) &&
         !/^\s*[-*+]\s+/.test(lines[i]) &&
-        !/^\s*\d+\.\s+/.test(lines[i])
+        !/^\s*\d+\.\s+/.test(lines[i]) &&
+        !(isTableRow(lines[i]) && i + 1 < lines.length && isTableDivider(lines[i + 1]))
       ) {
         paraLines.push(lines[i])
         i++

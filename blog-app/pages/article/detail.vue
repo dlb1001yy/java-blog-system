@@ -564,6 +564,23 @@ watch(() => article.value?.id, async () => {
   color: $color-primary;
   text-decoration: none;
 }
+/* GFM 表格：边框 + 表头浅灰底，宽单元格换行防溢出（rich-text 内无法横向滚动） */
+.markdown-body :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 16px 0;
+  font-size: 13px;
+}
+.markdown-body :deep(th),
+.markdown-body :deep(td) {
+  border: 1px solid var(--app-border, #E7E5E4);
+  padding: 8px 10px;
+  word-break: break-word;
+}
+.markdown-body :deep(th) {
+  background: var(--app-bg, #FAFAF9);
+  font-weight: 600;
+}
 
 /* ===== 顶部阅读进度条 ===== */
 /* fixed 顶部 3px，z-index 高于内容、低于弹层（SharePoster 为 999）；渐变主色保证亮暗主题均可见 */
